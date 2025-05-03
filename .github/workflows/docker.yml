@@ -10,14 +10,20 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+permissions:
+  contents: read
+  packages: read
+  actions: read
+  security-events: read
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      packages: write  # Needed for pushing Docker images
       actions: read
-      security-events: write
+      security-events: read
 
     steps:
       - name: Checkout repository
@@ -57,6 +63,8 @@ jobs:
 
       - name: Make package public
         if: github.event_name == 'push'
+        permissions:
+          packages: write  # Needed for making package public
         run: |
           PACKAGE_NAME=$(echo ${{ env.IMAGE_NAME }} | tr '/' '-')
           curl -X PATCH \
