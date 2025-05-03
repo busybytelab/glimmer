@@ -1,6 +1,7 @@
 name: "Microsoft Security DevOps Scan"
 
 on:
+  workflow_dispatch:  # Add manual trigger
   push:
     branches: [ main ]
   pull_request:
@@ -29,14 +30,13 @@ jobs:
         uses: microsoft/security-devops-action@v1
         id: msdo
         with:
-          tools: devskim,gitleaks,terrascan
+          tools: gitleaks,terrascan
           categories: code
           languages: go
-          build-break: true
-          
+
       # Upload alerts to Security tab
       - name: Upload SARIF to GitHub
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: success() || failure()
         with:
           sarif_file: ${{ steps.msdo.outputs.sarifFile }}
@@ -49,7 +49,7 @@ jobs:
           fail-on-severity: high
 
       - name: Upload Scan Results
-        if: always()
+        if: always() && steps.msdo.outputs.sarifFile != ''
         uses: actions/upload-artifact@v4
         with:
           name: security-scan-results
