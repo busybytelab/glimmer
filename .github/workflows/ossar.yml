@@ -9,6 +9,13 @@ on:
   schedule:
     - cron: '0 0 * * 0'
 
+# NOTE FOR FUTURE REFERENCE:
+# When this repository becomes open source:
+# 1. GitHub Advanced Security will be available for free
+# 2. Remove the 'continue-on-error: true' line from the upload-sarif step below
+# 3. Consider enabling the Security tab integration for better visualization of issues
+# More info: https://docs.github.com/en/code-security/code-scanning/enabling-code-scanning/configuring-default-setup-for-code-scanning
+
 jobs:
   security-scan:
     name: Security Scan
@@ -35,10 +42,11 @@ jobs:
           # Specify categories to focus the scan
           categories: code,IaC,containers
 
-      # Upload alerts to Security tab
+      # Upload alerts to Security tab (only works if GitHub Advanced Security is enabled)
       - name: Upload SARIF to GitHub
         uses: github/codeql-action/upload-sarif@v3
         if: success() || failure()
+        continue-on-error: true  # Don't fail if GitHub Advanced Security isn't enabled
         with:
           sarif_file: ${{ steps.msdo.outputs.sarifFile }}
 
@@ -49,6 +57,7 @@ jobs:
         with:
           fail-on-severity: high
 
+      # Always upload scan results as an artifact for review
       - name: Upload Scan Results
         if: always() && steps.msdo.outputs.sarifFile != ''
         uses: actions/upload-artifact@v4
