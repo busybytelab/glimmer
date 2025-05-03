@@ -1,13 +1,33 @@
 name: "Microsoft Security DevOps Scan"
 
 on:
-  workflow_dispatch:  # Add manual trigger
+  workflow_dispatch:  # Keep manual trigger
   push:
     branches: [ main ]
+    paths:
+      - '**/*.go'      # Only run on Go file changes
+      - '**/*.yaml'    # Run on YAML file changes (for IaC)
+      - '**/*.yml'     # Run on YML file changes
+      - '**/*.tf'      # Run on Terraform file changes
+      - '**/*.json'    # Run on JSON file changes
+      - 'go.mod'       # Run on dependency changes
+      - 'go.sum'
+      - 'Dockerfile'   # Run on container changes
+      - '.github/workflows/ossar.yml'  # Run when this workflow changes
   pull_request:
     branches: [ main ]
+    paths:
+      - '**/*.go'      # Only run on Go file changes
+      - '**/*.yaml'    # Run on YAML file changes (for IaC)
+      - '**/*.yml'     # Run on YML file changes
+      - '**/*.tf'      # Run on Terraform file changes
+      - '**/*.json'    # Run on JSON file changes
+      - 'go.mod'       # Run on dependency changes
+      - 'go.sum'
+      - 'Dockerfile'   # Run on container changes
+      - '.github/workflows/ossar.yml'  # Run when this workflow changes
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: '0 0 * * 0'  # Keep weekly runs for full scans
 
 # NOTE FOR FUTURE REFERENCE:
 # When this repository becomes open source:

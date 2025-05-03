@@ -1,12 +1,23 @@
 name: "CodeQL"
 
 on:
+  workflow_dispatch:  # Add manual trigger option
   push:
     branches: [ main ]
+    paths:
+      - '**/*.go'      # Only run on Go file changes
+      - 'go.mod'       # Run on dependency changes
+      - 'go.sum'
+      - '.github/workflows/codeql.yml'  # Run when this workflow changes
   pull_request:
     branches: [ main ]
+    paths:
+      - '**/*.go'      # Only run on Go file changes
+      - 'go.mod'       # Run on dependency changes
+      - 'go.sum'
+      - '.github/workflows/codeql.yml'  # Run when this workflow changes
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: '0 0 * * 0'  # Keep weekly runs for full scans
 
 # NOTE FOR FUTURE REFERENCE:
 # When this repository becomes open source:
