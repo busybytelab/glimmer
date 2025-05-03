@@ -10,6 +10,8 @@ on:
 permissions:
   contents: write  # Required for creating releases and uploading assets
   id-token: write  # Required for GITHUB_TOKEN authentication
+  actions: read
+  security-events: write
 
 jobs:
   release:

@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - 'v*'  # Push events matching v1.0, v20.15.10, etc.
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:  # Allow manual trigger
 
 env:
@@ -18,6 +16,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      actions: read
+      security-events: write
 
     steps:
       - name: Checkout repository
@@ -39,12 +39,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
+            type=ref,event=tag
             type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push multi-arch Docker image
+        id: docker_build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -54,6 +54,16 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Make package public
+        if: github.event_name == 'push'
+        run: |
+          PACKAGE_NAME=$(echo ${{ env.IMAGE_NAME }} | tr '/' '-')
+          curl -X PATCH \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/user/packages/container/$PACKAGE_NAME" \
+            -d '{"visibility":"public"}'
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }} 
