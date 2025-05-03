@@ -30,9 +30,10 @@ jobs:
         uses: microsoft/security-devops-action@v1
         id: msdo
         with:
-          tools: gitleaks,terrascan
-          categories: code
-          languages: go
+          # Specify only Linux-compatible tools
+          tools: trivy,checkov,terrascan
+          # Specify categories to focus the scan
+          categories: code,IaC,containers
 
       # Upload alerts to Security tab
       - name: Upload SARIF to GitHub
