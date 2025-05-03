@@ -1,12 +1,40 @@
-name: "OSSAR Scan"
+name: "Microsoft Security DevOps Scan"
 
 on:
+  workflow_dispatch:  # Keep manual trigger
   push:
     branches: [ main ]
+    paths:
+      - '**/*.go'      # Only run on Go file changes
+      - '**/*.yaml'    # Run on YAML file changes (for IaC)
+      - '**/*.yml'     # Run on YML file changes
+      - '**/*.tf'      # Run on Terraform file changes
+      - '**/*.json'    # Run on JSON file changes
+      - 'go.mod'       # Run on dependency changes
+      - 'go.sum'
+      - 'Dockerfile'   # Run on container changes
+      - '.github/workflows/ossar.yml'  # Run when this workflow changes
   pull_request:
     branches: [ main ]
+    paths:
+      - '**/*.go'      # Only run on Go file changes
+      - '**/*.yaml'    # Run on YAML file changes (for IaC)
+      - '**/*.yml'     # Run on YML file changes
+      - '**/*.tf'      # Run on Terraform file changes
+      - '**/*.json'    # Run on JSON file changes
+      - 'go.mod'       # Run on dependency changes
+      - 'go.sum'
+      - 'Dockerfile'   # Run on container changes
+      - '.github/workflows/ossar.yml'  # Run when this workflow changes
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: '0 0 * * 0'  # Keep weekly runs for full scans
+
+# NOTE FOR FUTURE REFERENCE:
+# When this repository becomes open source:
+# 1. GitHub Advanced Security will be available for free
+# 2. Remove the 'continue-on-error: true' line from the upload-sarif step below
+# 3. Consider enabling the Security tab integration for better visualization of issues
+# More info: https://docs.github.com/en/code-security/code-scanning/enabling-code-scanning/configuring-default-setup-for-code-scanning
 
 jobs:
   security-scan:
@@ -21,28 +49,39 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Run OSSAR Scan
-        uses: github/ossar-action@v1
-        continue-on-error: true
         with:
-          languages: go
-          config: .guardian/guardian-linux.yml
+          fetch-depth: 0
+
+      # Run the Microsoft Security DevOps (MSDO) action
+      - name: Run Microsoft Security DevOps Scan
+        uses: microsoft/security-devops-action@v1
+        id: msdo
+        with:
+          # Specify only Linux-compatible tools
+          tools: trivy,checkov,terrascan
+          # Specify categories to focus the scan
+          categories: code,IaC,containers
+
+      # Upload alerts to Security tab (only works if GitHub Advanced Security is enabled)
+      - name: Upload SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        if: success() || failure()
+        continue-on-error: true  # Don't fail if GitHub Advanced Security isn't enabled
+        with:
+          sarif_file: ${{ steps.msdo.outputs.sarifFile }}
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v3
+        if: github.event_name == 'pull_request'
         continue-on-error: true
         with:
           fail-on-severity: high
 
+      # Always upload scan results as an artifact for review
       - name: Upload Scan Results
-        if: always()
+        if: always() && steps.msdo.outputs.sarifFile != ''
         uses: actions/upload-artifact@v4
         with:
           name: security-scan-results
-          path: |
-            *.json
-            *.sarif
-            *.xml
-            *.txt
-          retention-days: 90 
+          path: ${{ steps.msdo.outputs.sarifFile }}
+          retention-days: 60 

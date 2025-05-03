@@ -1,12 +1,30 @@
 name: "CodeQL"
 
 on:
+  workflow_dispatch:  # Add manual trigger option
   push:
     branches: [ main ]
+    paths:
+      - '**/*.go'      # Only run on Go file changes
+      - 'go.mod'       # Run on dependency changes
+      - 'go.sum'
+      - '.github/workflows/codeql.yml'  # Run when this workflow changes
   pull_request:
     branches: [ main ]
+    paths:
+      - '**/*.go'      # Only run on Go file changes
+      - 'go.mod'       # Run on dependency changes
+      - 'go.sum'
+      - '.github/workflows/codeql.yml'  # Run when this workflow changes
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: '0 0 * * 0'  # Keep weekly runs for full scans
+
+# NOTE FOR FUTURE REFERENCE:
+# When this repository becomes open source:
+# 1. GitHub Advanced Security will be available for free
+# 2. Remove the 'continue-on-error: true' line from the analyze step below
+# 3. Consider enabling the Security tab integration for better visualization of issues
+# More info: https://docs.github.com/en/code-security/code-scanning/enabling-code-scanning/configuring-default-setup-for-code-scanning
 
 jobs:
   analyze:
@@ -37,5 +55,15 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
+      continue-on-error: true  # Don't fail if GitHub Advanced Security isn't enabled
       with:
-        category: "/language:${{matrix.language}}" 
+        category: "/language:${{matrix.language}}"
+        
+    # Save the results as an artifact as well
+    - name: Upload SARIF file
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: codeql-results
+        path: /home/runner/work/glimmer/results/*.sarif
+        retention-days: 60 
