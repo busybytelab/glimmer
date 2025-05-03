@@ -1,4 +1,4 @@
-name: "OSSAR Scan"
+name: "Microsoft Security DevOps Scan"
 
 on:
   push:
@@ -21,16 +21,29 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Run OSSAR Scan
-        uses: github/ossar-action@v1
-        continue-on-error: true
         with:
+          fetch-depth: 0
+
+      # Run the Microsoft Security DevOps (MSDO) action
+      - name: Run Microsoft Security DevOps Scan
+        uses: microsoft/security-devops-action@v1
+        id: msdo
+        with:
+          tools: devskim,gitleaks,terrascan
+          categories: code
           languages: go
-          config: .guardian/guardian-linux.yml
+          build-break: true
+          
+      # Upload alerts to Security tab
+      - name: Upload SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v2
+        if: success() || failure()
+        with:
+          sarif_file: ${{ steps.msdo.outputs.sarifFile }}
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v3
+        if: github.event_name == 'pull_request'
         continue-on-error: true
         with:
           fail-on-severity: high
@@ -40,9 +53,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: security-scan-results
-          path: |
-            *.json
-            *.sarif
-            *.xml
-            *.txt
-          retention-days: 90 
+          path: ${{ steps.msdo.outputs.sarifFile }}
+          retention-days: 60 
