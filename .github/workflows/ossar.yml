@@ -16,6 +16,7 @@ jobs:
       security-events: write
       actions: read
       contents: read
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -26,7 +27,7 @@ jobs:
         continue-on-error: true
         with:
           languages: go
-          config: .guardian/guardian.yml
+          config: .guardian/guardian-linux.yml
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v3
