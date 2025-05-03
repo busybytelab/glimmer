@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  glimmer:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: ghcr.io/busybytelab/glimmer:latest
+    container_name: glimmer
+    restart: unless-stopped
+    ports:
+      - "${LISTEN_ADDRESS:-0.0.0.0:8787}:8787"
+    volumes:
+      - /opt/glimmer-deploy/pb_data:/app/pb_data
+    
+    env_file:
+      - stack.env # stack.env when using portainer or .env when running locally
+    #environment:
+    #  LISTEN_ADDRESS=127.0.0.1:8787
+    #  ADMIN_EMAIL=admin@dev.local
+    #  ADMIN_PASSWORD=your-admin-password
+    #  # Generate a 32-character key with: openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 32 && echo
+    #  ENCRYPTION_KEY=your32characterkeyhere12345678901
+
+    networks:
+      - glimmer-network
+
+  init-superuser:
+    image: glimmer:latest
+    depends_on:
+      glimmer:
+        condition: service_healthy
+    entrypoint: ["/app/glimmer", "--encryptionEnv=${ENCRYPTION_KEY}", "superuser", "create", "${ADMIN_EMAIL:-admin@dev.local}", "${ADMIN_PASSWORD:-glimmerglimmer}"]
+    restart: "no"
+    volumes:
+      - /opt/glimmer-deploy/pb_data:/app/pb_data
+    networks:
+      - glimmer-network
+
+networks:
+  glimmer-network:
+    driver: bridge

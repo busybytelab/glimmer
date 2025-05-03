@@ -1,3 +1,5 @@
+> ⚠️ **Status**: This project is in early development and not ready yet. Features, documentation, and stability are actively being improved.
+
 # Glimmer
 
 A simple, self-hosted app helping kids (~6-12 yrs) practice specific skills like grammar or basic math. Parents define the topics, an LLM generates the content. Focused on easy setup (Docker) and providing safe, supplementary practice.
