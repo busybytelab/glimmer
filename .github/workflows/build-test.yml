@@ -52,8 +52,6 @@ jobs:
     - name: Install UI dependencies
       working-directory: ui
       run: npm ci
-      env:
-        NODE_ENV: production
     
     - name: Type check
       working-directory: ui
