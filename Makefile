@@ -61,7 +61,7 @@ run: ## Run the application with env vars from .env file if it exists
 	@if [ -f .env ]; then \
 		LISTEN_ADDRESS=$$(grep LISTEN_ADDRESS .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
-		go run ./... --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
+		source .env && go run ./... --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
 	else \
 		go run ./... serve; \
 	fi
@@ -74,7 +74,7 @@ create-superuser:  ## Create a superuser for dev environment with values from .e
 		PASSWORD=$$(grep PASSWORD .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
 		echo "Creating superuser with email $$EMAIL"; \
-		go run ./... --encryptionEnv=$$ENCRYPTION_KEY superuser create "$$EMAIL" "$$PASSWORD"; \
+		source .env && go run ./... --encryptionEnv=$$ENCRYPTION_KEY superuser create "$$EMAIL" "$$PASSWORD"; \
 	else \
 		echo "Error: .env file not found"; \
 		exit 1; \
