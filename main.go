@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/busybytelab.com/glimmer/internal/app"
+	_ "github.com/busybytelab.com/glimmer/internal/migrations" // register migrations
 )
 
 // Version holds the application version.
