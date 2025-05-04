@@ -10,6 +10,7 @@ on:
       - 'go.sum'
       - 'Makefile'     # Run on build config changes
       - '.github/workflows/build-test.yml'  # Run when this workflow changes
+      - 'ui/**/*'      # Run on UI changes
   pull_request:
     branches: [ main ]
     paths:
@@ -18,6 +19,7 @@ on:
       - 'go.sum'
       - 'Makefile'     # Run on build config changes
       - '.github/workflows/build-test.yml'  # Run when this workflow changes
+      - 'ui/**/*'      # Run on UI changes
 
 # Explicitly set minimal permissions
 permissions:
@@ -26,7 +28,60 @@ permissions:
   security-events: write
 
 jobs:
-  build:
+  build-ui:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: 'ui/package-lock.json'
+    
+    - name: Verify package files
+      working-directory: ui
+      run: |
+        if [ ! -f package-lock.json ]; then
+          echo "Error: package-lock.json is missing"
+          exit 1
+        fi
+        npm ls || true  # List installed packages, continue even if there are peer dependency warnings
+    
+    - name: Install UI dependencies
+      working-directory: ui
+      run: npm ci
+    
+    - name: Type check
+      working-directory: ui
+      run: npm run check
+    
+    - name: Build UI
+      working-directory: ui
+      run: npm run build
+    
+    - name: Verify build output
+      working-directory: ui
+      run: |
+        if [ ! -d "dist" ]; then
+          echo "Error: Build output directory 'dist' not found"
+          exit 1
+        fi
+        if [ ! -f "dist/index.html" ]; then
+          echo "Error: Build output 'index.html' not found"
+          exit 1
+        fi
+    
+    - name: Upload UI build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ui-dist
+        path: ui/dist
+        retention-days: 1
+
+  build-go:
+    needs: build-ui
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -36,6 +91,12 @@ jobs:
       with:
         go-version: '1.24'
         check-latest: true
+    
+    - name: Download UI build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ui-dist
+        path: ui/dist
     
     - name: Build
       run: make build

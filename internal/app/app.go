@@ -22,19 +22,20 @@ type Application struct {
 	pb           *pocketbase.PocketBase
 	quit         chan os.Signal
 	shutdownOnce sync.Once
-	publicFS     fs.FS
+	embedFs      fs.FS
 	config       *Config
 }
 
 // create a new application instance with the provided filesystem for static files.
-// if publicFS is nil, it will fall back to using the local pb_public directory.
-func New(publicFS fs.FS) *Application {
+// if embedFs is nil, it will fall back to using the local ui/dist directory.
+func New(embedFs fs.FS) *Application {
 	log.Info().Msg("Creating new application instance...")
+	pb := pocketbase.New()
 	return &Application{
-		pb:       pocketbase.New(),
-		quit:     make(chan os.Signal, 1),
-		publicFS: publicFS,
-		config:   EnvConfig(),
+		pb:      pb,
+		quit:    make(chan os.Signal, 1),
+		embedFs: embedFs,
+		config:  EnvConfig(),
 	}
 }
 
@@ -63,19 +64,9 @@ func (a *Application) setupMigrations() {
 // configures the HTTP routes for the application
 func (app *Application) setupRoutes() {
 	app.pb.OnServe().BindFunc(func(e *core.ServeEvent) error {
-		// serve static files - use the embedded filesystem if provided, otherwise use local directory
-		staticFS := app.publicFS
-		if staticFS == nil {
-			log.Info().Msg("Using physical pb_public directory for static files")
-			staticFS = os.DirFS("./pb_public")
-		} else {
-			log.Info().Msg("Using embedded static files")
-		}
 
-		e.Router.GET("/{path...}", apis.Static(staticFS, false))
-
-		// add custom API endpoints here
-		// e.Router.GET("/api/custom", func(c *core.RequestEvent) error { return nil })
+		// Serve UI static files
+		e.Router.GET("/{path...}", apis.Static(app.embedFs, true))
 
 		// must call e.Next() to continue the serve chain
 		return e.Next()

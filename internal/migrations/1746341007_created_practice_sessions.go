@@ -12,8 +12,8 @@ import (
 func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
-			"createRule": null,
-			"deleteRule": null,
+			"createRule": "@request.auth.id != null",
+			"deleteRule": "@request.auth.id = instructor.user.id",
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -104,12 +104,10 @@ func init() {
 					"required": true,
 					"system": false,
 					"type": "relation",
-					
-						"collectionId": "pbc_%s",
-						"cascadeDelete": true,
-						"maxSelect": 1,
-						"minSelect": 1
-					
+					"collectionId": "pbc_%s",
+					"cascadeDelete": true,
+					"maxSelect": 1,
+					"minSelect": 1
 				},
 				{
 					"autogeneratePattern": "",
@@ -123,31 +121,27 @@ func init() {
 					"required": true,
 					"system": false,
 					"type": "relation",
-					
-						"collectionId": "pbc_%s",
-						"cascadeDelete": true,
-						"maxSelect": 1,
-						"minSelect": 1
-					
+					"collectionId": "pbc_%s",
+					"cascadeDelete": true,
+					"maxSelect": 1,
+					"minSelect": 1
 				},
 				{
 					"autogeneratePattern": "",
 					"hidden": false,
-					"id": "instructor_column",
+					"id": "account_column",
 					"maxSize": 2000,
-					"name": "instructor",
+					"name": "account",
 					"pattern": "",
 					"presentable": false,
 					"primaryKey": false,
-					"required": false,
+					"required": true,
 					"system": false,
 					"type": "relation",
-					
-						"collectionId": "pbc_%s",
-						"cascadeDelete": false,
-						"maxSelect": 1,
-						"minSelect": 0
-					
+					"collectionId": "pbc_%s",
+					"cascadeDelete": false,
+					"maxSelect": 1,
+					"minSelect": 1
 				},
 				{
 					"autogeneratePattern": "",
@@ -161,12 +155,10 @@ func init() {
 					"required": true,
 					"system": false,
 					"type": "relation",
-						"collectionId": "pbc_%s",
-						"cascadeDelete": false,
-						"maxSelect": null,
-						"maxSelect": 1,
-						"minSelect": 1
-					
+					"collectionId": "pbc_%s",
+					"cascadeDelete": false,
+					"maxSelect": null,
+					"minSelect": 1
 				},
 				{
 					"hidden": false,
@@ -191,13 +183,13 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [],
-			"listRule": null,
+			"listRule": "@request.auth.id != null",
 			"name": "%s",
 			"system": false,
 			"type": "base",
-			"updateRule": null,
-			"viewRule": null
-		}`, domain.CollectionLearners, domain.CollectionPracticeTopics, domain.CollectionInstructors, domain.CollectionPracticeItems, domain.CollectionPracticeSessions, domain.CollectionPracticeSessions)
+			"updateRule": "@request.auth.id != null",
+			"viewRule": "@request.auth.id != null"
+		}`, domain.CollectionLearners, domain.CollectionPracticeTopics, domain.CollectionAccounts, domain.CollectionPracticeItems, domain.CollectionPracticeSessions, domain.CollectionPracticeSessions)
 
 		collection := &core.Collection{}
 		if err := json.Unmarshal([]byte(jsonData), &collection); err != nil {

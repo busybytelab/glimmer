@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 100 100" aria-hidden="true" role="img">
+  <defs>
+    <!-- Playful Blue/Cyan Gradient -->
+    <linearGradient id="shape1Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00BFFF"/> <!-- DeepSkyBlue -->
+      <stop offset="100%" stop-color="#87CEFA"/> <!-- LightSkyBlue -->
+    </linearGradient>
+    <!-- Bright Yellow/Lime Gradient -->
+    <linearGradient id="shape2Gradient" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFD700"/> <!-- Gold -->
+      <stop offset="100%" stop-color="#ADFF2F"/> <!-- GreenYellow -->
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded Shape 1 (like a soft square or cloud) -->
+  <path fill="url(#shape1Gradient)" d="M20 10 C0 10, 0 30, 20 30 H80 C100 30, 100 10, 80 10 Z" transform="rotate(-15 50 50) translate(0 15)"/>
+
+  <!-- Rounded Shape 2 (like a soft triangle or drop) -->
+   <path fill="url(#shape2Gradient)" d="M50 45 C20 45, 20 90, 50 90 C80 90, 80 45, 50 45 Z" transform="rotate(25 50 70) translate(0 -5)"/>
+
+   <!-- Small Sparkle/Dot -->
+   <circle cx="75" cy="25" r="5" fill="#FFFFFF" opacity="0.9"/>
+   <circle cx="75" cy="25" r="8" fill="#FFFFFF" opacity="0.5"/>
+
+
+</svg> 
