@@ -80,7 +80,7 @@ jobs:
         path: ui/dist
         retention-days: 1
 
-  build:
+  build-go:
     needs: build-ui
     runs-on: ubuntu-latest
     steps:
@@ -91,6 +91,12 @@ jobs:
       with:
         go-version: '1.24'
         check-latest: true
+    
+    - name: Download UI build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ui-dist
+        path: ui/dist
     
     - name: Build
       run: make build
