@@ -152,12 +152,12 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [],
-			"listRule": null,
+			"listRule": "@request.auth.id = user.id",
 			"name": "%s",
 			"system": false,
 			"type": "base",
-			"updateRule": null,
-			"viewRule": null
+			"updateRule": "@request.auth.id = user.id",
+			"viewRule": "@request.auth.id = user.id"
 		}`, domain.CollectionAccounts, domain.CollectionLearners, domain.CollectionLearners)
 
 		collection := &core.Collection{}

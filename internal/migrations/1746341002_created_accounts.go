@@ -45,6 +45,20 @@ func init() {
 				{
 					"autogeneratePattern": "",
 					"hidden": false,
+					"id": "user_column",
+					"maxSize": 2000,
+					"name": "owner",
+					"pattern": "",
+					"presentable": false,
+					"primaryKey": false,
+					"required": true,
+					"system": false,
+					"type": "relation",
+					"collectionId": "_pb_users_auth_"
+				},
+				{
+					"autogeneratePattern": "",
+					"hidden": false,
 					"id": "ollama_server_url_column",
 					"maxSize": 2000,
 					"name": "ollama_server_url",
@@ -104,12 +118,12 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [],
-			"listRule": null,
+			"listRule": "@request.auth.id = owner.id",
 			"name": "%s",
 			"system": false,
 			"type": "base",
-			"updateRule": null,
-			"viewRule": null
+			"updateRule": "@request.auth.id = owner.id",
+			"viewRule": "@request.auth.id = owner.id"
 		}`, domain.CollectionAccounts, domain.CollectionAccounts)
 
 		collection := &core.Collection{}

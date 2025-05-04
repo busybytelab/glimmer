@@ -5,17 +5,8 @@ import (
 	"io/fs"
 )
 
-//go:embed pb_public
-var publicFS embed.FS
+//go:embed all:ui/dist
+var distDir embed.FS
 
-// PublicFS returns the embedded filesystem with static web files.
-// This function provides the embedded pb_public directory for serving static content.
-func PublicFS() fs.FS {
-	// Extract the embedded subdirectory to use as the root
-	fsys, err := fs.Sub(publicFS, "pb_public")
-	if err != nil {
-		// This should never happen, but handle it just in case
-		panic("failed to extract embedded pb_public directory: " + err.Error())
-	}
-	return fsys
-}
+// DistDirFS contains the embedded dist directory files (without the "dist" prefix)
+var DistDirFS, _ = fs.Sub(distDir, "ui/dist")

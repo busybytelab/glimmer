@@ -12,8 +12,7 @@ import (
 var Version = "dev"
 
 func main() {
-	// Create application with the embedded static files
-	application := app.New(PublicFS())
+	application := app.New(DistDirFS)
 
 	if err := application.Initialize(); err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize glimmer application")

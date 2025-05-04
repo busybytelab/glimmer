@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #2c3e50;
+  --secondary: #3498db;
+  --success: #2ecc71;
+  --danger: #e74c3c;
+  --warning: #f1c40f;
+  --info: #3498db;
+  --light: #ecf0f1;
+  --dark: #2c3e50;
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --border-color: #e2e8f0;
+  --background-color: #f8fafc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #3498db;
+    --secondary: #2c3e50;
+    --success: #27ae60;
+    --danger: #c0392b;
+    --warning: #f39c12;
+    --info: #2980b9;
+    --light: #34495e;
+    --dark: #ecf0f1;
+    --text-primary: #ecf0f1;
+    --text-secondary: #bdc3c7;
+    --border-color: #2d3748;
+    --background-color: #1a202c;
+  }
+}
+
+@layer base {
+  html {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+      Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    color: var(--text-primary);
+    background-color: var(--background-color);
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
+  }
+
+  .btn-primary {
+    @apply btn bg-secondary text-white hover:bg-secondary focus:ring-secondary;
+  }
+
+  .btn-secondary {
+    @apply btn bg-white text-primary border-gray-300 hover:bg-gray-50 focus:ring-secondary;
+  }
+
+  .btn-danger {
+    @apply btn bg-danger text-white hover:bg-danger focus:ring-danger;
+  }
+
+  .input {
+    @apply appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm;
+    background-color: #f3f4f6;
+    color: var(--text-primary);
+  }
+  .input:disabled {
+    @apply opacity-60;
+  }
+  .input.dark {
+    background-color: #374151;
+    color: #f3f4f6;
+    border-color: #4b5563;
+    @apply placeholder-gray-400;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-sm p-6;
+  }
+  .card.dark {
+    background-color: #1f2937;
+    color: #f3f4f6;
+  }
+
+  .form-group {
+    @apply space-y-1;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-200;
+  }
+
+  .form-error {
+    @apply mt-1 text-sm text-danger dark:text-red-300;
+  }
+}
+
+@layer utilities {
+  .text-primary {
+    color: var(--primary);
+  }
+
+
+  .bg-primary {
+    background-color: var(--primary);
+  }
+
+  .bg-secondary {
+    background-color: var(--secondary);
+  }
+
+  .border-primary {
+    border-color: var(--primary);
+  }
+
+  .border-secondary {
+    border-color: var(--secondary);
+  }
+
+  .focus\:ring-primary:focus {
+    --tw-ring-color: var(--primary);
+  }
+
+  .focus\:ring-secondary:focus {
+    --tw-ring-color: var(--secondary);
+  }
+}

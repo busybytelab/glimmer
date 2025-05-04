@@ -12,8 +12,8 @@ import (
 func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
-			"createRule": null,
-			"deleteRule": null,
+			"createRule": "@request.auth.id != null",
+			"deleteRule": "@request.auth.id = instructor.user.id",
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -175,12 +175,10 @@ func init() {
 					"required": false,
 					"system": false,
 					"type": "relation",
-	
-						"collectionId": "pbc_%s",
-						"cascadeDelete": false,
-						"maxSelect": 1,
-						"minSelect": 0
-					
+					"collectionId": "pbc_%s",
+					"cascadeDelete": false,
+					"maxSelect": 1,
+					"minSelect": 0
 				},
 				{
 					"hidden": false,
@@ -205,12 +203,12 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [],
-			"listRule": null,
+			"listRule": "@request.auth.id = instructor.user.id",
 			"name": "%s",
 			"system": false,
 			"type": "base",
-			"updateRule": null,
-			"viewRule": null
+			"updateRule": "@request.auth.id = instructor.user.id",
+			"viewRule": "@request.auth.id = instructor.user.id"
 		}`, domain.CollectionAccounts, domain.CollectionInstructors, domain.CollectionPracticeTopics, domain.CollectionPracticeTopics)
 
 		collection := &core.Collection{}
