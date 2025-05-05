@@ -34,6 +34,15 @@ test: ## Run unit tests (excluding integration tests)
 	@echo "==> Running tests..."
 	@go test -count=1 -v --race --timeout 30s $(shell go list ./... | grep -v /tests/) | { grep "\\(FAIL\\|panic:\\)" || test $$? = 1; }
 
+test-local: ## Run all tests with variables
+	@echo "==> Running tests locally..."
+	@if [ -f .env ]; then \
+	    export `cat .env` && go test -count=1 -v --race --timeout 30s $(shell go list ./... | grep -v /tests/) | { grep "\\(FAIL\\|panic:\\)" || test $$? = 1; } \
+	else \
+		echo "Error: .env file not found"; \
+		exit 1; \
+	fi
+
 dep-upgrade: ## Upgrade dependencies to latest versions
 	@echo "==> Upgrading dependencies..."
 	@go get -v -u ./...
@@ -61,7 +70,7 @@ run: ## Run the application with env vars from .env file if it exists
 	@if [ -f .env ]; then \
 		LISTEN_ADDRESS=$$(grep LISTEN_ADDRESS .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
-		source .env && go run ./... --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
+		export `cat .env` && go run ./... --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
 	else \
 		go run ./... serve; \
 	fi
