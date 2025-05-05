@@ -13,7 +13,7 @@ func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
 			"createRule": null,
-			"deleteRule": null,
+			"deleteRule": "@request.auth.id = owner.id",
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -118,12 +118,12 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [],
-			"listRule": "@request.auth.id = owner.id",
+			"listRule": null,
 			"name": "%s",
 			"system": false,
 			"type": "base",
 			"updateRule": "@request.auth.id = owner.id",
-			"viewRule": "@request.auth.id = owner.id"
+			"viewRule": "@request.auth.id != null"
 		}`, domain.CollectionAccounts, domain.CollectionAccounts)
 
 		collection := &core.Collection{}

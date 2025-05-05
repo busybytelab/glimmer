@@ -2,6 +2,8 @@
 	import { isAuthenticated, error } from '$lib/stores';
 	import pb from '$lib/pocketbase';
 	import { onMount } from 'svelte';
+	import { saveAuthToken } from '$lib/auth';
+	import GlimmerLogo from '../assets/glimmer.svg';
 
 	interface LoginForm {
 		email: string;
@@ -49,10 +51,8 @@
 
 		try {
 			await pb.collection('users').authWithPassword(form.email, form.password);
-			if (form.rememberMe) {
-				// Store auth token in localStorage for persistence
-				localStorage.setItem('authToken', pb.authStore.token);
-			}
+			// Use the centralized auth utility to save the token if rememberMe is checked
+			saveAuthToken(form.rememberMe);
 			isAuthenticated.set(true);
 			// Use reload instead of history manipulation to ensure proper auth state
 			window.location.href = '/dashboard';
@@ -75,7 +75,7 @@
 	<div class="max-w-sm w-full space-y-6 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
 		<div class="text-center">
 			<div class="flex items-center justify-center">
-				<img src="/glimmer.svg" alt="Glimmer Logo" class="h-10 w-10 mr-3" />
+				<img src={GlimmerLogo} alt="Glimmer Logo" class="h-10 w-10 mr-3" />
 				<h1 class="text-2xl font-bold text-primary dark:text-white">Glimmer</h1>
 			</div>
 			<p class="mt-1 text-gray-600 dark:text-gray-300 text-base">Learning Helper for Kids</p>

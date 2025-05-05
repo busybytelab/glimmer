@@ -10,8 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/busybytelab.com/glimmer/internal/handler"
 	"github.com/busybytelab.com/glimmer/internal/llm"
+	llmRoute "github.com/busybytelab.com/glimmer/internal/route/llm"
+	practiceRoute "github.com/busybytelab.com/glimmer/internal/route/practice"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -42,30 +43,13 @@ func New(embedFs fs.FS) *Application {
 	}
 }
 
-// PB returns the PocketBase instance
-func (app *Application) PB() *pocketbase.PocketBase {
-	return app.pb
-}
-
-// LLM returns the LLM service
-func (app *Application) LLM() *llm.Service {
-	return app.llmService
-}
-
 func (app *Application) Initialize() error {
-	log.Info().Msg("Initializing application...")
-
+	log.Debug().Msg("Initializing application...")
 	app.setupMigrations()
-
-	app.setupRoutes()
-
-	app.setupCollectionsAndHooks()
-
-	app.setupGracefulShutdown()
-
-	// Initialize LLM service
 	app.setupLLMService()
-
+	app.setupRoutes()
+	app.setupCollectionsAndHooks()
+	app.setupGracefulShutdown()
 	return nil
 }
 
@@ -79,11 +63,14 @@ func (a *Application) setupMigrations() {
 
 // configures the HTTP routes for the application
 func (app *Application) setupRoutes() {
+	chatRoute := llmRoute.NewChatRoute(app.llmService)
+	practiceRoute := practiceRoute.NewPracticeSessionRoute(app.llmService)
 	app.pb.OnServe().BindFunc(func(e *core.ServeEvent) error {
-		// Add LLM chat API endpoint
-		e.Router.POST("/api/llm/chat", handler.HandleChat(app.llmService))
+		// LLM chat API endpoint for common chat requests
+		e.Router.POST("/api/llm/chat", chatRoute.OnChatRequest).Bind(apis.RequireAuth())
+		e.Router.POST("/api/practice/session", practiceRoute.HandleCreatePracticeSession).Bind(apis.RequireAuth())
 
-		// Serve UI static files
+		// UI static files
 		e.Router.GET("/{path...}", apis.Static(app.embedFs, true))
 
 		// must call e.Next() to continue the serve chain
@@ -93,13 +80,10 @@ func (app *Application) setupRoutes() {
 
 // register PocketBase collections and hooks
 func (app *Application) setupCollectionsAndHooks() {
-	// TODO: register collections and hooks
-	log.Warn().Msg("Collections and hooks pending implementation")
 }
 
 // initialize the LLM service
 func (app *Application) setupLLMService() {
-	// Load LLM configuration
 	llmConfig := llm.LoadConfig()
 
 	// Setup with PocketBase app for cache storage if needed
@@ -147,10 +131,11 @@ func (app *Application) Shutdown() {
 		log.Info().Msg("Shutting down gracefully...")
 
 		// create a context with a timeout for shutdown
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		_ = ctx // Use ctx in actual shutdown operations when needed
+		// Note: PocketBase handles database connections internally
+		// No need to manually close them as it's done by PocketBase's shutdown process
 
 		// close the quit channel to indicate shutdown is complete
 		select {

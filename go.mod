@@ -3,11 +3,13 @@ module github.com/busybytelab.com/glimmer
 go 1.24.2
 
 require (
+	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/ollama/ollama v0.6.8
 	github.com/pocketbase/dbx v1.11.0
 	github.com/pocketbase/pocketbase v0.27.2
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -40,7 +42,6 @@ require (
 	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.65.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.10.0 // indirect

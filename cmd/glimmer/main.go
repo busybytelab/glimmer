@@ -5,6 +5,7 @@ import (
 
 	"github.com/busybytelab.com/glimmer/internal/app"
 	_ "github.com/busybytelab.com/glimmer/internal/migrations" // register migrations
+	"github.com/busybytelab.com/glimmer/ui"
 )
 
 // Version holds the application version.
@@ -12,7 +13,7 @@ import (
 var Version = "dev"
 
 func main() {
-	application := app.New(DistDirFS)
+	application := app.New(ui.DistDirFS)
 
 	if err := application.Initialize(); err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize glimmer application")
