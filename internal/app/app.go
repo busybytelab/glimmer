@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/busybytelab.com/glimmer/internal/handler"
+	"github.com/busybytelab.com/glimmer/internal/llm"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -24,6 +26,7 @@ type Application struct {
 	shutdownOnce sync.Once
 	embedFs      fs.FS
 	config       *Config
+	llmService   *llm.Service
 }
 
 // create a new application instance with the provided filesystem for static files.
@@ -39,6 +42,16 @@ func New(embedFs fs.FS) *Application {
 	}
 }
 
+// PB returns the PocketBase instance
+func (app *Application) PB() *pocketbase.PocketBase {
+	return app.pb
+}
+
+// LLM returns the LLM service
+func (app *Application) LLM() *llm.Service {
+	return app.llmService
+}
+
 func (app *Application) Initialize() error {
 	log.Info().Msg("Initializing application...")
 
@@ -49,6 +62,9 @@ func (app *Application) Initialize() error {
 	app.setupCollectionsAndHooks()
 
 	app.setupGracefulShutdown()
+
+	// Initialize LLM service
+	app.setupLLMService()
 
 	return nil
 }
@@ -64,6 +80,8 @@ func (a *Application) setupMigrations() {
 // configures the HTTP routes for the application
 func (app *Application) setupRoutes() {
 	app.pb.OnServe().BindFunc(func(e *core.ServeEvent) error {
+		// Add LLM chat API endpoint
+		e.Router.POST("/api/llm/chat", handler.HandleChat(app.llmService))
 
 		// Serve UI static files
 		e.Router.GET("/{path...}", apis.Static(app.embedFs, true))
@@ -77,6 +95,17 @@ func (app *Application) setupRoutes() {
 func (app *Application) setupCollectionsAndHooks() {
 	// TODO: register collections and hooks
 	log.Warn().Msg("Collections and hooks pending implementation")
+}
+
+// initialize the LLM service
+func (app *Application) setupLLMService() {
+	// Load LLM configuration
+	llmConfig := llm.LoadConfig()
+
+	// Setup with PocketBase app for cache storage if needed
+	app.llmService = llm.AppService(llmConfig, app.pb)
+
+	log.Info().Msg("LLM service initialized")
 }
 
 // configure signal handling for graceful shutdown
@@ -121,7 +150,6 @@ func (app *Application) Shutdown() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		// any cleanup operations can go here
 		_ = ctx // Use ctx in actual shutdown operations when needed
 
 		// close the quit channel to indicate shutdown is complete

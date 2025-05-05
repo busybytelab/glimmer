@@ -13,7 +13,7 @@ func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
 			"createRule": "@request.auth.id != null",
-			"deleteRule": "@request.auth.id = instructor.user.id",
+			"deleteRule": "@request.auth.account.id = account.id",
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -157,7 +157,7 @@ func init() {
 					"type": "relation",
 					"collectionId": "pbc_%s",
 					"cascadeDelete": false,
-					"maxSelect": null,
+					"maxSelect": 1,
 					"minSelect": 1
 				},
 				{
