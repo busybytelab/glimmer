@@ -1,0 +1,203 @@
+# Default test password hash for test users (password: "password123")
+
+description: "Glimmer Test Seed Data - v1"
+db: "pb_data/data.db"
+collections:
+  - name: "users"
+    select: "SELECT COUNT(*) FROM users WHERE id = ?"
+    insert: "INSERT INTO users (id, email, name, password, verified, emailVisibility, avatar, tokenKey, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    items:
+      - id: "u1"
+        email: "u1@home.local"
+        name: "User 1"
+        password: "$2a$10$UiEpp7dQEwBOXiF.0fbiDe9bxJunArer9B7VhEJk7WvG9g3iaifQe|mX1BMz3d4Bi40w9s7tImE1zvQ314591c3f53bdQR0KwoM888u8"
+        verified: true
+        emailVisibility: false
+        avatar: ""
+        tokenKey: "testTokenKey123456789012345678901234567890"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+      - id: "u2"
+        email: "u2@home.local"
+        name: "User 2"
+        password: "$2a$10$UiEpp7dQEwBOXiF.0fbiDe9bxJunArer9B7VhEJk7WvG9g3iaifQe|mX1BMz3d4Bi40w9s7tImE1zvQ314591c3f53bdQR0KwoM888u8"
+        verified: true
+        emailVisibility: false
+        avatar: ""
+        tokenKey: "adminTokenKey12345678901234567890123456789"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  - name: "accounts"
+    select: "SELECT COUNT(*) FROM accounts WHERE id = ?"
+    insert: "INSERT INTO accounts (id, name, owner, ollama_server_url, default_llm_model, default_language, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    items:
+      - id: "a1"
+        name: "Account 1"
+        owner: "__ref::users::u1"
+        ollama_server_url: "http://localhost:11434"
+        default_llm_model: "gemma3:1b"
+        default_language: "en"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  - name: "instructors"
+    select: "SELECT COUNT(*) FROM instructors WHERE id = ?"
+    insert: "INSERT INTO instructors (id, nickname, account, user, created, updated) VALUES (?, ?, ?, ?, ?, ?)"
+    items:
+      - id: "i1"
+        nickname: "Teacher"
+        account: "__ref::accounts::a1"
+        user: "__ref::users::u1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  - name: "learners"
+    select: "SELECT COUNT(*) FROM learners WHERE id = ?"
+    insert: "INSERT INTO learners (id, nickname, age, grade_level, learning_preferences, avatar, account, user, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    items:
+      - id: "l1"
+        nickname: "Student1"
+        age: 10
+        grade_level: "5th"
+        learning_preferences: "[\"Visual\"]"
+        avatar: "default_avatar.png"
+        account: "__ref::accounts::a1"
+        user: "__ref::users::u2"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  - name: "practice_topics"
+    select: "SELECT COUNT(*) FROM practice_topics WHERE id = ?"
+    insert: "INSERT INTO practice_topics (id, name, description, subject, system_prompt, base_prompt, learning_goals, target_age_range, target_grade_level, tags, account, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    items:
+      - id: "pt1"
+        name: "Basic Math"
+        description: "Learn basic math operations"
+        subject: "Mathematics"
+        system_prompt: "You are a helpful math tutor"
+        base_prompt: "Explain this math problem in simple terms"
+        learning_goals: "Understand basic arithmetic"
+        target_age_range: "7-10"
+        target_grade_level: "3-5"
+        tags: "[\"weekly\"]"
+        account: "__ref::accounts::a1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  - name: "practice_items"
+    select: "SELECT COUNT(*) FROM practice_items WHERE id = ?"
+    insert: "INSERT INTO practice_items (id, question_text, question_type, correct_answer, options, explanation, explanation_for_incorrect, hints, difficulty_level, tags, status, practice_topic, account, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    items:
+      - id: "pi1"
+        question_text: "What is 2 + 2?"
+        question_type: "multiple_choice"
+        correct_answer: "\"4\""
+        options: "[\"2\", \"3\", \"4\", \"5\"]"
+        explanation: "Adding 2 and 2 equals 4"
+        explanation_for_incorrect: "{}"
+        hints: "[]"
+        difficulty_level: "easy"
+        tags: "[]"
+        status: "published"
+        practice_topic: "__ref::practice_topics::pt1"
+        instructor: "__ref::instructors::i1"
+        account: "__ref::accounts::a1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+      - id: "pi2"
+        question_text: "What is 15 * 3?"
+        question_type: "multiple_choice"
+        correct_answer: "\"45\""
+        options: "[\"40\", \"12\", \"45\", \"18\"]"
+        explanation: "Multiplying 15 by 3 equals 45"
+        explanation_for_incorrect: "{}"
+        hints: "[]"
+        difficulty_level: "medium"
+        tags: "[]"
+        status: "published"
+        practice_topic: "__ref::practice_topics::pt1"
+        instructor: "__ref::instructors::i1"
+        account: "__ref::accounts::a1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  - name: "practice_sessions"
+    select: "SELECT COUNT(*) FROM practice_sessions WHERE id = ?"
+    insert: "INSERT INTO practice_sessions (id, name, assigned_at, completed_at, status, generation_prompt, practice_topic, practice_items, learner, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    items:
+      - id: "ps1"
+        name: "Math Practice Session"
+        assigned_at: __::currentTimestamp::__
+        completed_at: __::currentTimestamp::__
+        status: "completed"
+        generation_prompt: "Generate basic math problems"
+        practice_topic: "__ref::practice_topics::pt1"
+        practice_items: "[\"pi1\", \"pi2\"]" 
+        learner: "__ref::learners::l1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  - name: "practice_results"
+    select: "SELECT COUNT(*) FROM practice_results WHERE id = ?"
+    insert: "INSERT INTO practice_results (id, answer, attempt_number, evaluation_details, feedback, hint_level_reached, is_correct, score, started_at, submitted_at, learner, practice_item, practice_session, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    items:
+      - id: "pr1"
+        answer: "\"4\""
+        attempt_number: 1
+        evaluation_details: "{\"method\": \"exact_match\"}"
+        feedback: "Great job!"
+        hint_level_reached: 0
+        is_correct: true
+        score: 100
+        started_at: __::currentTimestamp::__
+        submitted_at: __::currentTimestamp::__
+        learner: "__ref::learners::l1"
+        practice_item: "__ref::practice_items::pi1"
+        practice_session: "__ref::practice_sessions::ps1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+      - id: "pr2"
+        answer: "\"12\""
+        attempt_number: 1
+        evaluation_details: "{\"method\": \"exact_match\"}"
+        feedback: "Keep trying!"
+        hint_level_reached: 1
+        is_correct: false
+        score: 0
+        started_at: __::currentTimestamp::__
+        submitted_at: __::currentTimestamp::__
+        learner: "__ref::learners::l1"
+        practice_item: "__ref::practice_items::pi2"
+        practice_session: "__ref::practice_sessions::ps1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  - name: "achievement_definitions"
+    select: "SELECT COUNT(*) FROM achievement_definitions WHERE id = ?"
+    insert: "INSERT INTO achievement_definitions (id, name, description, icon, points, trigger_condition, account, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    items:
+      - id: "ad1"
+        name: "First Perfect Score"
+        description: "Achieved a perfect score on a practice session"
+        icon: "star"
+        points: 100
+        trigger_condition: "score = 100"
+        account: "__ref::accounts::a1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  - name: "earned_achievements"
+    select: "SELECT COUNT(*) FROM earned_achievements WHERE id = ?"
+    insert: "INSERT INTO earned_achievements (id, earned_at, achievement_definition, learner, account, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    items:
+      - id: "ea1"
+        earned_at: __::currentTimestamp::__
+        achievement_definition: "__ref::achievement_definitions::ad1"
+        learner: "__ref::learners::l1"
+        account: "__ref::accounts::a1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__ 

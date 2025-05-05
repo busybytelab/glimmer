@@ -34,15 +34,18 @@ export interface PracticeTopic extends BaseSystemFields {
 }
 
 export interface PracticeSession extends BaseSystemFields {
+    name?: string;
     learner: string;
-    topic: string;
-    account: string;
+    practice_topic: string;
+    instructor?: string;
+    practice_items: any[];
     status: 'InProgress' | 'Completed' | 'Abandoned';
+    assigned_at: string;
+    completed_at?: string;
+    generation_prompt?: string;
     score?: number;
     total_questions?: number;
     correct_answers?: number;
-    start_time: string;
-    end_time?: string;
     feedback?: string;
 }
 

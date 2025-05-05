@@ -20,7 +20,7 @@ LDFLAGS := -ldflags="-s -w -X $(PKG).Version=$(VERSION)" # Use PKG directly
 # like Raspberry Pi 3 and earlier. We can add it later if needed for legacy support.
 # Note: Apple Silicon (M1/M2/M3/M4) uses arm64 architecture, so it's covered by linux/arm64.
 
-.PHONY: all format test dep-upgrade build build-all clean help run dev-create-superuser docker-build docker-push docker-clean docker-multi-arch
+.PHONY: all format test dep-upgrade build build-all clean help run dev-create-superuser docker-build docker-push docker-clean docker-multi-arch seed-db
 
 all: format test build ## Run format, test, and build for current platform
 
@@ -55,7 +55,7 @@ build: ## Build the application for the current platform
 build-os: ## Build the application for the specific platform
 	@echo "==> Building $(SERVICE_NAME) version $(VERSION) for $(OS) $(ARCH)..."
 	@mkdir -p $(BUILD_DIR)
-	@GOOS=$$OS GOARCH=$$ARCH go build $(LDFLAGS) -o $(BUILD_DIR)/$(SERVICE_NAME)-$(OS)-$(ARCH)
+	@GOOS=$$OS GOARCH=$$ARCH go build $(LDFLAGS) -o $(BUILD_DIR)/$(SERVICE_NAME)-$(OS)-$(ARCH) cmd/glimmer/main.go
 
 build-all: ## Build the application for Linux and macOS (amd64, arm64)
 	@echo "==> Building $(SERVICE_NAME) version $(VERSION) for all target platforms..."
@@ -70,9 +70,9 @@ run: ## Run the application with env vars from .env file if it exists
 	@if [ -f .env ]; then \
 		LISTEN_ADDRESS=$$(grep LISTEN_ADDRESS .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
-		export `cat .env` && go run ./... --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
+		export `cat .env` && go run cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
 	else \
-		go run ./... serve; \
+		go run cmd/glimmer/main.go serve; \
 	fi
 
 # run go run main.go superuser -h for other sub commands
@@ -83,7 +83,7 @@ create-superuser:  ## Create a superuser for dev environment with values from .e
 		PASSWORD=$$(grep PASSWORD .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
 		echo "Creating superuser with email $$EMAIL"; \
-		source .env && go run ./... --encryptionEnv=$$ENCRYPTION_KEY superuser create "$$EMAIL" "$$PASSWORD"; \
+		source .env && go run cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY superuser create "$$EMAIL" "$$PASSWORD"; \
 	else \
 		echo "Error: .env file not found"; \
 		exit 1; \
@@ -122,3 +122,7 @@ clean: ## Clean build artifacts and test cache
 
 help: ## Display this help screen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {help_text[$$1] = $$2} END {for (cmd in help_text) {printf "\033[36m%-20s\033[0m %s\n", cmd, help_text[cmd]}}'
+
+seed-db: ## Seed the database with test data
+	@echo "==> Seeding database with test data using YAML configuration..."
+	@go run cmd/seed/main.go
