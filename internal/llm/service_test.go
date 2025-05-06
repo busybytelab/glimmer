@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// TestLLMServiceWithOllama tests the LLM service using Ollama platform with memory caching
-func TestLLMServiceWithOllama(t *testing.T) {
+// TestLLMServiceWithRealOllama tests the LLM service using Ollama platform with memory caching
+func TestLLMServiceWithRealOllama(t *testing.T) {
 	// Skip tests if OLLAMA_URL is not set
 	ollamaURL := os.Getenv("OLLAMA_URL")
 	if ollamaURL == "" {
@@ -102,6 +102,13 @@ func TestLLMServiceWithOllama(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, secondUsage.CacheHit)
 	})
+
+	// Test models
+	info := service.Info()
+	assert.NotNil(t, info)
+	assert.Equal(t, 1, len(info.Platforms))
+	assert.Equal(t, OllamaPlatform, info.Platforms[0].Name)
+	assert.Greater(t, len(info.Platforms[0].Models), 0)
 }
 
 func TestLLMServiceWithMockOllama(t *testing.T) {
@@ -136,15 +143,15 @@ func TestLLMServiceWithMockOllama(t *testing.T) {
 	}
 
 	// Create service
-	service := MemoryCacheService(config)
+	s := MemoryCacheService(config)
 
 	// Cast the platform to ollamaPlatform to set the mock client
-	cachedPlatform := service.platform.(*cachedPlatform)
+	cachedPlatform := s.(*service).platform.(*cachedPlatform)
 	ollamaPlatform := cachedPlatform.delegate.(*ollamaPlatform)
 	ollamaPlatform.client = mockClient
 
 	// Test Chat
-	response, usage, err := service.Chat("Hello", "You are a helpful assistant")
+	response, usage, err := s.Chat("Hello", "You are a helpful assistant")
 
 	assert.NoError(t, err)
 	assert.Equal(t, "This is a mock response", response)

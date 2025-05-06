@@ -20,7 +20,7 @@ type (
 	}
 
 	sessionRoute struct {
-		llmService *llm.Service
+		llmService llm.Service
 	}
 
 	// CreatePracticeSessionRequest defines the request body
@@ -47,7 +47,7 @@ type (
 	}
 )
 
-func NewPracticeSessionRoute(llmService *llm.Service) SessionRoute {
+func NewPracticeSessionRoute(llmService llm.Service) SessionRoute {
 	return &sessionRoute{
 		llmService: llmService,
 	}
@@ -97,7 +97,14 @@ func (r *sessionRoute) HandleCreatePracticeSession(e *core.RequestEvent) error {
 		Str("topic", topic.GetString("name")).
 		Msg("Generating practice items using LLM")
 
-	llmResponse, _, err := r.llmService.Chat(generationPrompt, systemPrompt)
+	// Get the LLM model from the practice topic, if not set, the service will use default
+	llmModel := topic.GetString("llm_model")
+	var chatOptions []llm.ChatOption
+	if llmModel != "" {
+		chatOptions = append(chatOptions, llm.WithModel(llmModel))
+	}
+
+	llmResponse, _, err := r.llmService.Chat(generationPrompt, systemPrompt, chatOptions...)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate practice items using LLM")
 		return e.InternalServerError("Failed to generate practice items", err)

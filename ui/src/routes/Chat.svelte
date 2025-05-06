@@ -1,7 +1,9 @@
 <script lang="ts">
 	import AppLayout from '../components/layout/AppLayout.svelte';
 	import { error as errorStore } from '$lib/stores';
-	import { getAuthToken } from '$lib/auth';
+	import { llmService } from '$lib/services/llm';
+	import type { Usage } from '$lib/services/llm';
+	import SelectField from '../components/common/SelectField.svelte';
 	
 	type Message = {
 		role: 'user' | 'assistant';
@@ -10,15 +12,6 @@
 		usage?: Usage;
 	};
 	
-	type Usage = {
-		llmModelName?: string;
-		cacheHit?: boolean;
-		cost?: number;
-		promptTokens: number;
-		completionTokens: number;
-		totalTokens: number;
-	};
-
 	let sidebarOpen = true;
 	let message = '';
 	let messages: Message[] = [];
@@ -29,11 +22,51 @@
 	let totalPromptTokens = 0;
 	let totalCompletionTokens = 0;
 	let totalCost = 0;
+	let isLoadingModels = false;
+	let modelError: string | null = null;
 	
-	// Available models - can be expanded later
-	const availableModels = [
-		{ id: "", name: "Default" },
-	];
+	// Available models - will be populated from backend
+	let availableModels: { id: string; name: string; isDefault?: boolean }[] = [];
+	
+	// Fetch available models from backend
+	async function fetchModels() {
+		isLoadingModels = true;
+		modelError = null;
+		
+		try {
+			const data = await llmService.getInfo();
+			
+			// Transform the models data into the format we need
+			availableModels = data.platforms.flatMap(platform => 
+				platform.models.map(model => ({
+					id: model.name,
+					name: `${model.name}${model.isDefault ? ' (Default)' : ''}`,
+					isDefault: model.isDefault
+				}))
+			);
+			
+			// If no models were found, add a default option
+			if (availableModels.length === 0) {
+				availableModels = [{ id: "", name: "Default" }];
+			}
+			
+			// Select the default model if available
+			const defaultModel = availableModels.find(m => m.isDefault);
+			if (defaultModel) {
+				selectedModel = defaultModel.id;
+			}
+		} catch (err) {
+			console.error('Error fetching models:', err);
+			modelError = err instanceof Error ? err.message : 'Failed to fetch models';
+			// Fallback to default model
+			availableModels = [{ id: "", name: "Default" }];
+		} finally {
+			isLoadingModels = false;
+		}
+	}
+	
+	// Fetch models when component mounts
+	fetchModels();
 	
 	// Calculate the total tokens and cost used in the conversation
 	$: {
@@ -44,10 +77,10 @@
 		
 		messages.forEach(msg => {
 			if (msg.usage) {
-				prompt += msg.usage.promptTokens || 0;
-				completion += msg.usage.completionTokens || 0;
-				total += msg.usage.totalTokens || 0;
-				cost += msg.usage.cost || 0;
+				prompt += msg.usage.PromptTokens || 0;
+				completion += msg.usage.CompletionTokens || 0;
+				total += msg.usage.TotalTokens || 0;
+				cost += msg.usage.Cost || 0;
 			}
 		});
 		
@@ -80,51 +113,15 @@
 			// Prepare chat history by concatenating all previous messages
 			const chatHistory = messages.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n\n');
 			
-			const requestBody: Record<string, string> = {
-				prompt: chatHistory,
-				systemPrompt: systemPrompt
-			};
-			
-			// Only add model if a specific one is selected
-			if (selectedModel) {
-				requestBody.model = selectedModel;
-			}
-			
-			// Get auth token using the centralized auth utility
-			const authToken = getAuthToken();
-			
-			if (!authToken) {
-				throw new Error('Please log in again.');
-			}
-			
-			const response = await fetch('/api/llm/chat', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${authToken}`
-				},
-				body: JSON.stringify(requestBody)
-			});
-			
-			if (!response.ok) {
-				throw new Error(`Error: ${response.status} ${response.statusText}`);
-			}
-			
-			const data = await response.json();
+			// Send chat request using the LLM service
+			const data = await llmService.chat(chatHistory, systemPrompt, selectedModel || undefined);
 			
 			// Add assistant response to chat
 			const assistantMessage: Message = {
 				role: 'assistant',
 				content: data.response,
 				timestamp: new Date(),
-				usage: data.usage ? {
-					llmModelName: data.usage.LlmModelName,
-					cacheHit: data.usage.CacheHit,
-					cost: data.usage.Cost || 0,
-					promptTokens: data.usage.PromptTokens || 0,
-					completionTokens: data.usage.CompletionTokens || 0,
-					totalTokens: data.usage.TotalTokens || 0
-				} : undefined
+				usage: data.usage
 			};
 			messages = [...messages, assistantMessage];
 			
@@ -158,18 +155,24 @@
 			<h1 class="text-2xl font-semibold text-gray-900">Chat with LLM</h1>
 			
 			<div class="flex items-center">
-				<label for="modelSelect" class="block text-sm font-medium text-gray-700 mr-2">
-					Model:
-				</label>
-				<select
+				<SelectField
 					id="modelSelect"
+					label="Model"
 					bind:value={selectedModel}
-					class="block min-w-[160px] pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm rounded-md bg-white shadow-sm"
+					disabled={isLoadingModels}
+					cols=""
+					inline={true}
 				>
-					{#each availableModels as model}
-						<option value={model.id}>{model.name}</option>
-					{/each}
-				</select>
+					{#if isLoadingModels}
+						<option value="">Loading models...</option>
+					{:else if modelError}
+						<option value="">Error loading models</option>
+					{:else}
+						{#each availableModels as model}
+							<option value={model.id}>{model.name}</option>
+						{/each}
+					{/if}
+				</SelectField>
 			</div>
 		</div>
 		
@@ -195,8 +198,8 @@
 									</span>
 									{#if msg.role === 'assistant' && msg.usage}
 										<span class="text-xs text-gray-400 ml-2 tooltip" 
-										      title="Model: {msg.usage.llmModelName || 'Default'}&#10;Cache hit: {msg.usage.cacheHit ? 'Yes' : 'No'}&#10;Prompt: {msg.usage.promptTokens} tokens&#10;Completion: {msg.usage.completionTokens} tokens&#10;Cost: ${(msg.usage.cost || 0).toFixed(6)}">
-											({msg.usage.totalTokens} tokens)
+										      title="Model: {msg.usage.LlmModelName || 'Default'}&#10;Cache hit: {msg.usage.CacheHit ? 'Yes' : 'No'}&#10;Prompt: {msg.usage.PromptTokens} tokens&#10;Completion: {msg.usage.CompletionTokens} tokens&#10;Cost: ${(msg.usage.Cost || 0).toFixed(6)}">
+											({msg.usage.TotalTokens} tokens)
 										</span>
 									{/if}
 								</div>

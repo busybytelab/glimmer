@@ -7,6 +7,8 @@
 	import FormButton from '../common/FormButton.svelte';
 	import FormSection from '../common/FormSection.svelte';
 	import ErrorAlert from '../common/ErrorAlert.svelte';
+	import SelectField from '../common/SelectField.svelte';
+	import { llmService } from '$lib/services/llm';
 
 	export let topic: PracticeTopic | null = null;
 
@@ -28,8 +30,8 @@
 		tags: string[];
 		instructor?: string;
 		account?: string;
+		llm_model?: string;
 	};
-
 
 	let formData: FormData = topic ? {
 		name: topic.name,
@@ -40,7 +42,8 @@
 		learning_goals: Array.isArray(topic.learning_goals) ? topic.learning_goals : [],
 		base_prompt: topic.base_prompt || '',
 		system_prompt: topic.system_prompt || '',
-		tags: Array.isArray(topic.tags) ? topic.tags : []
+		tags: Array.isArray(topic.tags) ? topic.tags : [],
+		llm_model: topic.llm_model || ''
 	} : {
 		name: '',
 		subject: '',
@@ -50,7 +53,8 @@
 		learning_goals: [],
 		base_prompt: '',
 		system_prompt: '',
-		tags: []
+		tags: [],
+		llm_model: ''
 	};
 
 	let loading = false;
@@ -58,7 +62,51 @@
 	let learningGoalsText = formData.learning_goals.join('\n');
 	let tagsText = formData.tags.join(', ');
 	let formSubmitted = false;
+	let isLoadingModels = false;
+	let modelError: string | null = null;
+	let availableModels: { id: string; name: string; isDefault?: boolean }[] = [];
 
+	// Fetch available models from backend
+	async function fetchModels() {
+		isLoadingModels = true;
+		modelError = null;
+		
+		try {
+			const data = await llmService.getInfo();
+			
+			// Transform the models data into the format we need
+			availableModels = data.platforms.flatMap(platform => 
+				platform.models.map(model => ({
+					id: model.name,
+					name: `${model.name}${model.isDefault ? ' (Default)' : ''}`,
+					isDefault: model.isDefault
+				}))
+			);
+			
+			// If no models were found, add a default option
+			if (availableModels.length === 0) {
+				availableModels = [{ id: "", name: "Default" }];
+			}
+			
+			// Select the default model if available and no model is selected
+			if (!formData.llm_model) {
+				const defaultModel = availableModels.find(m => m.isDefault);
+				if (defaultModel) {
+					formData.llm_model = defaultModel.id;
+				}
+			}
+		} catch (err) {
+			console.error('Error fetching models:', err);
+			modelError = err instanceof Error ? err.message : 'Failed to fetch models';
+			// Fallback to default model
+			availableModels = [{ id: "", name: "Default" }];
+		} finally {
+			isLoadingModels = false;
+		}
+	}
+
+	// Fetch models when component mounts
+	fetchModels();
 
 	$: {
 		formData.learning_goals = learningGoalsText.split('\n').map(goal => goal.trim()).filter(Boolean);
@@ -278,6 +326,24 @@
 					cols="col-span-6"
 					placeholder="Enter a system prompt for the AI assistant"
 				/>
+
+				<SelectField 
+					id="llm_model"
+					label="LLM Model"
+					bind:value={formData.llm_model}
+					disabled={loading || isLoadingModels}
+					cols="col-span-6 sm:col-span-3"
+				>
+					{#if isLoadingModels}
+						<option value="">Loading models...</option>
+					{:else if modelError}
+						<option value="">Error loading models</option>
+					{:else}
+						{#each availableModels as model}
+							<option value={model.id}>{model.name}</option>
+						{/each}
+					{/if}
+				</SelectField>
 
 				<FormField 
 					id="tags"

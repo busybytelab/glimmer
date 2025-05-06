@@ -10,36 +10,44 @@ import (
 type (
 	PlatformType string
 
+	// ModelInfo represents information about a specific LLM model
+	ModelInfo struct {
+		Name      string `json:"name"`
+		SizeHuman string `json:"sizeHuman"`
+		IsDefault bool   `json:"isDefault"`
+	}
+
 	Usage struct {
-		LlmModelName     string
-		CacheHit         bool
-		Cost             float64
-		PromptTokens     int
-		CompletionTokens int
-		TotalTokens      int
+		LlmModelName     string  `json:"llmModelName"`
+		CacheHit         bool    `json:"cacheHit"`
+		Cost             float64 `json:"cost"`
+		PromptTokens     int     `json:"promptTokens"`
+		CompletionTokens int     `json:"completionTokens"`
+		TotalTokens      int     `json:"totalTokens"`
 	}
 
 	DescribeImageResult struct {
-		Description string
-		Usage       *Usage
+		Description string `json:"description"`
+		Usage       *Usage `json:"usage"`
 	}
 
 	Platform interface {
 		Type() PlatformType
 		Chat(params *ChatParameters) (*ChatResponse, error)
 		DescribeImage(params *DescribeImageParameters) (*DescribeImageResponse, error)
+		Models() ([]*ModelInfo, error)
 	}
 
 	CacheParameters struct {
-		IgnoreCache  bool
+		IgnoreCache  bool `json:"ignoreCache"`
 		DisableCache bool
 	}
 
 	ChatParameters struct {
-		Prompt       string
-		SystemPrompt string
-		Model        string
-		Cache        *CacheParameters
+		Prompt       string           `json:"prompt"`
+		SystemPrompt string           `json:"systemPrompt"`
+		Model        string           `json:"model"`
+		Cache        *CacheParameters `json:"cache"`
 	}
 
 	ChatResponse struct {
