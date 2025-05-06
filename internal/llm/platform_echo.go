@@ -19,7 +19,10 @@ func (e *echoPlatform) Type() PlatformType {
 	return EchoPlatform
 }
 
-// Chat simply echoes the prompt back with some metadata
+func (e *echoPlatform) Models() ([]*ModelInfo, error) {
+	return nil, nil
+}
+
 func (e *echoPlatform) Chat(params *ChatParameters) (*ChatResponse, error) {
 	if params.Prompt == "" {
 		return nil, ErrPromptEmpty

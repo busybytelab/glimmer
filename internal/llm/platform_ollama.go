@@ -15,8 +15,8 @@ type ollamaPlatform struct {
 }
 
 const (
-	ollamaTimeout      = 5 * time.Minute
-	defaultOllamaModel = "llama3.2:1b"
+	defaultOllamaTimeout = 30 * time.Minute
+	defaultOllamaModel   = "llama3.2:1b"
 )
 
 func newOllamaPlatform(cfg OllamaConfig) Platform {
@@ -30,7 +30,7 @@ func newOllamaPlatform(cfg OllamaConfig) Platform {
 		Msg("Creating new Ollama platform")
 
 	// Create the Ollama client
-	client, err := NewOllamaClient(cfg.URL, ollamaTimeout)
+	client, err := NewOllamaClient(cfg.URL, defaultOllamaTimeout)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create Ollama client, will attempt to create on first use")
 	}
@@ -46,6 +46,21 @@ func (o *ollamaPlatform) Type() PlatformType {
 	return OllamaPlatform
 }
 
+func (o *ollamaPlatform) Models() ([]*ModelInfo, error) {
+	models, err := o.client.ListModels()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list Ollama models: %w", err)
+	}
+	// find the model with name matching in the config and set its IsDefault to true
+	for _, model := range models {
+		if model.Name == o.cfg.Model {
+			model.IsDefault = true
+		}
+	}
+
+	return models, nil
+}
+
 // getClient gets the client, creating it if necessary
 func (o *ollamaPlatform) getClient() (OllamaClient, error) {
 	if o.client != nil {
@@ -53,7 +68,7 @@ func (o *ollamaPlatform) getClient() (OllamaClient, error) {
 	}
 
 	// Try to create the client
-	client, err := NewOllamaClient(o.cfg.URL, ollamaTimeout)
+	client, err := NewOllamaClient(o.cfg.URL, defaultOllamaTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Ollama client: %w", err)
 	}
@@ -88,7 +103,7 @@ func (o *ollamaPlatform) Chat(params *ChatParameters) (*ChatResponse, error) {
 				Err(err).
 				Msg("Primary Ollama URL failed, attempting fallback")
 
-			fallbackClient, fallbackErr := NewOllamaClient(o.cfg.FallbackURL, ollamaTimeout)
+			fallbackClient, fallbackErr := NewOllamaClient(o.cfg.FallbackURL, defaultOllamaTimeout)
 			if fallbackErr != nil {
 				return nil, fmt.Errorf("failed to create fallback client: %w", fallbackErr)
 			}
@@ -125,7 +140,7 @@ func (o *ollamaPlatform) Chat(params *ChatParameters) (*ChatResponse, error) {
 	stream := false
 
 	// Create context
-	ctx, cancel := context.WithTimeout(context.Background(), ollamaTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultOllamaTimeout)
 	defer cancel()
 
 	log.Debug().
@@ -145,7 +160,7 @@ func (o *ollamaPlatform) Chat(params *ChatParameters) (*ChatResponse, error) {
 				Err(err).
 				Msg("Primary Ollama URL failed, attempting fallback")
 
-			fallbackClient, fallbackErr := NewOllamaClient(o.cfg.FallbackURL, ollamaTimeout)
+			fallbackClient, fallbackErr := NewOllamaClient(o.cfg.FallbackURL, defaultOllamaTimeout)
 			if fallbackErr != nil {
 				return nil, fmt.Errorf("failed to create fallback client: %w", fallbackErr)
 			}

@@ -32,6 +32,10 @@ func (c *cachedPlatform) Type() PlatformType {
 	return c.delegate.Type()
 }
 
+func (c *cachedPlatform) Models() ([]*ModelInfo, error) {
+	return c.delegate.Models()
+}
+
 // Chat implements the Platform interface with caching
 func (c *cachedPlatform) Chat(params *ChatParameters) (*ChatResponse, error) {
 	// Generate cache key from parameters

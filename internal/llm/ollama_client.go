@@ -11,12 +11,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const defaultOllamaTimeout = 2 * time.Minute
-
 // OllamaClient defines the interface for interacting with the Ollama API
 type OllamaClient interface {
 	// ChatWithModel sends a chat request to the Ollama API
 	ChatWithModel(ctx context.Context, modelName string, messages []api.Message, stream bool, options map[string]interface{}) (*api.ChatResponse, error)
+	// ListModels lists all models available on the Ollama server
+	ListModels() ([]*ModelInfo, error)
 }
 
 // DefaultOllamaClient is the default implementation of OllamaClient
@@ -47,7 +47,7 @@ func (c *DefaultOllamaClient) createAPIClient() *api.Client {
 	transport := &http.Transport{
 		DisableKeepAlives: false,
 		MaxIdleConns:      100,
-		IdleConnTimeout:   90 * time.Second,
+		IdleConnTimeout:   defaultOllamaTimeout + 20*time.Second,
 	}
 
 	return api.NewClient(c.baseURL, &http.Client{
@@ -97,4 +97,52 @@ func (c *DefaultOllamaClient) ChatWithModel(ctx context.Context, modelName strin
 		Msg("Received chat response from Ollama")
 
 	return finalResponse, nil
+}
+
+// ListModels lists all models available on the Ollama server
+func (c *DefaultOllamaClient) ListModels() ([]*ModelInfo, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	apiClient := c.createAPIClient()
+	models, err := apiClient.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list models: %w", err)
+	}
+
+	// Convert the API models to our ModelInfo format
+	result := make([]*ModelInfo, 0, len(models.Models))
+	for _, model := range models.Models {
+		modelInfo := &ModelInfo{
+			Name:      model.Name,
+			SizeHuman: formatSize(model.Size),
+			IsDefault: model.Name == defaultOllamaModel,
+		}
+		result = append(result, modelInfo)
+	}
+
+	return result, nil
+}
+
+// formatSize formats the size in bytes to a human-readable format
+func formatSize(sizeInBytes int64) string {
+	const (
+		_          = iota
+		KB float64 = 1 << (10 * iota)
+		MB
+		GB
+	)
+
+	size := float64(sizeInBytes)
+
+	switch {
+	case size >= GB:
+		return fmt.Sprintf("%.1f GB", size/GB)
+	case size >= MB:
+		return fmt.Sprintf("%.1f MB", size/MB)
+	case size >= KB:
+		return fmt.Sprintf("%.1f KB", size/KB)
+	default:
+		return fmt.Sprintf("%d B", sizeInBytes)
+	}
 }

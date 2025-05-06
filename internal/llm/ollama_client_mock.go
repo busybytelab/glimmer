@@ -27,3 +27,8 @@ func (m *MockOllamaClient) ChatWithModel(ctx context.Context, modelName string, 
 
 	return args.Get(0).(*api.ChatResponse), args.Error(1)
 }
+
+func (m *MockOllamaClient) ListModels() ([]*ModelInfo, error) {
+	args := m.Called()
+	return args.Get(0).([]*ModelInfo), args.Error(1)
+}

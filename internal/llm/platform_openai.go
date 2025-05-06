@@ -77,6 +77,10 @@ func (o *openAIPlatform) Type() PlatformType {
 	return OpenAIPlatform
 }
 
+func (o *openAIPlatform) Models() ([]*ModelInfo, error) {
+	return nil, nil
+}
+
 // Chat sends a chat request to OpenAI
 func (o *openAIPlatform) Chat(params *ChatParameters) (*ChatResponse, error) {
 	if params.Prompt == "" {

@@ -156,7 +156,7 @@ func init() {
 					"system": false,
 					"type": "relation",
 					"collectionId": "pbc_%s",
-					"cascadeDelete": false,
+					"cascadeDelete": true,
 					"maxSelect": 1,
 					"minSelect": 1
 				},

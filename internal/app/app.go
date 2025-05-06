@@ -27,7 +27,7 @@ type Application struct {
 	shutdownOnce sync.Once
 	embedFs      fs.FS
 	config       *Config
-	llmService   *llm.Service
+	llmService   llm.Service
 }
 
 // create a new application instance with the provided filesystem for static files.
@@ -63,11 +63,12 @@ func (a *Application) setupMigrations() {
 
 // configures the HTTP routes for the application
 func (app *Application) setupRoutes() {
-	chatRoute := llmRoute.NewChatRoute(app.llmService)
+	llmRoutes := llmRoute.New(app.llmService)
 	practiceRoute := practiceRoute.NewPracticeSessionRoute(app.llmService)
 	app.pb.OnServe().BindFunc(func(e *core.ServeEvent) error {
 		// LLM chat API endpoint for common chat requests
-		e.Router.POST("/api/llm/chat", chatRoute.OnChatRequest).Bind(apis.RequireAuth())
+		e.Router.POST("/api/llm/chat", llmRoutes.HandleChatRequest).Bind(apis.RequireAuth())
+		e.Router.GET("/api/llm/info", llmRoutes.HandleInfoRequest).Bind(apis.RequireAuth())
 		e.Router.POST("/api/practice/session", practiceRoute.HandleCreatePracticeSession).Bind(apis.RequireAuth())
 
 		// UI static files

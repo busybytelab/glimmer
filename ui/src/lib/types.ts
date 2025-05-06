@@ -31,6 +31,7 @@ export interface PracticeTopic extends BaseSystemFields {
     base_prompt: string;
     system_prompt?: string;
     tags?: string[];
+    llm_model?: string;
 }
 
 export interface PracticeSession extends BaseSystemFields {

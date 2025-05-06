@@ -22,23 +22,24 @@ type (
 		Usage    *llm.Usage `json:"usage,omitempty"`
 	}
 
-	ChatRoute interface {
-		OnChatRequest(e *core.RequestEvent) error
+	LLMRoutes interface {
+		HandleChatRequest(e *core.RequestEvent) error
+		HandleInfoRequest(e *core.RequestEvent) error
 	}
 
-	chatRoute struct {
-		llmService *llm.Service
+	llmRoutes struct {
+		llmService llm.Service
 	}
 )
 
-func NewChatRoute(llmService *llm.Service) ChatRoute {
-	return &chatRoute{
+func New(llmService llm.Service) LLMRoutes {
+	return &llmRoutes{
 		llmService: llmService,
 	}
 }
 
-// OnChatRequest handles LLM chat requests
-func (r *chatRoute) OnChatRequest(e *core.RequestEvent) error {
+// HandleChatRequest handles LLM chat requests
+func (r *llmRoutes) HandleChatRequest(e *core.RequestEvent) error {
 	// Parse request body
 	var req ChatRequest
 	if err := e.BindBody(&req); err != nil {
@@ -73,4 +74,13 @@ func (r *chatRoute) OnChatRequest(e *core.RequestEvent) error {
 		Response: response,
 		Usage:    usage,
 	})
+}
+
+// HandleInfoRequest handles requests for LLM platform and model information
+func (r *llmRoutes) HandleInfoRequest(e *core.RequestEvent) error {
+	log.Debug().Msg("Processing LLM models info request")
+
+	info := r.llmService.Info()
+
+	return e.JSON(http.StatusOK, info)
 }

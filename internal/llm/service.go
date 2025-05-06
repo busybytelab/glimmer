@@ -8,13 +8,35 @@ import (
 )
 
 // Service provides a high-level API for interacting with LLM platforms
-type Service struct {
-	platform Platform
-	config   *Config
-}
+type (
+	Service interface {
+		Chat(prompt string, systemPrompt string, options ...ChatOption) (string, *Usage, error)
+		DescribeImage(reader io.Reader, fileName string, prompt string, systemPrompt string) (string, *Usage, error)
+		Info() Info
+	}
+
+	Info struct {
+		Platforms []PlatformInfo `json:"platforms"`
+	}
+
+	// PlatformInfo represents information about an LLM platform
+	PlatformInfo struct {
+		Name      string       `json:"name"`
+		IsDefault bool         `json:"isDefault"`
+		Models    []*ModelInfo `json:"models"`
+	}
+
+	// ChatOption defines a function that can modify ChatParameters
+	ChatOption func(*ChatParameters)
+
+	service struct {
+		platform Platform
+		config   *Config
+	}
+)
 
 // MemoryCacheService creates a new LLM service with in-memory cache
-func MemoryCacheService(config *Config) *Service {
+func MemoryCacheService(config *Config) Service {
 	var cacheStorage CacheStorage
 
 	// Create appropriate cache storage
@@ -26,14 +48,14 @@ func MemoryCacheService(config *Config) *Service {
 	// Create the appropriate platform based on configuration
 	platform := NewPlatform(config, cacheStorage)
 
-	return &Service{
+	return &service{
 		platform: platform,
 		config:   config,
 	}
 }
 
 // AppService creates a new LLM service with PocketBase cache if enabled
-func AppService(config *Config, app core.App) *Service {
+func AppService(config *Config, app core.App) Service {
 	var platform Platform
 
 	// If using PocketBase cache and it's enabled, initialize it now
@@ -47,14 +69,14 @@ func AppService(config *Config, app core.App) *Service {
 		platform = NewPlatform(config, NewMemoryCacheStorage())
 	}
 
-	return &Service{
+	return &service{
 		platform: platform,
 		config:   config,
 	}
 }
 
 // Chat sends a chat request to the configured LLM platform
-func (s *Service) Chat(prompt string, systemPrompt string, options ...ChatOption) (string, *Usage, error) {
+func (s *service) Chat(prompt string, systemPrompt string, options ...ChatOption) (string, *Usage, error) {
 	params := &ChatParameters{
 		Prompt:       prompt,
 		SystemPrompt: systemPrompt,
@@ -85,7 +107,7 @@ func (s *Service) Chat(prompt string, systemPrompt string, options ...ChatOption
 }
 
 // DescribeImage sends an image to the configured LLM platform for description
-func (s *Service) DescribeImage(reader io.Reader, fileName string, prompt string, systemPrompt string) (string, *Usage, error) {
+func (s *service) DescribeImage(reader io.Reader, fileName string, prompt string, systemPrompt string) (string, *Usage, error) {
 	params := &DescribeImageParameters{
 		ChatParameters: ChatParameters{
 			Prompt:       prompt,
@@ -114,8 +136,22 @@ func (s *Service) DescribeImage(reader io.Reader, fileName string, prompt string
 	return response.Description, response.Usage, nil
 }
 
-// ChatOption defines a function that can modify ChatParameters
-type ChatOption func(*ChatParameters)
+func (s *service) Info() Info {
+	models, err := s.platform.Models()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get platform models")
+	}
+
+	return Info{
+		Platforms: []PlatformInfo{
+			{
+				Name:      string(s.platform.Type()),
+				IsDefault: true,
+				Models:    models,
+			},
+		},
+	}
+}
 
 // WithModel sets a specific model for the chat
 func WithModel(model string) ChatOption {
