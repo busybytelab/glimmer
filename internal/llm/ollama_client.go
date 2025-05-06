@@ -48,7 +48,7 @@ func (c *DefaultOllamaClient) createAPIClient() *api.Client {
 	transport := &http.Transport{
 		DisableKeepAlives: false,
 		MaxIdleConns:      100,
-		IdleConnTimeout:   10 * time.Minute,
+		IdleConnTimeout:   defaultOllamaTimeout + 20 * time.Second,
 	}
 
 	return api.NewClient(c.baseURL, &http.Client{
