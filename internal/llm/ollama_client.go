@@ -11,7 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-
 // OllamaClient defines the interface for interacting with the Ollama API
 type OllamaClient interface {
 	// ChatWithModel sends a chat request to the Ollama API
@@ -48,7 +47,7 @@ func (c *DefaultOllamaClient) createAPIClient() *api.Client {
 	transport := &http.Transport{
 		DisableKeepAlives: false,
 		MaxIdleConns:      100,
-		IdleConnTimeout:   defaultOllamaTimeout + 20 * time.Second,
+		IdleConnTimeout:   defaultOllamaTimeout + 20*time.Second,
 	}
 
 	return api.NewClient(c.baseURL, &http.Client{

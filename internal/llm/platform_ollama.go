@@ -15,8 +15,8 @@ type ollamaPlatform struct {
 }
 
 const (
-	defaultOllamaTimeout      = 30 * time.Minute
-	defaultOllamaModel = "llama3.2:1b"
+	defaultOllamaTimeout = 30 * time.Minute
+	defaultOllamaModel   = "llama3.2:1b"
 )
 
 func newOllamaPlatform(cfg OllamaConfig) Platform {
