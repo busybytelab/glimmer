@@ -15,7 +15,7 @@ type ollamaPlatform struct {
 }
 
 const (
-	ollamaTimeout      = 120 * time.Second
+	ollamaTimeout      = 5 * time.Minute
 	defaultOllamaModel = "llama3.2:1b"
 )
 
@@ -125,7 +125,8 @@ func (o *ollamaPlatform) Chat(params *ChatParameters) (*ChatResponse, error) {
 	stream := false
 
 	// Create context
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), ollamaTimeout)
+	defer cancel()
 
 	log.Debug().
 		Str("model", model).
