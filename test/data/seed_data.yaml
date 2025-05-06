@@ -31,7 +31,7 @@ collections:
 
   - name: "accounts"
     select: "SELECT COUNT(*) FROM accounts WHERE id = ?"
-    insert: "INSERT INTO accounts (id, name, owner, ollama_server_url, default_llm_model, default_language, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    insert: "INSERT INTO accounts (id, name, owner, ollama_server_url, default_llm_model, default_language, practice_session_default_prompt_extension, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     items:
       - id: "a1"
         name: "Account 1"
@@ -39,6 +39,105 @@ collections:
         ollama_server_url: "http://localhost:11434"
         default_llm_model: "gemma3:1b"
         default_language: "en"
+        practice_session_default_prompt_extension: |-
+          
+          INSTRUCTIONS:
+          The practice items should be returned ONLY in valid JSON format, starting with '{' and ending with '}'. Do not include any text before or after the JSON object.
+
+          The JSON structure must be:
+          {
+            "items": []
+          }
+
+          Each item JSON object within the "items" array must include:
+
+          REQUIRED FIELDS:
+          - question_text: The question text itself. (REQUIRED)
+          - question_type: MUST be one of these exact values: "multiple_choice", "true_false", "short_answer", or "fill_in_blank". (REQUIRED)
+          - correct_answer: The correct answer as a string. (REQUIRED)
+          - explanation: A detailed, teacher-like explanation of the correct answer. (REQUIRED)
+            • **Make it FUN and ENGAGING!** Use cheerful, age-appropriate language (grades 3-6).
+            • **Be Creative!** Think like explaining to a kid. Use analogies, simple stories, or even fun themes relevant to the subject (e.g., for math: "Imagine you're a pirate dividing treasure...", for grammar: "Think of commas like traffic signals for sentences..."). Spark curiosity!
+            • Provide clear reasoning that helps students truly *understand* the concept, not just memorize the answer.
+            • Include relevant simple formulas or rules when helpful (e.g., "Remember, Area = Length x Width!").
+            • Briefly connect the explanation to why it's useful or how it relates to bigger ideas, if possible.
+
+          OPTIONAL FIELDS (Highly Recommended):
+          - options: Array of possible answer strings. (REQUIRED for "multiple_choice", optional otherwise). Ensure distractors represent common misconceptions.
+          - difficulty_level: "easy", "medium", or "hard". (OPTIONAL but recommended).
+          - hints: Array of strings with hints that progressively guide students toward the answer without giving it away. (OPTIONAL).
+          - explanation_for_incorrect: Object mapping incorrect answers (keys) to specific explanations (values). (OPTIONAL but highly valuable).
+            • For each incorrect option (especially in multiple_choice), explain *why* it's wrong in an encouraging way.
+            • Gently point out the likely mistake or misconception (e.g., "Oops! It looks like you might have added instead of multiplying here.").
+            • Guide the student back to the correct thinking process.
+
+          ---
+
+          **EXAMPLES OF ITEM FORMAT AND STYLE:**
+
+          *Remember, these are just examples to show the JSON structure and the *kind* of engaging explanation style desired. You should generate items based on the *specific topic* requested in the main prompt.*
+
+          **Example for a MATH item:**
+          ```json
+          {
+            "question_text": "A pirate captain has 12 gold coins and wants to share them equally among his 3 best mates. How many coins does each mate get?",
+            "question_type": "multiple_choice",
+            "options": ["3", "4", "6", "12"],
+            "correct_answer": "4",
+            "explanation": "Ahoy! To share the treasure fairly, the captain needs to divide the 12 coins into 3 equal groups. Think of it like dealing cards: one for matey 1, one for matey 2, one for matey 3, then repeat! We use division: 12 ÷ 3 = 4. So each lucky pirate mate gets 4 shiny gold coins! Arrr! Knowing how to divide helps share things equally, whether it's treasure or cookies!",
+            "explanation_for_incorrect": {
+              "3": "Close! 3 is the number of mates, but we need to find out how many coins *each* mate gets. Try dividing the total coins (12) by the number of mates (3).",
+              "6": "Hmm, if each mate got 6 coins, you'd need 6 x 3 = 18 coins, but the captain only has 12! Remember to divide 12 by 3.",
+              "12": "That's the total number of coins! The question asks how many *each* of the 3 mates gets when they share the 12 coins equally."
+            },
+            "hints": [
+              "Think about 'sharing equally' - what math operation is that?",
+              "You have 12 items to split into 3 groups.",
+              "What number multiplied by 3 equals 12?"
+            ],
+            "difficulty_level": "easy"
+          }
+          ```
+
+          **Example for a GRAMMAR item:**
+          ```json
+          {
+            "question_text": "Which word correctly completes the sentence: The dog wagged ___ tail happily.",
+            "question_type": "fill_in_blank",
+            "correct_answer": "its",
+            "explanation": "Great job! The word 'its' (with no apostrophe) shows ownership or belonging, like the tail belongs to the dog. It's like saying the dog's tail. The word 'it\\'s' (with an apostrophe) is a contraction, meaning 'it is' or 'it has' (like 'It\\'s a sunny day!'). Remembering this difference helps make your writing super clear!",
+            "hints": [
+              "Are you showing something belongs to the dog, or are you saying 'it is'?",
+              "The word needed here is a possessive pronoun.",
+              "Think: 'it\\'s' = 'it is' or 'it has'. Does 'The dog wagged it is tail' make sense?"
+            ],
+            "difficulty_level": "medium",
+            "explanation_for_incorrect": {
+              "it's": "Careful! 'It\\'s' with the apostrophe means 'it is' or 'it has'. Does 'The dog wagged it is tail' make sense? We need the word that shows the tail *belongs* to the dog, which is 'its'."
+            }
+          }
+          ```
+
+          **Example for a SCIENCE item:**
+          ```json
+          {
+            "question_text": "True or False: Plants use sunlight, water, and carbon dioxide to make their own food.",
+            "question_type": "true_false",
+            "correct_answer": "True",
+            "explanation": "That's absolutely right! Plants are like amazing little chefs! They perform a process called photosynthesis. Using energy from sunlight (like their oven!), water (taken by roots), and carbon dioxide (from the air), they magically whip up their own sugary food (glucose) to grow. They even release oxygen, which we need to breathe! So cool!",
+            "hints": [
+              "Think about what plants need to grow.",
+              "What is the process called where plants make food?",
+              "Does sunlight seem important for plants?"
+            ],
+            "difficulty_level": "easy"
+          }
+          ```
+          ---
+          DO NOT mix questions of different topics unless explicitly instructed to do so.
+          Focus on creating pedagogically sound practice items. Ensure explanations help students understand the *why* behind the answer. Use age-appropriate examples and language for grades 3-6. Make the learning experience positive and encouraging!
+
+          Return ONLY the valid JSON output.
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
@@ -70,7 +169,7 @@ collections:
 
   - name: "practice_topics"
     select: "SELECT COUNT(*) FROM practice_topics WHERE id = ?"
-    insert: "INSERT INTO practice_topics (id, name, description, subject, system_prompt, base_prompt, learning_goals, target_age_range, target_grade_level, tags, account, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    insert: "INSERT INTO practice_topics (id, name, description, subject, system_prompt, base_prompt, learning_goals, target_age_range, target_grade_level, llm_model, tags, account, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     items:
       - id: "pt1"
         name: "Basic Math"
@@ -81,6 +180,7 @@ collections:
         learning_goals: "Understand basic arithmetic"
         target_age_range: "7-10"
         target_grade_level: "3-5"
+        llm_model: ""
         tags: "[\"weekly\"]"
         account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
@@ -102,7 +202,6 @@ collections:
         tags: "[]"
         status: "published"
         practice_topic: "__ref::practice_topics::pt1"
-        instructor: "__ref::instructors::i1"
         account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
