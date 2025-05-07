@@ -11,7 +11,7 @@ DOCKER_IMAGE := $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(SERVICE_NAME)
 VERSION ?= $(shell git describe --tags 2>/dev/null || echo "dev")
 # Variable to hold the Go package path for the Version variable (adjust if needed)
 # VERSION_PKG = $(PKG)/cmd # Assuming a cmd package, adjust if main or other -- REMOVED
-LDFLAGS := -ldflags="-s -w -X $(PKG).Version=$(VERSION)" # Use PKG directly
+LDFLAGS := -ldflags="-s -w -X $(PKG).Version=$(VERSION)" -tags embed # Use PKG directly
 
 # Supported architectures:
 # - linux/amd64: Standard x86_64 servers and desktops
@@ -70,9 +70,9 @@ run: ## Run the application with env vars from .env file if it exists
 	@if [ -f .env ]; then \
 		LISTEN_ADDRESS=$$(grep LISTEN_ADDRESS .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
-		export `cat .env` && go run cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
+		export `cat .env` && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
 	else \
-		go run cmd/glimmer/main.go serve; \
+		go run -tags embed cmd/glimmer/main.go serve; \
 	fi
 
 # run go run main.go superuser -h for other sub commands
@@ -83,7 +83,7 @@ create-superuser:  ## Create a superuser for dev environment with values from .e
 		PASSWORD=$$(grep PASSWORD .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
 		echo "Creating superuser with email $$EMAIL"; \
-		source .env && go run cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY superuser create "$$EMAIL" "$$PASSWORD"; \
+		source .env && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY superuser create "$$EMAIL" "$$PASSWORD"; \
 	else \
 		echo "Error: .env file not found"; \
 		exit 1; \
@@ -125,4 +125,4 @@ help: ## Display this help screen
 
 seed-db: ## Seed the database with test data
 	@echo "==> Seeding database with test data using YAML configuration..."
-	@go run cmd/seed/main.go
+	@go run -tags embed cmd/glimmer/main.go seed

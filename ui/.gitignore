@@ -9,14 +9,13 @@ lerna-debug.log*
 
 # Node dependencies and build outputs
 node_modules
-dist
-dist-ssr
 *.local
 
 # SvelteKit specific
 .svelte-kit/
 build/
 package/
+!dist/
 
 # Environment variables
 .env

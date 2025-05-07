@@ -9,7 +9,7 @@
 </script>
 
 <div class={`${cols} mb-4 ${inline ? 'flex items-center gap-2' : ''}`}>
-	<label for={id} class="block text-sm font-medium text-gray-700 mb-1 text-left ${inline ? 'mb-0' : ''}">
+	<label for={id} class="block text-sm font-medium text-gray-700 text-left ${inline ? '' : 'mb-1'}">
 		{label} {#if required}<span class="text-red-500">*</span>{/if}
 	</label>
 	<select 

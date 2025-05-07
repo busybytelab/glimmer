@@ -49,6 +49,7 @@ func (app *Application) Initialize() error {
 	app.setupLLMService()
 	app.setupRoutes()
 	app.setupCollectionsAndHooks()
+	app.setupCommands()
 	app.setupGracefulShutdown()
 	return nil
 }
@@ -59,6 +60,13 @@ func (a *Application) setupMigrations() {
 	migratecmd.MustRegister(a.pb, a.pb.RootCmd, migratecmd.Config{
 		Automigrate: a.config.DB.AutoMigrate,
 	})
+}
+
+// configures custom commands
+func (app *Application) setupCommands() {
+	log.Trace().Msg("Setting up custom commands...")
+	setupSeedCommand(app.pb)
+	log.Trace().Msg("Custom commands setup completed")
 }
 
 // configures the HTTP routes for the application
