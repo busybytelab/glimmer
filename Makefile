@@ -11,7 +11,7 @@ DOCKER_IMAGE := $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(SERVICE_NAME)
 VERSION ?= $(shell git describe --tags 2>/dev/null || echo "dev")
 # Variable to hold the Go package path for the Version variable (adjust if needed)
 # VERSION_PKG = $(PKG)/cmd # Assuming a cmd package, adjust if main or other -- REMOVED
-LDFLAGS := -ldflags="-s -w -X $(PKG).Version=$(VERSION)" # Use PKG directly
+LDFLAGS := -ldflags="-s -w -X $(PKG).Version=$(VERSION)" -tags embed # Use PKG directly
 
 # Supported architectures:
 # - linux/amd64: Standard x86_64 servers and desktops
@@ -55,7 +55,7 @@ build: ## Build the application for the current platform
 build-os: ## Build the application for the specific platform
 	@echo "==> Building $(SERVICE_NAME) version $(VERSION) for $(OS) $(ARCH)..."
 	@mkdir -p $(BUILD_DIR)
-	@GOOS=$$OS GOARCH=$$ARCH go build -tags embed -o $(BUILD_DIR)/$(SERVICE_NAME)-$(OS)-$(ARCH) cmd/glimmer/main.go
+	@GOOS=$$OS GOARCH=$$ARCH go build $(LDFLAGS) -o $(BUILD_DIR)/$(SERVICE_NAME)-$(OS)-$(ARCH) cmd/glimmer/main.go
 
 build-all: ## Build the application for Linux and macOS (amd64, arm64)
 	@echo "==> Building $(SERVICE_NAME) version $(VERSION) for all target platforms..."
