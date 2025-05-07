@@ -55,7 +55,7 @@ build: ## Build the application for the current platform
 build-os: ## Build the application for the specific platform
 	@echo "==> Building $(SERVICE_NAME) version $(VERSION) for $(OS) $(ARCH)..."
 	@mkdir -p $(BUILD_DIR)
-	@GOOS=$$OS GOARCH=$$ARCH go build $(LDFLAGS) -o $(BUILD_DIR)/$(SERVICE_NAME)-$(OS)-$(ARCH) cmd/glimmer/main.go
+	@GOOS=$$OS GOARCH=$$ARCH go build -tags embed -o $(BUILD_DIR)/$(SERVICE_NAME)-$(OS)-$(ARCH) cmd/glimmer/main.go
 
 build-all: ## Build the application for Linux and macOS (amd64, arm64)
 	@echo "==> Building $(SERVICE_NAME) version $(VERSION) for all target platforms..."
@@ -70,9 +70,9 @@ run: ## Run the application with env vars from .env file if it exists
 	@if [ -f .env ]; then \
 		LISTEN_ADDRESS=$$(grep LISTEN_ADDRESS .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
-		export `cat .env` && go run cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
+		export `cat .env` && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
 	else \
-		go run cmd/glimmer/main.go serve; \
+		go run -tags embed cmd/glimmer/main.go serve; \
 	fi
 
 # run go run main.go superuser -h for other sub commands
@@ -83,7 +83,7 @@ create-superuser:  ## Create a superuser for dev environment with values from .e
 		PASSWORD=$$(grep PASSWORD .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
 		echo "Creating superuser with email $$EMAIL"; \
-		source .env && go run cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY superuser create "$$EMAIL" "$$PASSWORD"; \
+		source .env && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY superuser create "$$EMAIL" "$$PASSWORD"; \
 	else \
 		echo "Error: .env file not found"; \
 		exit 1; \
@@ -125,4 +125,4 @@ help: ## Display this help screen
 
 seed-db: ## Seed the database with test data
 	@echo "==> Seeding database with test data using YAML configuration..."
-	@go run cmd/seed/main.go
+	@go run -tags embed cmd/glimmer/main.go seed

@@ -10,14 +10,17 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/busybytelab.com/glimmer/data"
 	"github.com/busybytelab.com/glimmer/internal/llm"
 	llmRoute "github.com/busybytelab.com/glimmer/internal/route/llm"
 	practiceRoute "github.com/busybytelab.com/glimmer/internal/route/practice"
+	"github.com/busybytelab.com/glimmer/internal/seed"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 )
 
 // Application is the core glimmer service, with all required dependencies.
@@ -49,6 +52,7 @@ func (app *Application) Initialize() error {
 	app.setupLLMService()
 	app.setupRoutes()
 	app.setupCollectionsAndHooks()
+	app.setupCommands()
 	app.setupGracefulShutdown()
 	return nil
 }
@@ -59,6 +63,61 @@ func (a *Application) setupMigrations() {
 	migratecmd.MustRegister(a.pb, a.pb.RootCmd, migratecmd.Config{
 		Automigrate: a.config.DB.AutoMigrate,
 	})
+}
+
+// configures custom commands
+func (app *Application) setupCommands() {
+	log.Trace().Msg("Setting up custom commands...")
+
+	// Create the seed command
+	seedCmd := &cobra.Command{
+		Use:   "seed",
+		Short: "Seed the database with test data from a YAML configuration file",
+		Run: func(cmd *cobra.Command, args []string) {
+			// Parse command line flags
+			configPath := cmd.Flag("config").Value.String()
+			if configPath == "" {
+				// Use embedded data if no config path is provided
+				configPath = "sample-v0.1.yaml"
+				// Create a temporary file to store the embedded YAML
+				tmpFile, err := os.CreateTemp("", "seed-*.yaml")
+				if err != nil {
+					log.Fatal().Err(err).Msg("Failed to create temporary file")
+				}
+				defer os.Remove(tmpFile.Name())
+
+				// Read the embedded YAML file
+				data, err := fs.ReadFile(data.SeedDirFS, configPath)
+				if err != nil {
+					log.Fatal().Err(err).Msg("Failed to read embedded seed data")
+				}
+
+				// Write the embedded YAML to the temporary file
+				if _, err := tmpFile.Write(data); err != nil {
+					log.Fatal().Err(err).Msg("Failed to write seed data to temporary file")
+				}
+				tmpFile.Close()
+
+				configPath = tmpFile.Name()
+			}
+
+			// Log the start of the seeding process
+			log.Info().Msg("Starting YAML-based database seeding...")
+
+			// Run the seed from YAML
+			seed.RunSeedFromYAML(configPath)
+
+			log.Info().Msg("Seeding completed successfully!")
+		},
+	}
+
+	// Add flags to the command
+	seedCmd.Flags().String("config", "", "Path to seed YAML config file (default: uses embedded sample-v0.1.yaml)")
+
+	// Add the seed command to PocketBase's root command
+	app.pb.RootCmd.AddCommand(seedCmd)
+
+	log.Trace().Msg("Custom commands setup completed")
 }
 
 // configures the HTTP routes for the application
