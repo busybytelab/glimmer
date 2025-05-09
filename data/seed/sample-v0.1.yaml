@@ -2,148 +2,222 @@
 
 description: "Glimmer Test Seed Data - v1"
 db: "pb_data/data.db"
+default_password_hash: "$2a$10$UiEpp7dQEwBOXiF.0fbiDe9bxJunArer9B7VhEJk7WvG9g3iaifQe|mX1BMz3d4Bi40w9s7tImE1zvQ314591c3f53bdQR0KwoM888u8"
 collections:
   - name: "users"
-    select: "SELECT COUNT(*) FROM users WHERE id = ?"
-    insert: "INSERT INTO users (id, email, name, password, verified, emailVisibility, avatar, tokenKey, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    select: "SELECT COUNT(*) FROM users WHERE id = {:id}"
+    insert: "INSERT INTO users (id, email, name, password, verified, emailVisibility, avatar, tokenKey, created, updated) VALUES ({:id}, {:email}, {:name}, {:password}, {:verified}, {:emailVisibility}, {:avatar}, {:tokenKey}, {:created}, {:updated})"
     items:
       - id: "u1"
         email: "u1@home.local"
         name: "User 1"
-        password: "$2a$10$UiEpp7dQEwBOXiF.0fbiDe9bxJunArer9B7VhEJk7WvG9g3iaifQe|mX1BMz3d4Bi40w9s7tImE1zvQ314591c3f53bdQR0KwoM888u8"
+        password: "__::env::TEST_USER_PASSWORD_HASH::default_password_hash::__"
         verified: true
         emailVisibility: false
         avatar: ""
-        tokenKey: "testTokenKey123456789012345678901234567890"
+        tokenKey: "u1TokenKey123456789012345678901234567890"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
       - id: "u2"
         email: "u2@home.local"
         name: "User 2"
-        password: "$2a$10$UiEpp7dQEwBOXiF.0fbiDe9bxJunArer9B7VhEJk7WvG9g3iaifQe|mX1BMz3d4Bi40w9s7tImE1zvQ314591c3f53bdQR0KwoM888u8"
+        password: "__::env::TEST_USER_PASSWORD_HASH::default_password_hash::__"
         verified: true
         emailVisibility: false
         avatar: ""
-        tokenKey: "adminTokenKey12345678901234567890123456789"
+        tokenKey: "u2TokenKey12345678901234567890123456789"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
   - name: "accounts"
-    select: "SELECT COUNT(*) FROM accounts WHERE id = ?"
-    insert: "INSERT INTO accounts (id, name, owner, ollama_server_url, default_llm_model, default_language, practice_session_default_prompt_extension, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    select: "SELECT COUNT(*) FROM accounts WHERE id = {:id}"
+    insert: "INSERT INTO accounts (id, name, owner, ollama_server_url, default_llm_model, default_language, practice_session_default_prompt_extension, created, updated) VALUES ({:id}, {:name}, {:owner}, {:ollama_server_url}, {:default_llm_model}, {:default_language}, {:practice_session_default_prompt_extension}, {:created}, {:updated})"
     items:
       - id: "a1"
         name: "Account 1"
         owner: "__ref::users::u1"
         ollama_server_url: "http://localhost:11434"
-        default_llm_model: "gemma3:1b"
+        default_llm_model: "gemma3:4b"
         default_language: "en"
         practice_session_default_prompt_extension: |-
           
           INSTRUCTIONS:
           The practice items should be returned ONLY in valid JSON format, starting with '{' and ending with '}'. Do not include any text before or after the JSON object.
 
-          The JSON structure must be:
+          TARGET AUDIENCE:
+          - Age Range: Grades 3-6 (approximately 8-12 years old)
+          - Language: Age-appropriate, engaging, and encouraging
+          - Style: Fun, creative, and educational
+
+          JSON STRUCTURE:
           {
-            "items": []
+            "items": [
+              {
+                // Each item object follows the structure below
+              }
+            ]
           }
 
-          Each item JSON object within the "items" array must include:
+          ITEM FIELDS:
 
-          REQUIRED FIELDS:
-          - question_text: The question text itself. (REQUIRED)
-          - question_type: MUST be one of these exact values: "multiple_choice", "true_false", "short_answer", or "fill_in_blank". (REQUIRED)
-          - correct_answer: The correct answer as a string. (REQUIRED)
-          - explanation: A detailed, teacher-like explanation of the correct answer. (REQUIRED)
-            • **Make it FUN and ENGAGING!** Use cheerful, age-appropriate language (grades 3-6).
-            • **Be Creative!** Think like explaining to a kid. Use analogies, simple stories, or even fun themes relevant to the subject (e.g., for math: "Imagine you're a pirate dividing treasure...", for grammar: "Think of commas like traffic signals for sentences..."). Spark curiosity!
-            • Provide clear reasoning that helps students truly *understand* the concept, not just memorize the answer.
-            • Include relevant simple formulas or rules when helpful (e.g., "Remember, Area = Length x Width!").
-            • Briefly connect the explanation to why it's useful or how it relates to bigger ideas, if possible.
+          REQUIRED FIELDS (Must be included for every item):
+          - question_text: string
+            • The question text itself
+            • Must be clear and age-appropriate
+            • Should be engaging and relevant to the topic
 
-          OPTIONAL FIELDS (Highly Recommended):
-          - options: Array of possible answer strings. (REQUIRED for "multiple_choice", optional otherwise). Ensure distractors represent common misconceptions.
-          - difficulty_level: "easy", "medium", or "hard". (OPTIONAL but recommended).
-          - hints: Array of strings with hints that progressively guide students toward the answer without giving it away. (OPTIONAL).
-          - explanation_for_incorrect: Object mapping incorrect answers (keys) to specific explanations (values). (OPTIONAL but highly valuable).
-            • For each incorrect option (especially in multiple_choice), explain *why* it's wrong in an encouraging way.
-            • Gently point out the likely mistake or misconception (e.g., "Oops! It looks like you might have added instead of multiplying here.").
-            • Guide the student back to the correct thinking process.
+          - question_type: string
+            • Must be exactly one of: "multiple_choice", "true_false", "short_answer", "fill_in_blank"
+            • Determines the format of the answer and available fields
 
-          ---
+          - correct_answer: string
+            • The correct answer as a string
+            • Format depends on question_type:
+              - multiple_choice: One of the options
+              - true_false: "True" or "False"
+              - short_answer: The expected answer
+              - fill_in_blank: The word or phrase to fill in
 
-          **EXAMPLES OF ITEM FORMAT AND STYLE:**
+          - explanation: string
+            • A detailed, teacher-like explanation
+            • Must be fun and engaging
+            • Should include:
+              - Clear reasoning
+              - Relevant examples or analogies
+              - Simple formulas or rules when applicable
+              - Connection to real-world applications
+              - Positive and encouraging tone
 
-          *Remember, these are just examples to show the JSON structure and the *kind* of engaging explanation style desired. You should generate items based on the *specific topic* requested in the main prompt.*
+          CONDITIONAL FIELDS (Required based on question_type):
+          - options: string[]
+            • Required for: multiple_choice
+            • Array of possible answer strings
+            • Must include the correct_answer
+            • Should include common misconceptions as distractors
 
-          **Example for a MATH item:**
+          RECOMMENDED FIELDS (Highly encouraged):
+          - difficulty_level: string
+            • Must be exactly one of: "easy", "medium", "hard"
+            • Should match the target age group's capabilities
+
+          - hints: string[]
+            • Array of progressive hints
+            • Should guide without giving away the answer
+            • Start general, become more specific
+
+          - explanation_for_incorrect: object
+            • Map of incorrect answers to explanations
+            • Required for multiple_choice
+            • Should be encouraging and educational
+            • Format: { "incorrect_answer": "explanation" }
+
+          EXAMPLES:
+
+          **Multiple Choice Example:**
           ```json
           {
-            "question_text": "A pirate captain has 12 gold coins and wants to share them equally among his 3 best mates. How many coins does each mate get?",
-            "question_type": "multiple_choice",
-            "options": ["3", "4", "6", "12"],
-            "correct_answer": "4",
-            "explanation": "Ahoy! To share the treasure fairly, the captain needs to divide the 12 coins into 3 equal groups. Think of it like dealing cards: one for matey 1, one for matey 2, one for matey 3, then repeat! We use division: 12 ÷ 3 = 4. So each lucky pirate mate gets 4 shiny gold coins! Arrr! Knowing how to divide helps share things equally, whether it's treasure or cookies!",
-            "explanation_for_incorrect": {
-              "3": "Close! 3 is the number of mates, but we need to find out how many coins *each* mate gets. Try dividing the total coins (12) by the number of mates (3).",
-              "6": "Hmm, if each mate got 6 coins, you'd need 6 x 3 = 18 coins, but the captain only has 12! Remember to divide 12 by 3.",
-              "12": "That's the total number of coins! The question asks how many *each* of the 3 mates gets when they share the 12 coins equally."
-            },
-            "hints": [
-              "Think about 'sharing equally' - what math operation is that?",
-              "You have 12 items to split into 3 groups.",
-              "What number multiplied by 3 equals 12?"
-            ],
-            "difficulty_level": "easy"
+            "items": [
+              {
+                "question_text": "A pirate captain has 12 gold coins and wants to share them equally among his 3 best mates. How many coins does each mate get?",
+                "question_type": "multiple_choice",
+                "options": ["3", "4", "6", "12"],
+                "correct_answer": "4",
+                "explanation": "Ahoy! To share the treasure fairly, the captain needs to divide the 12 coins into 3 equal groups. Think of it like dealing cards: one for matey 1, one for matey 2, one for matey 3, then repeat! We use division: 12 ÷ 3 = 4. So each lucky pirate mate gets 4 shiny gold coins! Arrr! Knowing how to divide helps share things equally, whether it's treasure or cookies!",
+                "explanation_for_incorrect": {
+                  "3": "Close! 3 is the number of mates, but we need to find out how many coins *each* mate gets. Try dividing the total coins (12) by the number of mates (3).",
+                  "6": "Hmm, if each mate got 6 coins, you'd need 6 x 3 = 18 coins, but the captain only has 12! Remember to divide 12 by 3.",
+                  "12": "That's the total number of coins! The question asks how many *each* of the 3 mates gets when they share the 12 coins equally."
+                },
+                "hints": [
+                  "Think about 'sharing equally' - what math operation is that?",
+                  "You have 12 items to split into 3 groups.",
+                  "What number multiplied by 3 equals 12?"
+                ],
+                "difficulty_level": "easy"
+              }
+            ]
           }
           ```
 
-          **Example for a GRAMMAR item:**
+          **True/False Example:**
           ```json
           {
-            "question_text": "Which word correctly completes the sentence: The dog wagged ___ tail happily.",
-            "question_type": "fill_in_blank",
-            "correct_answer": "its",
-            "explanation": "Great job! The word 'its' (with no apostrophe) shows ownership or belonging, like the tail belongs to the dog. It's like saying the dog's tail. The word 'it\\'s' (with an apostrophe) is a contraction, meaning 'it is' or 'it has' (like 'It\\'s a sunny day!'). Remembering this difference helps make your writing super clear!",
-            "hints": [
-              "Are you showing something belongs to the dog, or are you saying 'it is'?",
-              "The word needed here is a possessive pronoun.",
-              "Think: 'it\\'s' = 'it is' or 'it has'. Does 'The dog wagged it is tail' make sense?"
-            ],
-            "difficulty_level": "medium",
-            "explanation_for_incorrect": {
-              "it's": "Careful! 'It\\'s' with the apostrophe means 'it is' or 'it has'. Does 'The dog wagged it is tail' make sense? We need the word that shows the tail *belongs* to the dog, which is 'its'."
-            }
+            "items": [
+              {
+                "question_text": "True or False: Plants use sunlight, water, and carbon dioxide to make their own food.",
+                "question_type": "true_false",
+                "correct_answer": "True",
+                "explanation": "That's absolutely right! Plants are like amazing little chefs! They perform a process called photosynthesis. Using energy from sunlight (like their oven!), water (taken by roots), and carbon dioxide (from the air), they magically whip up their own sugary food (glucose) to grow. They even release oxygen, which we need to breathe! So cool!",
+                "hints": [
+                  "Think about what plants need to grow.",
+                  "What is the process called where plants make food?",
+                  "Does sunlight seem important for plants?"
+                ],
+                "difficulty_level": "easy"
+              }
+            ]
           }
           ```
 
-          **Example for a SCIENCE item:**
+          **Short Answer Example:**
           ```json
           {
-            "question_text": "True or False: Plants use sunlight, water, and carbon dioxide to make their own food.",
-            "question_type": "true_false",
-            "correct_answer": "True",
-            "explanation": "That's absolutely right! Plants are like amazing little chefs! They perform a process called photosynthesis. Using energy from sunlight (like their oven!), water (taken by roots), and carbon dioxide (from the air), they magically whip up their own sugary food (glucose) to grow. They even release oxygen, which we need to breathe! So cool!",
-            "hints": [
-              "Think about what plants need to grow.",
-              "What is the process called where plants make food?",
-              "Does sunlight seem important for plants?"
-            ],
-            "difficulty_level": "easy"
+            "items": [
+              {
+                "question_text": "What is the process called when plants make their own food using sunlight?",
+                "question_type": "short_answer",
+                "correct_answer": "photosynthesis",
+                "explanation": "Excellent! Photosynthesis is like a plant's superpower! It's the process where plants use sunlight (like their energy source), water, and carbon dioxide to create their own food (glucose) and release oxygen. It's like they have their own little kitchen inside their leaves! This amazing process is what makes plants so important for our planet - they provide food for themselves and oxygen for us!",
+                "hints": [
+                  "Think about what plants do with sunlight.",
+                  "It starts with 'photo' and ends with 'synthesis'.",
+                  "This process helps plants make their own food."
+                ],
+                "difficulty_level": "medium"
+              }
+            ]
           }
           ```
-          ---
-          DO NOT mix questions of different topics unless explicitly instructed to do so.
-          Focus on creating pedagogically sound practice items. Ensure explanations help students understand the *why* behind the answer. Use age-appropriate examples and language for grades 3-6. Make the learning experience positive and encouraging!
 
-          Return ONLY the valid JSON output.
+          **Fill in the Blank Example:**
+          ```json
+          {
+            "items": [
+              {
+                "question_text": "The dog wagged ___ tail happily.",
+                "question_type": "fill_in_blank",
+                "correct_answer": "its",
+                "explanation": "Great job! The word 'its' (with no apostrophe) shows ownership or belonging, like the tail belongs to the dog. It's like saying the dog's tail. The word 'it's' (with an apostrophe) is a contraction, meaning 'it is' or 'it has' (like 'It's a sunny day!'). Remembering this difference helps make your writing super clear!",
+                "hints": [
+                  "Are you showing something belongs to the dog, or are you saying 'it is'?",
+                  "The word needed here is a possessive pronoun.",
+                  "Think: 'it's' = 'it is' or 'it has'. Does 'The dog wagged it is tail' make sense?"
+                ],
+                "difficulty_level": "medium",
+                "explanation_for_incorrect": {
+                  "it's": "Careful! 'It's' with the apostrophe means 'it is' or 'it has'. Does 'The dog wagged it is tail' make sense? We need the word that shows the tail *belongs* to the dog, which is 'its'."
+                }
+              }
+            ]
+          }
+          ```
+
+          IMPORTANT RULES:
+          1. Return ONLY valid JSON output
+          2. Include ALL required fields for each item
+          3. Follow the exact question_type formats
+          4. Keep explanations fun, engaging, and age-appropriate
+          5. Do not mix different topics unless explicitly instructed
+          6. Ensure all JSON is properly formatted and escaped
+          7. Make explanations help students understand the *why* behind the answer
+          8. Use positive and encouraging language throughout
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
   - name: "instructors"
-    select: "SELECT COUNT(*) FROM instructors WHERE id = ?"
-    insert: "INSERT INTO instructors (id, nickname, account, user, created, updated) VALUES (?, ?, ?, ?, ?, ?)"
+    select: "SELECT COUNT(*) FROM instructors WHERE id = {:id}"
+    insert: "INSERT INTO instructors (id, nickname, account, user, created, updated) VALUES ({:id}, {:nickname}, {:account}, {:user}, {:created}, {:updated})"
     items:
       - id: "i1"
         nickname: "Teacher"
@@ -153,8 +227,8 @@ collections:
         updated: __::currentTimestamp::__
 
   - name: "learners"
-    select: "SELECT COUNT(*) FROM learners WHERE id = ?"
-    insert: "INSERT INTO learners (id, nickname, age, grade_level, learning_preferences, avatar, account, user, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    select: "SELECT COUNT(*) FROM learners WHERE id = {:id}"
+    insert: "INSERT INTO learners (id, nickname, age, grade_level, learning_preferences, avatar, account, user, created, updated) VALUES ({:id}, {:nickname}, {:age}, {:grade_level}, {:learning_preferences}, {:avatar}, {:account}, {:user}, {:created}, {:updated})"
     items:
       - id: "l1"
         nickname: "Student1"
@@ -168,8 +242,8 @@ collections:
         updated: __::currentTimestamp::__
 
   - name: "practice_topics"
-    select: "SELECT COUNT(*) FROM practice_topics WHERE id = ?"
-    insert: "INSERT INTO practice_topics (id, name, description, subject, system_prompt, base_prompt, learning_goals, target_age_range, target_grade_level, llm_model, tags, account, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    select: "SELECT COUNT(*) FROM practice_topics WHERE id = {:id}"
+    insert: "INSERT INTO practice_topics (id, name, description, subject, system_prompt, base_prompt, learning_goals, target_age_range, target_grade_level, llm_model, tags, account, created, updated) VALUES ({:id}, {:name}, {:description}, {:subject}, {:system_prompt}, {:base_prompt}, {:learning_goals}, {:target_age_range}, {:target_grade_level}, {:llm_model}, {:tags}, {:account}, {:created}, {:updated})"
     items:
       - id: "pt1"
         name: "Basic Math"
@@ -186,9 +260,100 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      - id: "pt2"
+        name: "Editing Skills"
+        description: "Learn essential editing skills for improving writing and communication"
+        subject: "English"
+        system_prompt: |-
+          Teaching children editing skills is vital for improving their writing and communication. Here are the top important editing skills to focus on:
+
+          1. **Understanding the Purpose**: Teach children to identify the purpose of their writing, which helps them understand what needs to be changed to make their message clearer.
+
+          2. **Grammar and Punctuation**: Basic grammar rules (like subject-verb agreement and sentence structure) and punctuation (like commas, periods, and question marks) are essential for clear writing.
+
+          3. **Spelling and Word Choice**: Encourage children to check their spelling and choose words that are appropriate for their audience and topic. This can improve clarity and engagement.
+
+          4. **Organization**: Help them learn to arrange their ideas logically. A clear introduction, body, and conclusion will make their writing more coherent.
+
+          5. **Clarity and Conciseness**: Teach children to express their ideas clearly and remove unnecessary words or phrases. This makes their writing easier to read.
+
+          6. **Peer Review**: Encourage them to share their work with classmates for feedback. Learning to give and receive constructive criticism helps improve their editing skills.
+
+          7. **Revision Techniques**: Show them how to look at their work from different perspectives and make changes. This could involve rewriting sentences or rethinking whole paragraphs.
+
+          8. **Reading Aloud**: Encourage children to read their work aloud. Hearing their writing can help them identify awkward phrasing or mistakes they might miss when reading silently.
+        base_prompt: |-
+          Create a set of 6-10 editing questions for UK Year 4 students (ages 8-9) that cover the following key areas:
+
+          1. Grammar and Punctuation:
+             - Subject-verb agreement
+             - Proper use of commas, periods, question marks, and exclamation marks
+             - Capitalization rules
+             - Apostrophes for possession and contractions
+
+          2. Spelling and Word Choice:
+             - Common UK English spellings (e.g., colour, centre, theatre)
+             - Homophones (their/there/they're, your/you're)
+             - Age-appropriate vocabulary
+             - Word meaning and context
+
+          3. Organization and Structure:
+             - Sentence structure and flow
+             - Paragraph organization
+             - Clear topic sentences
+             - Logical sequence of ideas
+
+          Question Types:
+          - Multiple choice (identify correct punctuation/grammar)
+          - Fill in the blank (add missing punctuation/correct words)
+          - Short answer (explain why a correction is needed)
+          - Edit the paragraph (identify and fix multiple errors)
+
+          Guidelines:
+          1. Use age-appropriate topics and vocabulary
+          2. Include deliberate, common mistakes that Year 4 students might make
+          3. Provide clear, encouraging explanations for corrections
+          4. Follow UK English spelling and grammar conventions
+          5. Make questions engaging and relatable to children's experiences
+          6. Include a mix of difficulty levels (easy to challenging)
+          7. Ensure questions align with UK National Curriculum standards for Year 4
+
+          Themed Content Creation:
+          Create questions within an engaging theme that will capture children's imagination. Choose one of these themes for the entire set of questions:
+          - Minecraft Adventure: Frame questions around building, crafting, and exploring the Minecraft world
+          - Pirate's Treasure: Use pirate language and scenarios about finding treasure, sailing seas, and solving riddles
+          - Magical School: Set questions in a wizarding school with spells, potions, and magical creatures
+          - Ghostly Mansion: Create spooky but fun scenarios in a haunted house with friendly ghosts
+          - Space Explorer: Frame questions around space travel, planets, and alien encounters
+          - Dinosaur Discovery: Set questions in a prehistoric world with dinosaurs and ancient creatures
+          - Superhero Academy: Create scenarios about training to be a superhero with special powers
+          - Underwater Kingdom: Frame questions around ocean life, mermaids, and sea creatures
+
+          For the chosen theme:
+          1. Use theme-appropriate vocabulary and scenarios
+          2. Maintain educational value while making it fun
+          3. Keep the theme consistent across all questions
+          4. Use the theme to make grammar and punctuation rules more memorable
+          5. Create a story-like flow between questions
+          6. Make explanations fit the theme while being clear and educational
+
+          Each question should:
+          - Have a clear learning objective
+          - Include easy to understand hints for children
+          - Provide detailed explanations for both correct and incorrect answers
+          - Use positive, encouraging language in feedback
+        learning_goals: "Master essential editing skills including grammar, punctuation, spelling, and organization"
+        target_age_range: "8-9"
+        target_grade_level: "4"
+        llm_model: ""
+        tags: "[\"weekly\", \"english\", \"editing\"]"
+        account: "__ref::accounts::a1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
   - name: "practice_items"
-    select: "SELECT COUNT(*) FROM practice_items WHERE id = ?"
-    insert: "INSERT INTO practice_items (id, question_text, question_type, correct_answer, options, explanation, explanation_for_incorrect, hints, difficulty_level, tags, status, practice_topic, account, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    select: "SELECT COUNT(*) FROM practice_items WHERE id = {:id}"
+    insert: "INSERT INTO practice_items (id, question_text, question_type, correct_answer, options, explanation, explanation_for_incorrect, hints, difficulty_level, tags, status, practice_topic, account, created, updated) VALUES ({:id}, {:question_text}, {:question_type}, {:correct_answer}, {:options}, {:explanation}, {:explanation_for_incorrect}, {:hints}, {:difficulty_level}, {:tags}, {:status}, {:practice_topic}, {:account}, {:created}, {:updated})"
     items:
       - id: "pi1"
         question_text: "What is 2 + 2?"
@@ -200,7 +365,7 @@ collections:
         hints: "[]"
         difficulty_level: "easy"
         tags: "[]"
-        status: "published"
+        status: "Generated"
         practice_topic: "__ref::practice_topics::pt1"
         account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
@@ -216,22 +381,86 @@ collections:
         hints: "[]"
         difficulty_level: "medium"
         tags: "[]"
-        status: "published"
+        status: "Generated"
         practice_topic: "__ref::practice_topics::pt1"
         instructor: "__ref::instructors::i1"
         account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      - id: "pi3"
+        question_text: "What is the value of 7 x 8?"
+        question_type: "multiple_choice"
+        correct_answer: "\"56\""
+        options: "[\"54\", \"56\", \"64\", \"74\"]"
+        explanation: "Let's solve this problem! We need to multiply 7 by 8. You can think of it like this: 7 groups of 8. Or, you can do it in any order – 8 groups of 7. 7 x 8 = 56. Multiplying is a super-important skill for building things, sharing treats, and lots of other cool stuff! Knowing your multiplication tables helps you quickly solve these types of problems."
+        explanation_for_incorrect: "{\"54\": \"Oops! It looks like you might have added 7 + 7 + 7 + 7 instead of multiplying. Multiplication is about combining groups, not just adding the numbers.\", \"64\": \"Close! 7 x 8 is not 64. Let's try again and make sure we're multiplying, not adding.\", \"74\": \"That's the total if you added 7 + 7 + 7 + 7. But the question asks for the *product* of 7 and 8.\"}"
+        hints: "[\"Remember, multiplication means 'groups of'.\", \"What's 7 + 7 + 7 + 7? Is that the same as 7 x 8?\"]"
+        difficulty_level: "easy"
+        tags: "[]"
+        status: "Generated"
+        practice_topic: "__ref::practice_topics::pt1"
+        account: "__ref::accounts::a1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+      - id: "pi4"
+        question_text: "If you have 15 cookies and you want to share them equally with 3 friends, how many cookies does each person get?"
+        question_type: "multiple_choice"
+        correct_answer: "\"5\""
+        options: "[\"3\", \"4\", \"5\", \"6\"]"
+        explanation: "Fantastic! Sharing is caring, and this problem is about dividing. We need to split 15 cookies between 4 people. We can do this by dividing: 15 ÷ 4 = 3 with a remainder of 3. This means each person gets 3 cookies, and there are 3 cookies left over. Or, you could think of it like this: 3 people x 4 cookies each = 12 cookies, and then you have 3 cookies left over. Does that make sense?"
+        explanation_for_incorrect: "{\"3\": \"Close! You got the total number of people, but we need to divide the cookies equally amongst them. Try dividing the total number of cookies (15) by the number of people (4).\", \"4\": \"Hmm, if each person got 4 cookies, you'd need 4 x 4 = 16 cookies, but we only have 15! Remember to divide 15 by 4.\", \"6\": \"That's too many cookies per person. Let's figure out how many cookies each person gets if we divide 15 by 4.\"}"
+        hints: "[\"Think about sharing equally - what operation do you use?\", \"You have 15 cookies and 4 friends.\"]"
+        difficulty_level: "easy"
+        tags: "[]"
+        status: "Generated"
+        practice_topic: "__ref::practice_topics::pt1"
+        account: "__ref::accounts::a1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+      - id: "pi5"
+        question_text: "True or False: A triangle has three sides."
+        question_type: "true_false"
+        correct_answer: "\"True\""
+        options: "[]"
+        explanation: "You got it! A triangle is, by definition, a shape with *three* sides. It's one of the basic shapes in geometry. Triangles are super important in building things and even in art! Knowing shapes helps us understand the world around us."
+        explanation_for_incorrect: "{\"False\": \"Not quite! A triangle is defined as a shape with exactly three sides. This is one of the fundamental properties of triangles in geometry. Think about it - can you draw a triangle with more or fewer than three sides?\"}"
+        hints: "[\"What's the shape of a triangle?\", \"How many sides does a triangle have?\"]"
+        difficulty_level: "easy"
+        tags: "[]"
+        status: "published"
+        practice_topic: "__ref::practice_topics::pt1"
+        account: "__ref::accounts::a1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+      - id: "pi6"
+        question_text: "What is 2 x 5 + 3?"
+        question_type: "short_answer"
+        correct_answer: "\"13\""
+        options: "[]"
+        explanation: "Great job! Let's solve this step-by-step. First, we need to do the multiplication: 2 x 5 = 10. Then, we add the result to 3: 10 + 3 = 13. Remember, we always do the multiplication *before* the addition! This is like following instructions – first do this, then do that."
+        explanation_for_incorrect: "{\"2 + 5 + 3\": \"You're combining the numbers, but you need to do the multiplication (2 x 5) *before* adding the 3.\", \"5 + 3\": \"Oops! It looks like you might have added 5 + 3 first. Remember, multiplication comes before addition in math!\"}"
+        hints: "[\"Remember the order of operations (PEMDAS/BODMAS).\", \"What operation comes first: multiplication or addition?\"]"
+        difficulty_level: "easy"
+        tags: "[]"
+        status: "Generated"
+        practice_topic: "__ref::practice_topics::pt1"
+        account: "__ref::accounts::a1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
   - name: "practice_sessions"
-    select: "SELECT COUNT(*) FROM practice_sessions WHERE id = ?"
-    insert: "INSERT INTO practice_sessions (id, name, assigned_at, completed_at, status, generation_prompt, practice_topic, practice_items, learner, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    select: "SELECT COUNT(*) FROM practice_sessions WHERE id = {:id}"
+    insert: "INSERT INTO practice_sessions (id, name, assigned_at, completed_at, status, generation_prompt, practice_topic, practice_items, learner, created, updated) VALUES ({:id}, {:name}, {:assigned_at}, {:completed_at}, {:status}, {:generation_prompt}, {:practice_topic}, {:practice_items}, {:learner}, {:created}, {:updated})"
     items:
       - id: "ps1"
         name: "Math Practice Session"
         assigned_at: __::currentTimestamp::__
         completed_at: __::currentTimestamp::__
-        status: "completed"
+        status: "Completed"
         generation_prompt: "Generate basic math problems"
         practice_topic: "__ref::practice_topics::pt1"
         practice_items: "[\"pi1\", \"pi2\"]" 
@@ -239,9 +468,22 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      - id: "ps2"
+        name: "Math Practice Session 2"
+        assigned_at: __::currentTimestamp::__
+        completed_at: __::currentTimestamp::__
+        status: "
+        ]"
+        generation_prompt: "Explain this math problem in simple terms"
+        practice_topic: "__ref::practice_topics::pt1"
+        practice_items: "[\"pi3\", \"pi4\", \"pi5\", \"pi6\"]"
+        learner: "__ref::learners::l1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
   - name: "practice_results"
-    select: "SELECT COUNT(*) FROM practice_results WHERE id = ?"
-    insert: "INSERT INTO practice_results (id, answer, attempt_number, evaluation_details, feedback, hint_level_reached, is_correct, score, started_at, submitted_at, learner, practice_item, practice_session, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    select: "SELECT COUNT(*) FROM practice_results WHERE id = {:id}"
+    insert: "INSERT INTO practice_results (id, answer, attempt_number, evaluation_details, feedback, hint_level_reached, is_correct, score, started_at, submitted_at, learner, practice_item, practice_session, created, updated) VALUES ({:id}, {:answer}, {:attempt_number}, {:evaluation_details}, {:feedback}, {:hint_level_reached}, {:is_correct}, {:score}, {:started_at}, {:submitted_at}, {:learner}, {:practice_item}, {:practice_session}, {:created}, {:updated})"
     items:
       - id: "pr1"
         answer: "\"4\""
@@ -275,9 +517,25 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      - id: "pr3"
+        answer: "\"True\""
+        attempt_number: 1
+        evaluation_details: "{\"method\": \"exact_match\"}"
+        feedback: "Correct! You used a hint to get there."
+        hint_level_reached: 1
+        is_correct: true
+        score: 90
+        started_at: __::currentTimestamp::__
+        submitted_at: __::currentTimestamp::__
+        learner: "__ref::learners::l1"
+        practice_item: "__ref::practice_items::pi5"
+        practice_session: "__ref::practice_sessions::ps2"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
   - name: "achievement_definitions"
-    select: "SELECT COUNT(*) FROM achievement_definitions WHERE id = ?"
-    insert: "INSERT INTO achievement_definitions (id, name, description, icon, points, trigger_condition, account, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    select: "SELECT COUNT(*) FROM achievement_definitions WHERE id = {:id}"
+    insert: "INSERT INTO achievement_definitions (id, name, description, icon, points, trigger_condition, account, created, updated) VALUES ({:id}, {:name}, {:description}, {:icon}, {:points}, {:trigger_condition}, {:account}, {:created}, {:updated})"
     items:
       - id: "ad1"
         name: "First Perfect Score"
@@ -290,8 +548,8 @@ collections:
         updated: __::currentTimestamp::__
 
   - name: "earned_achievements"
-    select: "SELECT COUNT(*) FROM earned_achievements WHERE id = ?"
-    insert: "INSERT INTO earned_achievements (id, earned_at, achievement_definition, learner, account, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    select: "SELECT COUNT(*) FROM earned_achievements WHERE id = {:id}"
+    insert: "INSERT INTO earned_achievements (id, earned_at, achievement_definition, learner, account, created, updated) VALUES ({:id}, {:earned_at}, {:achievement_definition}, {:learner}, {:account}, {:created}, {:updated})"
     items:
       - id: "ea1"
         earned_at: __::currentTimestamp::__

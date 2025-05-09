@@ -27,20 +27,24 @@ Children can then:
 ## Quick Start
 
 ```bash
-# Build the Docker image
-docker build -t glimmer .
+# Clone the repository
+git clone https://github.com/busybytelab.com/glimmer.git
+cd glimmer
 
-# or pull the image from Docker Hub
-docker pull ghcr.io/busybytelab/glimmer:latest
+# Build and run
+make build
 
-# Run with Docker
-docker run -p 8787:8787 glimmer
+# Edit the environment variables
+cp .env.example .env
+
+# Run the app, e.g. on Linux arm64
+./build/glimmer-linux-arm64
 
 # Or using docker-compose
-docker-compose up
+docker compose up -d
 ```
 
-For detailed installation instructions, see the [installation guide](docs/installation.md).
+For detailed installation instructions and configuration options, see our [Installation Guide](docs/installation.md).
 
 ## License
 

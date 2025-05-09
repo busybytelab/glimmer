@@ -53,28 +53,26 @@
 		}
 	}
 
-	onMount(() => {
+	onMount(async () => {
 		console.log('PracticeTopics mounted, loading topics');
-		loadTopics();
 		
 		// Check if edit parameter is in URL
 		const urlParams = new URLSearchParams(window.location.search);
 		const editTopicId = urlParams.get('edit');
 		console.log('URL edit parameter:', editTopicId);
 		
+		// Load topics first
+		await loadTopics();
+		
 		if (editTopicId) {
 			console.log('Found edit parameter, will edit topic:', editTopicId);
-			
-			// Find the topic to edit
-			loadTopics().then(() => {
-				const topicToEdit = topics.find(t => t.id === editTopicId);
-				if (topicToEdit) {
-					console.log('Found topic to edit:', topicToEdit.name);
-					handleTopicEdit(topicToEdit);
-				} else {
-					console.error('Could not find topic with id:', editTopicId);
-				}
-			});
+			const topicToEdit = topics.find(t => t.id === editTopicId);
+			if (topicToEdit) {
+				console.log('Found topic to edit:', topicToEdit.name);
+				handleTopicEdit(topicToEdit);
+			} else {
+				console.error('Could not find topic with id:', editTopicId);
+			}
 			
 			// Clear the URL parameter to avoid reopening the edit form on refresh
 			const url = new URL(window.location.href);

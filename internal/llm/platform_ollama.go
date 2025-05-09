@@ -57,6 +57,7 @@ func (o *ollamaPlatform) Models() ([]*ModelInfo, error) {
 			model.IsDefault = true
 		}
 	}
+	sortModels(models)
 
 	return models, nil
 }

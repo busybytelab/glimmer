@@ -215,9 +215,8 @@
 								</div>
 								<div class="bg-gray-50 border border-gray-100 rounded-lg p-4">
 									<div class="flex space-x-2">
-										<div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-										<div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-										<div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+										<div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce bounce-delay-1"></div>
+										<div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce bounce-delay-2"></div>
 									</div>
 								</div>
 							</div>
@@ -285,5 +284,13 @@
 		font-weight: normal;
 		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
 		text-align: left;
+	}
+	
+	.bounce-delay-1 {
+		animation-delay: 0.2s;
+	}
+	
+	.bounce-delay-2 {
+		animation-delay: 0.4s;
 	}
 </style> 

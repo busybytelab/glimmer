@@ -1,6 +1,5 @@
 <script lang="ts">
   export let mobile = false;
-  export let currentPath: string;
   
   // SVG path data for icons
   const icons = {

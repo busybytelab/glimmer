@@ -3,7 +3,6 @@ package llm
 import (
 	"crypto/sha256"
 	"encoding/hex"
-
 	"github.com/rs/zerolog/log"
 )
 
@@ -11,6 +10,7 @@ import (
 type cachedPlatform struct {
 	delegate Platform
 	storage  CacheStorage
+	models   []*ModelInfo
 }
 
 // cacheEntry represents a cached response
@@ -33,7 +33,18 @@ func (c *cachedPlatform) Type() PlatformType {
 }
 
 func (c *cachedPlatform) Models() ([]*ModelInfo, error) {
-	return c.delegate.Models()
+	if c.models == nil {
+		models, err := c.delegate.Models()
+		if err != nil {
+			return nil, err
+		}
+		c.models = models
+	}
+	return c.models, nil
+}
+
+func (c *cachedPlatform) ClearModelsCache() {
+	c.models = nil
 }
 
 // Chat implements the Platform interface with caching

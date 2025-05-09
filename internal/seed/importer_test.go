@@ -3,15 +3,17 @@ package seed
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/pocketbase/pocketbase/tests"
 )
 
 func TestLoadSeedConfig(t *testing.T) {
 	// Create a temporary YAML file
 	content := `
 description: "Test Config"
-db: "test.db"
 collections:
   - name: "test_collection"
     select: "SELECT COUNT(*) FROM test_collection WHERE id = ?"
@@ -41,9 +43,6 @@ collections:
 	if config.Description != "Test Config" {
 		t.Errorf("Expected description 'Test Config', got '%s'", config.Description)
 	}
-	if config.DB != "test.db" {
-		t.Errorf("Expected DB 'test.db', got '%s'", config.DB)
-	}
 	if len(config.Collections) != 1 {
 		t.Fatalf("Expected 1 collection, got %d", len(config.Collections))
 	}
@@ -52,6 +51,73 @@ collections:
 	}
 	if len(config.Collections[0].Items) != 1 {
 		t.Fatalf("Expected 1 item, got %d", len(config.Collections[0].Items))
+	}
+}
+
+func TestSeedDatabaseFromYAML(t *testing.T) {
+	// Create a test app instance
+	testApp, err := tests.NewTestApp()
+	if err != nil {
+		t.Fatalf("Failed to create test app: %v", err)
+	}
+	defer testApp.Cleanup()
+
+	// Create test table
+	_, err = testApp.DB().NewQuery(`
+		CREATE TABLE test_collection (
+			id TEXT PRIMARY KEY,
+			name TEXT,
+			created_at TEXT,
+			updated_at TEXT
+		)
+	`).Execute()
+	if err != nil {
+		t.Fatalf("Failed to create test table: %v", err)
+	}
+
+	// Create a temporary YAML file with test configuration
+	content := `
+collections:
+  - name: test_collection
+    select: SELECT COUNT(*) FROM test_collection WHERE id = {:id}
+    insert: INSERT INTO test_collection (id, name, created_at, updated_at) VALUES ({:id}, {:name}, {:created_at}, {:updated_at})
+    items:
+      - id: "test1"
+        name: "Test Item 1"
+        created_at: "__::currentTimestamp::__"
+        updated_at: "__::currentTimestamp::__"
+      - id: "test2"
+        name: "Test Item 2"
+        created_at: "__::currentTimestamp::__"
+        updated_at: "__::currentTimestamp::__"
+`
+	tmpFile, err := os.CreateTemp("", "test-seed-*.yaml")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.WriteString(content); err != nil {
+		t.Fatalf("Failed to write test config: %v", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		t.Fatalf("Failed to close temp file: %v", err)
+	}
+
+	// Run the seed
+	if err := SeedDatabaseFromYAML(testApp, tmpFile.Name()); err != nil {
+		t.Fatalf("Failed to seed database: %v", err)
+	}
+
+	// Verify the seeded data
+	var count int
+	err = testApp.DB().NewQuery("SELECT COUNT(*) FROM test_collection").Row(&count)
+	if err != nil {
+		t.Fatalf("Failed to verify seeded data: %v", err)
+	}
+
+	if count != 2 {
+		t.Errorf("Expected 2 items in test_collection, got %d", count)
 	}
 }
 
@@ -127,7 +193,6 @@ func TestTimestampReplacement(t *testing.T) {
 	// Create a temporary YAML file with timestamp placeholder
 	content := `
 description: "Test Config"
-db: "test.db"
 collections:
   - name: "test_collection"
     select: "SELECT COUNT(*) FROM test_collection WHERE id = ?"
@@ -169,7 +234,6 @@ func TestValidateConfigWithReferences(t *testing.T) {
 	// Test with valid references
 	validConfig := &SeedConfig{
 		Description: "Test Config",
-		DB:          "test.db",
 		Collections: []CollectionConfig{
 			{
 				Name:   "collection1",
@@ -204,7 +268,6 @@ func TestValidateConfigWithReferences(t *testing.T) {
 	// Test with invalid reference format
 	invalidFormatConfig := &SeedConfig{
 		Description: "Test Config",
-		DB:          "test.db",
 		Collections: []CollectionConfig{
 			{
 				Name:   "collection1",
@@ -239,7 +302,6 @@ func TestValidateConfigWithReferences(t *testing.T) {
 	// Test with reference to non-existent collection
 	nonExistentCollectionConfig := &SeedConfig{
 		Description: "Test Config",
-		DB:          "test.db",
 		Collections: []CollectionConfig{
 			{
 				Name:   "collection1",
@@ -274,7 +336,6 @@ func TestValidateConfigWithReferences(t *testing.T) {
 	// Test with reference to non-existent item in existing collection
 	nonExistentItemConfig := &SeedConfig{
 		Description: "Test Config",
-		DB:          "test.db",
 		Collections: []CollectionConfig{
 			{
 				Name:   "collection1",
@@ -311,7 +372,6 @@ func TestCircularReferenceDetection(t *testing.T) {
 	// Test with circular references
 	circularConfig := &SeedConfig{
 		Description: "Test Config",
-		DB:          "test.db",
 		Collections: []CollectionConfig{
 			{
 				Name:   "collection1",
@@ -352,7 +412,6 @@ func TestCircularReferenceDetection(t *testing.T) {
 	// Test with no circular references (similar structure but no circularity)
 	validConfig := &SeedConfig{
 		Description: "Test Config",
-		DB:          "test.db",
 		Collections: []CollectionConfig{
 			{
 				Name:   "collection1",
@@ -398,124 +457,148 @@ func TestCircularReferenceDetection(t *testing.T) {
 	}
 }
 
-func TestExtractTableAndColumns(t *testing.T) {
-	testCases := []struct {
-		name        string
-		insertStmt  string
-		wantTable   string
-		wantColumns []string
-		wantError   bool
+func TestExtractTableName(t *testing.T) {
+	tests := []struct {
+		name     string
+		insert   string
+		expected string
 	}{
 		{
-			name:        "Simple insert",
-			insertStmt:  "INSERT INTO users (id, name, email) VALUES (?, ?, ?)",
-			wantTable:   "users",
-			wantColumns: []string{"id", "name", "email"},
-			wantError:   false,
+			name:     "Simple insert",
+			insert:   "INSERT INTO users (id, name) VALUES (?, ?)",
+			expected: "users",
 		},
 		{
-			name:        "Insert with spaces",
-			insertStmt:  "INSERT INTO  practice_sessions  ( id ,  name ,  assigned_at ) VALUES (?, ?, ?)",
-			wantTable:   "practice_sessions",
-			wantColumns: []string{"id", "name", "assigned_at"},
-			wantError:   false,
+			name:     "Insert with spaces",
+			insert:   "INSERT INTO  users  (id, name) VALUES (?, ?)",
+			expected: "users",
 		},
 		{
-			name:        "Insert with lowercase",
-			insertStmt:  "insert into items (id, title) values (?, ?)",
-			wantTable:   "items",
-			wantColumns: []string{"id", "title"},
-			wantError:   false,
+			name:     "Insert with lowercase",
+			insert:   "insert into users (id, name) values (?, ?)",
+			expected: "users",
 		},
 		{
-			name:        "Invalid insert without columns",
-			insertStmt:  "INSERT INTO users VALUES (?, ?, ?)",
-			wantTable:   "",
-			wantColumns: nil,
-			wantError:   true,
+			name:     "Invalid insert without columns",
+			insert:   "INSERT INTO users",
+			expected: "users",
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			table, columns, err := extractTableAndColumns(tc.insertStmt)
-
-			if tc.wantError {
-				if err == nil {
-					t.Errorf("Expected error but got none")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Fatalf("Unexpected error: %v", err)
-			}
-
-			if table != tc.wantTable {
-				t.Errorf("Expected table %s, got %s", tc.wantTable, table)
-			}
-
-			if len(columns) != len(tc.wantColumns) {
-				t.Fatalf("Expected %d columns, got %d", len(tc.wantColumns), len(columns))
-			}
-
-			for i, col := range tc.wantColumns {
-				if columns[i] != col {
-					t.Errorf("Expected column %s at position %d, got %s", col, i, columns[i])
-				}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := extractTableName(tt.insert)
+			if got != tt.expected {
+				t.Errorf("Expected table %s, got %s", tt.expected, got)
 			}
 		})
 	}
 }
 
-func TestCountPlaceholdersInStatement(t *testing.T) {
-	testCases := []struct {
-		name          string
-		statement     string
-		expectedCount int
-		expectError   bool
+func TestProcessEnvVarToken(t *testing.T) {
+	// Save original environment and restore after test
+	originalEnv := os.Getenv("TEST_ENV_VAR")
+	defer os.Setenv("TEST_ENV_VAR", originalEnv)
+
+	tests := []struct {
+		name                string
+		token               string
+		defaultPasswordHash string
+		envValue            string
+		expected            string
 	}{
 		{
-			name:          "Simple statement",
-			statement:     "INSERT INTO users (id, name) VALUES (?, ?)",
-			expectedCount: 2,
-			expectError:   false,
+			name:                "valid env var with value",
+			token:               "__::env::TEST_ENV_VAR::default_value::__",
+			defaultPasswordHash: "default_hash",
+			envValue:            "env_value",
+			expected:            "env_value",
 		},
 		{
-			name:          "Complex statement with many placeholders",
-			statement:     "INSERT INTO users (id, name, email, age, created, updated) VALUES (?, ?, ?, ?, ?, ?)",
-			expectedCount: 6,
-			expectError:   false,
+			name:                "valid env var without value",
+			token:               "__::env::TEST_ENV_VAR::default_value::__",
+			defaultPasswordHash: "default_hash",
+			envValue:            "",
+			expected:            "default_value",
 		},
 		{
-			name:          "Statement with inconsistent placeholders",
-			statement:     "INSERT INTO users (id, name) VALUES (?, ?, ?)", // 3 ? but only 2 columns
-			expectedCount: 3,
-			expectError:   true,
+			name:                "default password hash reference",
+			token:               "__::env::TEST_ENV_VAR::default_password_hash::__",
+			defaultPasswordHash: "default_hash",
+			envValue:            "",
+			expected:            "default_hash",
 		},
 		{
-			name:          "Statement with no VALUES section",
-			statement:     "DELETE FROM users WHERE id = ?",
-			expectedCount: 1,
-			expectError:   false, // No error as we default to counting ? marks
+			name:                "invalid token format",
+			token:               "invalid_token",
+			defaultPasswordHash: "default_hash",
+			envValue:            "",
+			expected:            "invalid_token",
+		},
+		{
+			name:                "invalid env token format",
+			token:               "__::env::TEST_ENV_VAR::__",
+			defaultPasswordHash: "default_hash",
+			envValue:            "",
+			expected:            "__::env::TEST_ENV_VAR::__",
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			count, err := countPlaceholdersInStatement(tc.statement)
-
-			if tc.expectError {
-				if err == nil {
-					t.Log("Expected error but got none")
-					// Not failing test as this is more of a warning
-				}
-			} else if err != nil {
-				t.Errorf("Unexpected error: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Setenv("TEST_ENV_VAR", tt.envValue)
+			result := processEnvVarToken(tt.token, tt.defaultPasswordHash)
+			if result != tt.expected {
+				t.Errorf("processEnvVarToken() = %v, want %v", result, tt.expected)
 			}
+		})
+	}
+}
 
-			if count != tc.expectedCount {
-				t.Errorf("Expected %d placeholders, got %d", tc.expectedCount, count)
+func TestProcessItemValues(t *testing.T) {
+	// Save original environment and restore after test
+	originalEnv := os.Getenv("TEST_ENV_VAR")
+	defer os.Setenv("TEST_ENV_VAR", originalEnv)
+
+	tests := []struct {
+		name                string
+		itemMap             map[string]interface{}
+		defaultPasswordHash string
+		envValue            string
+		expected            map[string]interface{}
+	}{
+		{
+			name: "process env var token",
+			itemMap: map[string]interface{}{
+				"field1": "__::env::TEST_ENV_VAR::default_value::__",
+				"field2": "normal_value",
+			},
+			defaultPasswordHash: "default_hash",
+			envValue:            "env_value",
+			expected: map[string]interface{}{
+				"field1": "env_value",
+				"field2": "normal_value",
+			},
+		},
+		{
+			name: "process default password hash",
+			itemMap: map[string]interface{}{
+				"password": "__::env::TEST_ENV_VAR::default_password_hash::__",
+			},
+			defaultPasswordHash: "default_hash",
+			envValue:            "",
+			expected: map[string]interface{}{
+				"password": "default_hash",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Setenv("TEST_ENV_VAR", tt.envValue)
+			processItemValues(tt.itemMap, tt.defaultPasswordHash)
+			if !reflect.DeepEqual(tt.itemMap, tt.expected) {
+				t.Errorf("processItemValues() = %v, want %v", tt.itemMap, tt.expected)
 			}
 		})
 	}

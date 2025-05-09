@@ -158,11 +158,10 @@ func init() {
 					"required": true,
 					"system": false,
 					"type": "relation",
-					
-						"collectionId": "pbc_%s",
-						"cascadeDelete": false,
-						"maxSelect": 1,
-						"minSelect": 1
+					"collectionId": "pbc_%s",
+					"cascadeDelete": true,
+					"maxSelect": 1,
+					"minSelect": 1
 					
 				},
 				{
@@ -177,12 +176,10 @@ func init() {
 					"required": true,
 					"system": false,
 					"type": "relation",
-						
-						"collectionId": "pbc_%s",
-						"cascadeDelete": true,
-						"maxSelect": 1,
-						"minSelect": 1
-					
+					"collectionId": "pbc_%s",
+					"cascadeDelete": true,
+					"maxSelect": 1,
+					"minSelect": 1
 				},
 				{
 					"autogeneratePattern": "",
@@ -196,12 +193,10 @@ func init() {
 					"required": true,
 					"system": false,
 					"type": "relation",
-					
-						"collectionId": "pbc_%s",
-						"cascadeDelete": true,
-						"maxSelect": 1,
-						"minSelect": 1
-					
+					"collectionId": "pbc_%s",
+					"cascadeDelete": true,
+					"maxSelect": 1,
+					"minSelect": 1
 				},
 				{
 					"hidden": false,
@@ -226,12 +221,12 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [],
-			"listRule": null,
+			"listRule": "@request.auth.id != null",
 			"name": "%s",
 			"system": false,
 			"type": "base",
-			"updateRule": null,
-			"viewRule": null
+			"updateRule": "@request.auth.id != null",
+			"viewRule": "@request.auth.id != null"
 		}`, domain.CollectionPracticeItems, domain.CollectionLearners, domain.CollectionPracticeSessions, domain.CollectionPracticeResults, domain.CollectionPracticeResults)
 
 		collection := &core.Collection{}

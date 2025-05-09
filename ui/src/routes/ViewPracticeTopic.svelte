@@ -1,69 +1,77 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import type { PracticeTopic } from '$lib/types';
     import pb from '$lib/pocketbase';
-    import type { PracticeTopic, PracticeSession } from '$lib/types';
     import AppLayout from '../components/layout/AppLayout.svelte';
     import FormButton from '../components/common/FormButton.svelte';
 
     let topic: PracticeTopic | null = null;
-    let pastPractices: PracticeSession[] = [];
+    let pastPractices: any[] = [];
     let loading = true;
     let error: string | null = null;
     let sidebarOpen = true;
     let topicId: string | null = null;
 
-    onMount(() => {
-        // Extract the topic ID from the URL path
-        const path = window.location.pathname;
-        console.log('Current path:', path);
-        
-        if (path.includes('/practice-topic/')) {
-            // Extract ID from path
-            topicId = path.split('/practice-topic/')[1];
-            console.log('Extracted topicId:', topicId);
+    onMount(async () => {
+        try {
+            // Extract the topic ID from the URL path
+            const path = window.location.pathname;
             
-            // Load data if we have an ID
-            if (topicId) {
-                loadTopic(topicId);
-                loadPastPractices(topicId);
+            if (path.includes('/practice-topic/')) {
+                // Extract ID from path
+                topicId = path.split('/practice-topic/')[1];
+                
+                // Load data if we have an ID
+                if (topicId) {
+                    await loadTopic(topicId);
+                    await loadPastPractices(topicId);
+                } else {
+                    error = 'Invalid topic ID';
+                    loading = false;
+                }
             } else {
-                error = 'Invalid topic ID';
+                console.error('Invalid URL format, expected /practice-topic/ID');
+                error = 'Invalid URL format';
                 loading = false;
             }
-        } else {
-            console.error('Invalid URL format, expected /practice-topic/ID');
-            error = 'Invalid URL format';
+        } catch (err) {
+            console.error('Error in onMount:', err);
+            error = err instanceof Error ? err.message : 'An unexpected error occurred';
             loading = false;
         }
     });
 
     async function loadTopic(id: string) {
         try {
-            console.log('Loading topic with ID:', id);
             loading = true;
             error = null;
             
-            const result = await pb.collection('practice_topics').getOne(id);
-            console.log('Topic data loaded:', result);
-            
-            // Format tags if needed
-            if (result.tags && !Array.isArray(result.tags)) {
-                try {
-                    if (typeof result.tags === 'string' && (result.tags as string).trim().startsWith('[')) {
-                        result.tags = JSON.parse(result.tags as string);
-                    } else if (typeof result.tags === 'string') {
-                        result.tags = (result.tags as string).split(',').map((tag: string) => tag.trim()).filter(Boolean);
+            if (!id) {
+                throw new Error('Topic ID is required');
+            }
+
+            const result = await pb.collection('practice_topics').getOne<PracticeTopic>(id);
+
+            // Parse tags if they're stored as a string
+            if (result.tags) {
+                const tagsValue = result.tags as string | string[];
+                if (typeof tagsValue === 'string') {
+                    try {
+                        if (tagsValue.trim().startsWith('[')) {
+                            result.tags = JSON.parse(tagsValue);
+                        } else {
+                            result.tags = tagsValue.split(',').map((tag: string) => tag.trim()).filter(Boolean);
+                        }
+                    } catch (err) {
+                        console.error('Error parsing tags:', err);
+                        result.tags = [];
                     }
-                } catch (e) {
-                    console.error('Error parsing tags:', e);
-                    result.tags = [];
                 }
-            } else if (!result.tags) {
+            } else {
                 result.tags = [];
             }
-            
-            topic = result as unknown as PracticeTopic;
-            console.log('Topic assigned:', topic);
+
+            topic = result;
         } catch (err) {
             console.error('Failed to load topic:', err);
             error = 'Failed to load practice topic';
@@ -72,74 +80,53 @@
         }
     }
 
-    async function loadPastPractices(topicId: string) {
+    async function loadPastPractices(id: string) {
         try {
-            console.log('Loading past practices for topic:', topicId);
-            // Update field name from "topic" to "practice_topic"
             const result = await pb.collection('practice_sessions').getList(1, 10, {
-                filter: `practice_topic="${topicId}"`,
+                filter: `practice_topic="${id}"`,
                 sort: '-created',
                 expand: 'learner,practice_topic'
             });
-            
-            console.log('Past practices loaded:', result);
-            pastPractices = result.items as unknown as PracticeSession[];
+            pastPractices = result.items;
         } catch (err) {
             console.error('Failed to load past practices:', err);
-            // Don't set error here as it would override topic loading error
         }
     }
 
     function goBack() {
-        // Navigate using path-based routing
         (window as any).navigate('/practice-topics');
     }
 
-    function goToEdit() {
+    function editTopic() {
         if (!topic) return;
-        
-        // Navigate to practice topics page with edit query parameter
         const url = new URL(window.location.origin + '/practice-topics');
         url.searchParams.set('edit', topic.id);
-        
-        console.log('Navigating to edit:', url.toString());
         (window as any).navigate(url.pathname + url.search);
     }
 
-    async function startNewPractice() {
+    async function startPractice() {
         if (!topic) return;
+
         try {
-            // Get current user info
             const authData = pb.authStore.model;
             if (!authData) {
                 console.error('User not authenticated');
                 error = 'You must be logged in to start a practice';
                 return;
             }
-            
-            console.log('Auth data:', authData);
-            
-            // First, determine if the current user is an instructor or a learner
+
             try {
-                // Check if user is an instructor
                 const instructorRecord = await pb.collection('instructors').getFirstListItem(`user="${authData.id}"`);
                 if (instructorRecord) {
-                    console.log('User is an instructor', instructorRecord);
-                    
-                    // If user is an instructor, redirect to the create practice session page
-                    // where they can select a learner
                     (window as any).navigate(`/create-practice/${topic.id}`);
                     return;
                 }
-            } catch (err) {
-                // Not an instructor, continue checking if learner
-                console.log('User is not an instructor');
+            } catch {
+                // Not an instructor, continue as learner
             }
-            
-            // If we get here, check if user is a learner
+
             try {
                 const learnerRecord = await pb.collection('learners').getFirstListItem(`user="${authData.id}"`);
-                console.log('Found learner record:', learnerRecord);
                 
                 // Create the session with all required fields
                 const sessionData = {
@@ -151,11 +138,7 @@
                     name: `Practice: ${topic.name}`
                 };
                 
-                console.log('Creating session with data:', sessionData);
-                
                 const newSession = await pb.collection('practice_sessions').create(sessionData);
-                
-                console.log('Created session:', newSession);
                 
                 // Redirect to practice session page using path-based routing
                 (window as any).navigate(`/practice-session/${newSession.id}`);
@@ -186,7 +169,7 @@
                 <FormButton
                     type="button"
                     variant="primary"
-                    on:click={goToEdit}
+                    on:click={editTopic}
                 >
                     Edit Topic
                 </FormButton>
@@ -256,7 +239,7 @@
                     <FormButton
                         type="button"
                         variant="primary"
-                        on:click={startNewPractice}
+                        on:click={startPractice}
                     >
                         Start New Practice
                     </FormButton>
@@ -265,7 +248,7 @@
             
             {#if pastPractices.length > 0}
                 <div class="bg-white shadow-md rounded-lg p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Past Practice Sessions</h2>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Practice Sessions</h2>
                     
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -299,12 +282,12 @@
                                             {practice.score ? `${practice.score}%` : '-'}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <a 
-                                                href={`#practice-session/${practice.id}`}
+                                            <button 
+                                                on:click={() => (window as any).navigate(`/practice-session/${practice.id}`)}
                                                 class="text-indigo-600 hover:text-indigo-900"
                                             >
                                                 {practice.status === 'InProgress' ? 'Continue' : 'View'}
-                                            </a>
+                                            </button>
                                         </td>
                                     </tr>
                                 {/each}

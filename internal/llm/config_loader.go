@@ -29,7 +29,7 @@ func LoadConfig() *Config {
 			BaseURL:             "https://api.openai.com/v1",
 		},
 		Ollama: OllamaConfig{
-			Model: "llama3.2:1b",
+			Model: "gemma3:1b",
 			URL:   "http://localhost:11434",
 		},
 		Cache: CacheConfig{

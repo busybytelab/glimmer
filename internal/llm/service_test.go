@@ -14,7 +14,7 @@ func TestLLMServiceWithRealOllama(t *testing.T) {
 	// Skip tests if OLLAMA_URL is not set
 	ollamaURL := os.Getenv("OLLAMA_URL")
 	if ollamaURL == "" {
-		t.Skip("OLLAMA_URL is not set, skipping tests")
+		t.Skip("Skipping test: OLLAMA_URL is not set")
 	}
 
 	// Create a configuration
@@ -22,7 +22,7 @@ func TestLLMServiceWithRealOllama(t *testing.T) {
 		Platform: OllamaPlatform,
 		Ollama: OllamaConfig{
 			URL:   ollamaURL,
-			Model: "llama3.2:1b", // Use the default model or override
+			Model: "gemma3:1b", // Use a more common model name
 		},
 		Cache: CacheConfig{
 			Enabled: true,
@@ -56,7 +56,7 @@ func TestLLMServiceWithRealOllama(t *testing.T) {
 			name:         "With model option",
 			prompt:       "What time is it?",
 			systemPrompt: "",
-			options:      []ChatOption{WithModel("llama3.2:1b")},
+			options:      []ChatOption{WithModel("gemma3:1b")},
 		},
 		{
 			name:         "With cache options",
@@ -79,7 +79,7 @@ func TestLLMServiceWithRealOllama(t *testing.T) {
 
 			// Assert usage is present and valid
 			assert.NotNil(t, usage)
-			assert.Equal(t, "llama3.2:1b", usage.LlmModelName) // Ensure model name is correct
+			assert.Equal(t, "gemma3:1b", usage.LlmModelName) // Ensure model name is correct
 			assert.GreaterOrEqual(t, usage.PromptTokens, 1)
 			assert.GreaterOrEqual(t, usage.CompletionTokens, 1)
 			assert.GreaterOrEqual(t, usage.TotalTokens, usage.PromptTokens+usage.CompletionTokens)
@@ -117,7 +117,7 @@ func TestLLMServiceWithMockOllama(t *testing.T) {
 	// Set up the expected behavior
 	mockClient.On("ChatWithModel",
 		mock.Anything, // context
-		"llama3.2:1b", // model name
+		"gemma3:1b",   // model name
 		mock.Anything, // messages
 		false,         // stream
 		mock.Anything, // options
@@ -126,7 +126,7 @@ func TestLLMServiceWithMockOllama(t *testing.T) {
 			Role:    "assistant",
 			Content: "This is a mock response",
 		},
-		Model: "llama3.2:1b",
+		Model: "gemma3:1b",
 		Done:  true,
 	}, nil)
 
@@ -134,7 +134,7 @@ func TestLLMServiceWithMockOllama(t *testing.T) {
 		Platform: OllamaPlatform,
 		Ollama: OllamaConfig{
 			URL:   "http://localhost:11434", // Mock URL
-			Model: "llama3.2:1b",
+			Model: "gemma3:1b",
 		},
 		Cache: CacheConfig{
 			Enabled: true,
@@ -156,7 +156,7 @@ func TestLLMServiceWithMockOllama(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "This is a mock response", response)
 	assert.NotNil(t, usage)
-	assert.Equal(t, "llama3.2:1b", usage.LlmModelName)
+	assert.Equal(t, "gemma3:1b", usage.LlmModelName)
 
 	mockClient.AssertExpectations(t)
 }

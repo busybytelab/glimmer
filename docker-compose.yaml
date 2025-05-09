@@ -11,7 +11,7 @@ services:
     ports:
       - "${LISTEN_ADDRESS:-0.0.0.0:8787}:8787"
     volumes:
-      - /opt/glimmer-deploy/pb_data:/app/pb_data
+      - pb_data:/app/pb_data
     
     env_file:
       - stack.env # stack.env when using portainer or .env when running locally
@@ -33,10 +33,43 @@ services:
     entrypoint: ["/app/glimmer", "--encryptionEnv=${ENCRYPTION_KEY}", "superuser", "create", "${ADMIN_EMAIL:-admin@dev.local}", "${ADMIN_PASSWORD:-glimmerglimmer}"]
     restart: "no"
     volumes:
-      - /opt/glimmer-deploy/pb_data:/app/pb_data
+      - pb_data:/app/pb_data
     networks:
       - glimmer-network
 
+  init-seed-data:
+    image: glimmer:latest
+    depends_on:
+      init-superuser:
+        condition: service_completed_successfully
+    restart: "no"
+    volumes:
+      - pb_data:/app/pb_data
+    networks:
+      - glimmer-network
+    profiles:
+      - demo
+    environment:
+      - SEED_DATA=${SEED_DATA:-false}
+      # Note: When using bcrypt hashes in TEST_USER_PASSWORD_HASH, escape each $ with another $ (e.g., $$2a$$10$$...)
+      - TEST_USER_PASSWORD_HASH=${TEST_USER_PASSWORD_HASH}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    command: >
+      sh -c 'if [ "$$SEED_DATA" = "true" ]; then
+        /app/glimmer --encryptionEnv=$${ENCRYPTION_KEY} seed;
+      else
+        echo "Skipping seed data creation as SEED_DATA is not set to true";
+        exit 0;
+      fi'
+
 networks:
   glimmer-network:
-    driver: bridge
+    external: false
+
+volumes:
+  pb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/glimmer-deploy/pb_data
