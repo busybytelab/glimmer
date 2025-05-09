@@ -47,7 +47,7 @@ The recommended way to run Glimmer is using Docker Compose. This method provides
    # Optional
    LISTEN_ADDRESS=0.0.0.0:8787  # Default: 0.0.0.0:8787
    ADMIN_EMAIL=admin@dev.local  # Default: admin@dev.local
-   ADMIN_PASSWORD=your-admin-password  # Default: glimmerglimmer
+   ADMIN_PASSWORD=your-admin-password
    ```
 
 2. Run the application:

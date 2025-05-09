@@ -430,7 +430,7 @@ collections:
         hints: "[\"What's the shape of a triangle?\", \"How many sides does a triangle have?\"]"
         difficulty_level: "easy"
         tags: "[]"
-        status: "published"
+        status: "Generated"
         practice_topic: "__ref::practice_topics::pt1"
         account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
