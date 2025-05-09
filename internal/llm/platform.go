@@ -2,9 +2,9 @@ package llm
 
 import (
 	"errors"
-	"io"
-
 	"github.com/rs/zerolog/log"
+	"io"
+	"sort"
 )
 
 type (
@@ -103,4 +103,10 @@ func NewPlatform(cfg *Config, cacheStorage CacheStorage) Platform {
 	}
 
 	return platform
+}
+
+func sortModels(models []*ModelInfo) {
+	sort.Slice(models, func(i, j int) bool {
+		return models[i].Name < models[j].Name
+	})
 }

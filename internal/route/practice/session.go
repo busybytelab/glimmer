@@ -247,7 +247,7 @@ func createPracticeItems(e *core.RequestEvent, items []PracticeItemResponse, top
 		newItem.Set("explanation_for_incorrect", string(explanationForIncorrectJson))
 		newItem.Set("hints", string(hintsJson))
 		newItem.Set("difficulty_level", item.DifficultyLevel)
-		newItem.Set("status", "published")
+		newItem.Set("status", "Generated")
 		newItem.Set("practice_topic", topicId)
 		newItem.Set("account", accountId)
 		newItem.Set("tags", "[]") // Empty tags array
@@ -288,7 +288,8 @@ func createPracticeSession(e *core.RequestEvent, topicId, learnerId string, item
 	session.Set("learner", learnerId)
 	session.Set("practice_topic", topicId)
 	session.Set("practice_items", string(itemIdsJsonString))
-	session.Set("status", "InProgress")
+	// Workflow status (e.g., 'Generated', 'NeedsReview', 'Approved', 'Rejected')
+	session.Set("status", "Generated")
 	session.Set("assigned_at", time.Now())
 	session.Set("generation_prompt", generationPrompt)
 	session.Set("account", accountId)

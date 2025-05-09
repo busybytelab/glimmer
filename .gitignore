@@ -1,7 +1,7 @@
 /build/
 
 # Pocketbase data directory
-/pb_data/
+/pb_data*
 
 .private/
 .env

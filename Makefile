@@ -20,9 +20,9 @@ LDFLAGS := -ldflags="-s -w -X $(PKG).Version=$(VERSION)" -tags embed # Use PKG d
 # like Raspberry Pi 3 and earlier. We can add it later if needed for legacy support.
 # Note: Apple Silicon (M1/M2/M3/M4) uses arm64 architecture, so it's covered by linux/arm64.
 
-.PHONY: all format test dep-upgrade build build-all clean help run dev-create-superuser docker-build docker-push docker-clean docker-multi-arch seed-db
+.PHONY: all format test dep-upgrade build build-all clean help run dev-create-superuser docker-build docker-push docker-clean docker-multi-arch seed-db verify-seed
 
-all: format test build ## Run format, test, and build for current platform
+all: format test check-ui build-ui build ## Run format, test, and build for current platform
 
 format: ## Tidy modules and format code
 	@echo "==> Tidying modules..."
@@ -37,7 +37,7 @@ test: ## Run unit tests (excluding integration tests)
 test-local: ## Run all tests with variables
 	@echo "==> Running tests locally..."
 	@if [ -f .env ]; then \
-	    export `cat .env` && go test -count=1 -v --race --timeout 30s $(shell go list ./... | grep -v /tests/) | { grep "\\(FAIL\\|panic:\\)" || test $$? = 1; } \
+	    export $$(grep -v '^#' .env | xargs) && go test -count=1 -v --race --timeout 30s $(shell go list ./... | grep -v /tests/) | { grep "\\(FAIL\\|panic:\\)" || test $$? = 1; } \
 	else \
 		echo "Error: .env file not found"; \
 		exit 1; \
@@ -70,20 +70,23 @@ run: ## Run the application with env vars from .env file if it exists
 	@if [ -f .env ]; then \
 		LISTEN_ADDRESS=$$(grep LISTEN_ADDRESS .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
-		export `cat .env` && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
+		export $$(grep -v '^#' .env | xargs) && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
 	else \
 		go run -tags embed cmd/glimmer/main.go serve; \
 	fi
 
-# run go run main.go superuser -h for other sub commands
-create-superuser:  ## Create a superuser for dev environment with values from .env file
+prepare-dev:  ## Prepare dev environment, apply migrations and create super user
 	@echo "==> Creating superuser..."
 	@if [ -f .env ]; then \
 		EMAIL=$$(grep EMAIL .env | cut -d= -f2); \
 		PASSWORD=$$(grep PASSWORD .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
+		echo "Applying migrations..."; \
+		export $$(grep -v '^#' .env | xargs) && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY migrate; \
 		echo "Creating superuser with email $$EMAIL"; \
-		source .env && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY superuser create "$$EMAIL" "$$PASSWORD"; \
+		source .env && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY superuser upsert "$$EMAIL" "$$PASSWORD"; \
+		echo "Seeding database..."; \
+		export $$(grep -v '^#' .env | xargs) && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY seed; \
 	else \
 		echo "Error: .env file not found"; \
 		exit 1; \
@@ -120,9 +123,38 @@ clean: ## Clean build artifacts and test cache
 	@rm -rf $(BUILD_DIR)
 	@go clean -testcache
 
+check-ui: ## Check UI for errors
+	@echo "==> Checking UI for errors..."
+	@cd ui && npm run check
+
+build-ui: ## Build UI
+	@echo "==> Building UI..."
+	@cd ui && npm run build
+
 help: ## Display this help screen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {help_text[$$1] = $$2} END {for (cmd in help_text) {printf "\033[36m%-20s\033[0m %s\n", cmd, help_text[cmd]}}'
 
-seed-db: ## Seed the database with test data
-	@echo "==> Seeding database with test data using YAML configuration..."
-	@go run -tags embed cmd/glimmer/main.go seed
+verify-seed: build ## Verify seed data by running migrations and seeding in a temporary environment
+	@echo "==> Verifying seed data..."
+	@TEMP_DIR=$$(mktemp -d) && \
+	OS=$$(go env GOOS) && \
+	ARCH=$$(go env GOARCH) && \
+	BINARY=$$TEMP_DIR/$(SERVICE_NAME)-$$OS-$$ARCH && \
+	echo "Created temporary directory: $$TEMP_DIR" && \
+	echo "Copying binary to $$BINARY" && \
+	cp $(BUILD_DIR)/$(SERVICE_NAME)-$$OS-$$ARCH $$BINARY && \
+	cd $$TEMP_DIR && \
+	echo "Running migrations..." && \
+	if [ -f ../.env ]; then \
+		export $$(grep -v '^#' ../.env | xargs) && \
+		./$(SERVICE_NAME)-$$OS-$$ARCH migrate && \
+		echo "Running seed command..." && \
+		./$(SERVICE_NAME)-$$OS-$$ARCH seed; \
+	else \
+		./$(SERVICE_NAME)-$$OS-$$ARCH migrate && \
+		echo "Running seed command with default password hash..." && \
+		./$(SERVICE_NAME)-$$OS-$$ARCH seed; \
+	fi && \
+	echo "Seed verification completed successfully!" && \
+	cd - > /dev/null && \
+	rm -rf $$TEMP_DIR

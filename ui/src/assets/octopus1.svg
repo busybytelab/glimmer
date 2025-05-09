@@ -1,0 +1,14 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="100" r="40" fill="#FFD700" stroke="black" stroke-width="3"/>  <!-- Main body -->
+  <circle cx="60" cy="80" r="10" fill="#FFD700" stroke="black" stroke-width="2"/>  <!-- Eye 1 -->
+  <circle cx="140" cy="80" r="10" fill="#FFD700" stroke="black" stroke-width="2"/>  <!-- Eye 2 -->
+  <circle cx="90" cy="140" r="15" fill="#87CEEB" stroke="black" stroke-width="3"/>  <!-- Tentacle 1 -->
+  <circle cx="150" cy="130" r="15" r="15" fill="#87CEEB" stroke="black" stroke-width="3"/> <!-- Tentacle 2 -->
+  <circle cx="65" cy="170" r="10" fill="#87CEEB" stroke="black" stroke-width="2"/> <!-- Tentacle 3 -->
+  <circle cx="145" cy="160" r="10" fill="#87CEEB" stroke="black" stroke-width="2"/> <!-- Tentacle 4 -->
+  <circle cx="100" cy="180" r="15" fill="#87CEEB" stroke="black" stroke-width="3"/>  <!-- Tentacle 5 -->
+  <circle cx="130" cy="170" r="15" r="15" fill="#87CEEB" stroke="black" stroke-width="3"/>  <!-- Tentacle 6 -->
+  <circle cx="85" cy="190" r="10" fill="#87CEEB" stroke="black" stroke-width="2"/>  <!-- Tentacle 7 -->
+  <circle cx="155" cy="190" r="10" fill="#87CEEB" stroke="black" stroke-width="2"/>  <!-- Tentacle 8 -->
+  <text x="100" y="10" font-size="20" font-family="Verdana" fill="darkblue">Silly Octopus!</text>
+</svg>

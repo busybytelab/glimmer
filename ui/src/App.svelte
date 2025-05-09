@@ -11,6 +11,7 @@
 	import PracticeTopics from './routes/PracticeTopics.svelte';
 	import ViewPracticeTopic from './routes/ViewPracticeTopic.svelte';
 	import CreatePracticeSession from './routes/CreatePracticeSession.svelte';
+	import PracticeSession from './routes/PracticeSession.svelte';
 	import Learners from './routes/Learners.svelte';
 	import Chat from './routes/Chat.svelte';
 
@@ -102,37 +103,38 @@
 		}
 	}
 
+	// Handle routing based on URL path
+	function handleRouting() {
+		const path = window.location.pathname || '/';
+		const search = window.location.search;
+		console.log('Routing path:', path, 'with search:', search);
+		
+		// Check if this is a dynamic route with parameters
+		if (path.includes('/practice-topic/')) {
+			console.log('Setting route to practice-topic view');
+			currentRoute = 'practice-topic';
+		} else if (path.includes('/create-practice/')) {
+			console.log('Setting route to create-practice');
+			currentRoute = 'create-practice';
+		} else if (path.includes('/practice-session/')) {
+			console.log('Setting route to practice-session');
+			currentRoute = 'practice-session';
+		} else if (path === '/') {
+			console.log('Setting route to dashboard');
+			currentRoute = 'dashboard';
+		} else {
+			// Remove leading slash and use the path as route
+			const routeName = path.startsWith('/') ? path.slice(1) : path;
+			console.log('Setting route to:', routeName);
+			currentRoute = routeName;
+		}
+	}
+
 	onMount(() => {
 		// Initialize auth
 		initializeAuth();
 		
 		// Handle routing based on URL path
-		function handleRouting() {
-			const path = window.location.pathname || '/';
-			console.log('Routing path:', path);
-			
-			// Check if this is a dynamic route with parameters
-			if (path.includes('/practice-topic/')) {
-				console.log('Setting route to practice-topic view');
-				currentRoute = 'practice-topic';
-			} else if (path.includes('/create-practice/')) {
-				console.log('Setting route to create-practice');
-				currentRoute = 'create-practice';
-			} else if (path.includes('/practice-session/')) {
-				console.log('Setting route to practice-session');
-				currentRoute = 'practice-session';
-			} else if (path === '/') {
-				console.log('Setting route to dashboard');
-				currentRoute = 'dashboard';
-			} else {
-				// Remove leading slash and use the path as route
-				const routeName = path.startsWith('/') ? path.slice(1) : path;
-				console.log('Setting route to:', routeName);
-				currentRoute = routeName;
-			}
-		}
-		
-		// Initial route
 		handleRouting();
 		
 		// Add navigation event listener for SPA navigation
@@ -169,10 +171,11 @@
 
 	// Navigate function to use throughout the app
 	function navigate(path: string) {
+		// Use history.pushState with the full URL including search params
 		history.pushState(null, '', path);
 		
 		const newPath = window.location.pathname || '/';
-		console.log('Navigated to path:', newPath);
+		console.log('Navigated to path:', newPath, 'with search:', window.location.search);
 		
 		// Update current route based on new path
 		if (newPath.includes('/practice-topic/')) {
@@ -200,7 +203,8 @@
 		
 		// Let the main routing handle this
 		const path = window.location.pathname || '/';
-		console.log('Current path:', path);
+		console.log('Current path:', path, 'with search:', window.location.search);
+		handleRouting();
 	});
 </script>
 
@@ -235,6 +239,8 @@
 			<ViewPracticeTopic />
 		{:else if currentRoute === 'create-practice'}
 			<CreatePracticeSession />
+		{:else if currentRoute === 'practice-session'}
+			<PracticeSession />
 		{:else if currentRoute === 'learners'}
 			<Learners />
 		{:else if currentRoute === 'chat'}

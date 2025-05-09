@@ -8,17 +8,24 @@ interface BaseSystemFields {
 }
 
 // Your collection types
-export interface PracticeItem extends BaseSystemFields {
+export interface PracticeItem {
+    id: string;
     question_text: string;
     question_type: string;
-    options?: string[];
+    options?: string;
     correct_answer: string;
     explanation: string;
-    explanation_for_incorrect?: Record<string, string>;
-    hints?: string[];
-    difficulty_level?: 'Easy' | 'Medium' | 'Hard';
-    status: 'Generated' | 'NeedsReview' | 'Approved' | 'Rejected';
+    explanation_for_incorrect?: string;
+    hints?: string;
+    difficulty_level?: string;
+    status: string;
     tags?: string[];
+    practice_topic: string;
+    account: string;
+    created: string;
+    updated: string;
+    user_answer?: string;
+    hints_used?: string;
 }
 
 export interface PracticeTopic extends BaseSystemFields {
@@ -34,20 +41,31 @@ export interface PracticeTopic extends BaseSystemFields {
     llm_model?: string;
 }
 
-export interface PracticeSession extends BaseSystemFields {
+export interface PracticeSession {
+    id: string;
     name?: string;
-    learner: string;
-    practice_topic: string;
-    instructor?: string;
-    practice_items: any[];
-    status: 'InProgress' | 'Completed' | 'Abandoned';
+    status: string;
     assigned_at: string;
     completed_at?: string;
     generation_prompt?: string;
+    learner: string;
+    practice_topic: string;
+    account: string;
+    practice_items: string;
     score?: number;
-    total_questions?: number;
-    correct_answers?: number;
-    feedback?: string;
+    created: string;
+    updated: string;
+    expand?: {
+        learner?: {
+            id: string;
+            name: string;
+        };
+        practice_topic?: {
+            id: string;
+            name: string;
+        };
+        practice_items?: PracticeItem[];
+    };
 }
 
 export interface Account extends BaseSystemFields {

@@ -101,7 +101,7 @@ func init() {
 					"id": "practice_session_default_prompt_extension_column",
 					"name": "practice_session_default_prompt_extension",
 					"pattern": "",
-					"max": 20000,
+					"max": 40000,
 					"presentable": false,
 					"primaryKey": false,
 					"required": false,

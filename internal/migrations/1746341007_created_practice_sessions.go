@@ -12,7 +12,7 @@ import (
 func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
-			"createRule": "@request.auth.id != null",
+			"createRule": null,
 			"deleteRule": "@request.auth.account.id = account.id",
 			"fields": [
 				{
@@ -139,7 +139,7 @@ func init() {
 					"system": false,
 					"type": "relation",
 					"collectionId": "pbc_%s",
-					"cascadeDelete": false,
+					"cascadeDelete": true,
 					"maxSelect": 1,
 					"minSelect": 1
 				},
@@ -156,8 +156,8 @@ func init() {
 					"system": false,
 					"type": "relation",
 					"collectionId": "pbc_%s",
-					"cascadeDelete": true,
-					"maxSelect": 1,
+					"cascadeDelete": false,
+					"maxSelect": 999,
 					"minSelect": 1
 				},
 				{

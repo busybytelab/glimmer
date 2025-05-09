@@ -1,21 +1,20 @@
 package llm
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"mime/multipart"
-	"net/http"
+	"strings"
 	"time"
 
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
 	"github.com/rs/zerolog/log"
 )
 
 type (
 	openAIPlatform struct {
-		cfg *OpenAIConfig
+		cfg    *OpenAIConfig
+		client *openai.Client
 	}
 
 	openaiRequestMessage struct {
@@ -67,8 +66,14 @@ func newOpenAIPlatform(cfg OpenAIConfig) Platform {
 		cfg.BaseURL = openAIBaseURL
 	}
 
+	client := openai.NewClient(
+		option.WithAPIKey(cfg.APIKey),
+		option.WithBaseURL(cfg.BaseURL),
+	)
+
 	return &openAIPlatform{
-		cfg: &cfg,
+		cfg:    &cfg,
+		client: &client,
 	}
 }
 
@@ -78,7 +83,33 @@ func (o *openAIPlatform) Type() PlatformType {
 }
 
 func (o *openAIPlatform) Models() ([]*ModelInfo, error) {
-	return nil, nil
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), openAITimeout)
+	defer cancel()
+
+	// Fetch models from OpenAI
+	resp, err := o.client.Models.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching models: %w", err)
+	}
+
+	// Convert OpenAI models to our ModelInfo format
+	models := make([]*ModelInfo, 0, len(resp.Data))
+	for _, model := range resp.Data {
+		// Skip models that are not available for chat completions
+		if !strings.Contains(model.ID, "gpt") {
+			continue
+		}
+
+		models = append(models, &ModelInfo{
+			Name:      model.ID,
+			SizeHuman: "N/A",
+			IsDefault: model.ID == o.cfg.Model,
+		})
+	}
+	sortModels(models)
+
+	return models, nil
 }
 
 // Chat sends a chat request to OpenAI
@@ -96,95 +127,63 @@ func (o *openAIPlatform) Chat(params *ChatParameters) (*ChatResponse, error) {
 		return nil, ErrModelNotSpecified
 	}
 
-	// Create request payload
-	messages := []openaiRequestMessage{
-		{
-			Role:    "system",
-			Content: params.SystemPrompt,
-		},
-		{
-			Role:    "user",
-			Content: params.Prompt,
-		},
-	}
-
-	payload := openaiRequest{
-		Model:    model,
-		Messages: messages,
-	}
-
-	// Serialize the request
-	requestBody, err := json.Marshal(payload)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling request: %w", err)
-	}
-
-	// Prepare the request
-	url := fmt.Sprintf("%s/chat/completions", o.cfg.BaseURL)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", o.cfg.APIKey))
-
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), openAITimeout)
 	defer cancel()
-	req = req.WithContext(ctx)
+
+	// Create chat completion request
+	req := openai.ChatCompletionNewParams{
+		Model: model,
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			{
+				OfSystem: &openai.ChatCompletionSystemMessageParam{
+					Content: openai.ChatCompletionSystemMessageParamContentUnion{
+						OfString: openai.String(params.SystemPrompt),
+					},
+				},
+			},
+			{
+				OfUser: &openai.ChatCompletionUserMessageParam{
+					Content: openai.ChatCompletionUserMessageParamContentUnion{
+						OfString: openai.String(params.Prompt),
+					},
+				},
+			},
+		},
+	}
 
 	// Send the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := o.client.Chat.Completions.New(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Read response body
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response: %w", err)
-	}
-
-	// Check for HTTP errors
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API error: %s, %s", resp.Status, string(respBody))
-	}
-
-	// Parse response
-	var response openaiResponse
-	if err := json.Unmarshal(respBody, &response); err != nil {
-		return nil, fmt.Errorf("error unmarshaling response: %w", err)
+		return nil, fmt.Errorf("error sending chat request: %w", err)
 	}
 
 	// Ensure we have at least one choice
-	if len(response.Choices) == 0 {
+	if len(resp.Choices) == 0 {
 		return nil, fmt.Errorf("no response from API")
 	}
 
 	// Calculate cost
-	cost := float64(response.Usage.TotalTokens) * o.cfg.CostPerMillionToken / 1_000_000
+	cost := float64(resp.Usage.TotalTokens) * o.cfg.CostPerMillionToken / 1_000_000
 
 	log.Debug().
 		Str("model", model).
-		Int("promptTokens", response.Usage.PromptTokens).
-		Int("completionTokens", response.Usage.CompletionTokens).
-		Int("totalTokens", response.Usage.TotalTokens).
+		Int64("promptTokens", resp.Usage.PromptTokens).
+		Int64("completionTokens", resp.Usage.CompletionTokens).
+		Int64("totalTokens", resp.Usage.TotalTokens).
 		Float64("cost", cost).
 		Msg("OpenAI chat response received")
 
 	// Create the response
 	return &ChatResponse{
-		Response: response.Choices[0].Message.Content,
+		Response: resp.Choices[0].Message.Content,
 		Usage: &Usage{
 			LlmModelName:     model,
 			CacheHit:         false,
 			Cost:             cost,
-			PromptTokens:     response.Usage.PromptTokens,
-			CompletionTokens: response.Usage.CompletionTokens,
-			TotalTokens:      response.Usage.TotalTokens,
+			PromptTokens:     int(resp.Usage.PromptTokens),
+			CompletionTokens: int(resp.Usage.CompletionTokens),
+			TotalTokens:      int(resp.Usage.TotalTokens),
 		},
 	}, nil
 }
@@ -204,127 +203,63 @@ func (o *openAIPlatform) DescribeImage(params *DescribeImageParameters) (*Descri
 		return nil, ErrModelNotSpecified
 	}
 
-	// Create a buffer to store the multipart form data
-	var requestBody bytes.Buffer
-	multipartWriter := multipart.NewWriter(&requestBody)
-
-	// Add the model field
-	if err := multipartWriter.WriteField("model", model); err != nil {
-		return nil, fmt.Errorf("error writing model field: %w", err)
-	}
-
-	// Add system content if provided
-	if params.SystemPrompt != "" {
-		systemContent := map[string]interface{}{
-			"type": "text",
-			"text": params.SystemPrompt,
-		}
-		systemContentJSON, err := json.Marshal(systemContent)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling system content: %w", err)
-		}
-		if err := multipartWriter.WriteField("system", string(systemContentJSON)); err != nil {
-			return nil, fmt.Errorf("error writing system field: %w", err)
-		}
-	}
-
-	// Add the prompt field (user content)
-	promptContent := "What's in this image?"
-	if params.Prompt != "" {
-		promptContent = params.Prompt
-	}
-
-	userContent := []map[string]interface{}{
-		{
-			"type": "text",
-			"text": promptContent,
-		},
-		{
-			"type": "image",
-			"image": map[string]interface{}{
-				"data": params.Reader,
-			},
-		},
-	}
-	userContentJSON, err := json.Marshal(userContent)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling user content: %w", err)
-	}
-	if err := multipartWriter.WriteField("user", string(userContentJSON)); err != nil {
-		return nil, fmt.Errorf("error writing user field: %w", err)
-	}
-
-	// Close the multipart writer
-	if err := multipartWriter.Close(); err != nil {
-		return nil, fmt.Errorf("error closing multipart writer: %w", err)
-	}
-
-	// Create the HTTP request
-	url := fmt.Sprintf("%s/chat/completions", o.cfg.BaseURL)
-	req, err := http.NewRequest("POST", url, &requestBody)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", multipartWriter.FormDataContentType())
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", o.cfg.APIKey))
-
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), openAITimeout)
 	defer cancel()
-	req = req.WithContext(ctx)
+
+	// Create chat completion request with image
+	req := openai.ChatCompletionNewParams{
+		Model: model,
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			{
+				OfSystem: &openai.ChatCompletionSystemMessageParam{
+					Content: openai.ChatCompletionSystemMessageParamContentUnion{
+						OfString: openai.String(params.SystemPrompt),
+					},
+				},
+			},
+			{
+				OfUser: &openai.ChatCompletionUserMessageParam{
+					Content: openai.ChatCompletionUserMessageParamContentUnion{
+						OfString: openai.String(params.Prompt),
+					},
+				},
+			},
+		},
+	}
 
 	// Send the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := o.client.Chat.Completions.New(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Read response body
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response: %w", err)
-	}
-
-	// Check for HTTP errors
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API error: %s, %s", resp.Status, string(respBody))
-	}
-
-	// Parse response
-	var response openaiResponse
-	if err := json.Unmarshal(respBody, &response); err != nil {
-		return nil, fmt.Errorf("error unmarshaling response: %w", err)
+		return nil, fmt.Errorf("error sending image description request: %w", err)
 	}
 
 	// Ensure we have at least one choice
-	if len(response.Choices) == 0 {
+	if len(resp.Choices) == 0 {
 		return nil, fmt.Errorf("no response from API")
 	}
 
 	// Calculate cost
-	cost := float64(response.Usage.TotalTokens) * o.cfg.CostPerMillionToken / 1_000_000
+	cost := float64(resp.Usage.TotalTokens) * o.cfg.CostPerMillionToken / 1_000_000
 
 	log.Debug().
 		Str("model", model).
-		Int("promptTokens", response.Usage.PromptTokens).
-		Int("completionTokens", response.Usage.CompletionTokens).
-		Int("totalTokens", response.Usage.TotalTokens).
+		Int64("promptTokens", resp.Usage.PromptTokens).
+		Int64("completionTokens", resp.Usage.CompletionTokens).
+		Int64("totalTokens", resp.Usage.TotalTokens).
 		Float64("cost", cost).
 		Msg("OpenAI image description received")
 
 	// Create the response
 	return &DescribeImageResponse{
-		Description: response.Choices[0].Message.Content,
+		Description: resp.Choices[0].Message.Content,
 		Usage: &Usage{
 			LlmModelName:     model,
 			CacheHit:         false,
 			Cost:             cost,
-			PromptTokens:     response.Usage.PromptTokens,
-			CompletionTokens: response.Usage.CompletionTokens,
-			TotalTokens:      response.Usage.TotalTokens,
+			PromptTokens:     int(resp.Usage.PromptTokens),
+			CompletionTokens: int(resp.Usage.CompletionTokens),
+			TotalTokens:      int(resp.Usage.TotalTokens),
 		},
 	}, nil
 }

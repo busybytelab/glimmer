@@ -17,7 +17,6 @@
 package seed
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -26,15 +25,17 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/core"
 	"gopkg.in/yaml.v3"
 )
 
 // SeedConfig represents the top-level structure of the seed YAML file
 type SeedConfig struct {
-	Description string             `yaml:"description"`
-	DB          string             `yaml:"db"`
-	Collections []CollectionConfig `yaml:"collections"`
+	Description         string             `yaml:"description"`
+	DB                  string             `yaml:"db"`
+	DefaultPasswordHash string             `yaml:"default_password_hash"`
+	Collections         []CollectionConfig `yaml:"collections"`
 }
 
 // CollectionConfig represents a collection's configuration for seeding
@@ -72,10 +73,6 @@ func LoadSeedConfig(configPath string) (*SeedConfig, error) {
 
 // validateConfig validates the seed configuration
 func validateConfig(config *SeedConfig) error {
-	if config.DB == "" {
-		return fmt.Errorf("database path is required")
-	}
-
 	if len(config.Collections) == 0 {
 		return fmt.Errorf("at least one collection is required")
 	}
@@ -232,173 +229,58 @@ func detectCircularReferences(graph map[string][]string) error {
 	return nil
 }
 
-// SeedDatabaseFromYAML seeds the database using the provided YAML configuration
-func SeedDatabaseFromYAML(configPath string) error {
-	config, err := LoadSeedConfig(configPath)
-	if err != nil {
-		return err
+// processEnvVarToken processes a token in the format __::env::ENV_VAR_NAME::default_value::__
+// It returns the value from the environment variable if set, otherwise returns the default value
+func processEnvVarToken(token string, defaultPasswordHash string) string {
+	// Extract environment variable name and default value
+	parts := strings.Split(token, "::")
+	if len(parts) != 5 || parts[0] != "__" || parts[4] != "__" || parts[1] != "env" {
+		return token // Return original token if format doesn't match
 	}
 
-	// Resolve references in the config
-	if err := ResolveReferences(config); err != nil {
-		return fmt.Errorf("failed to resolve references: %w", err)
+	envVarName := parts[2]
+	defaultValue := parts[3]
+
+	// If default value is "default_password_hash", use the config's default password hash
+	if defaultValue == "default_password_hash" {
+		defaultValue = defaultPasswordHash
 	}
 
-	// Determine database path
-	dbPath := config.DB
-	if !filepath.IsAbs(dbPath) {
-		workDir, err := os.Getwd()
-		if err != nil {
-			return fmt.Errorf("failed to get current directory: %w", err)
+	// Get value from environment variable
+	if value := os.Getenv(envVarName); value != "" {
+		// Add info line for TEST_USER_PASSWORD_HASH
+		if envVarName == "TEST_USER_PASSWORD_HASH" {
+			log.Printf("Using TEST_USER_PASSWORD_HASH from environment")
 		}
-		dbPath = filepath.Join(workDir, dbPath)
+		return value
 	}
 
-	// Check if the database exists
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		return fmt.Errorf("database file not found at: %s", dbPath)
-	}
-
-	// Connect to the database
-	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
-	}
-	defer db.Close()
-
-	// Validate schema before processing
-	if err := validateDatabaseSchema(db, config); err != nil {
-		return fmt.Errorf("schema validation failed: %w", err)
-	}
-
-	// Begin a transaction
-	tx, err := db.Begin()
-	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
-	}
-
-	// Process each collection in order
-	for _, collection := range config.Collections {
-		if err := seedCollection(tx, collection); err != nil {
-			tx.Rollback()
-			return err
-		}
-	}
-
-	// Commit the transaction
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	return nil
+	return defaultValue
 }
 
-// validateDatabaseSchema checks if columns in INSERT statements exist in the database
-func validateDatabaseSchema(db *sql.DB, config *SeedConfig) error {
-	for _, collection := range config.Collections {
-		// Extract table name and columns from INSERT statement
-		tableName, columns, err := extractTableAndColumns(collection.Insert)
-		if err != nil {
-			return fmt.Errorf("failed to parse insert statement for %s: %w", collection.Name, err)
-		}
-
-		// Get actual table columns from database
-		tableColumns, err := getTableColumns(db, tableName)
-		if err != nil {
-			return fmt.Errorf("failed to get columns for table %s: %w", tableName, err)
-		}
-
-		// Validate each column exists in the table
-		for _, col := range columns {
-			if !columnExists(tableColumns, col) {
-				return fmt.Errorf("table %s has no column named %s", tableName, col)
+// processItemValues processes all values in an item map, handling special tokens
+func processItemValues(itemMap map[string]interface{}, defaultPasswordHash string) {
+	for key, value := range itemMap {
+		if strValue, ok := value.(string); ok {
+			if strings.HasPrefix(strValue, "__::env::") {
+				itemMap[key] = processEnvVarToken(strValue, defaultPasswordHash)
 			}
 		}
-
-		log.Printf("Validated schema for table %s", tableName)
 	}
-	return nil
 }
 
-// extractTableAndColumns extracts the table name and column names from an INSERT statement
-func extractTableAndColumns(insertStmt string) (string, []string, error) {
-	// Extract table name using regex - making it case-insensitive with (?i)
-	tableRegex := regexp.MustCompile(`(?i)INSERT\s+INTO\s+(\w+)\s*\(`)
-	tableMatches := tableRegex.FindStringSubmatch(insertStmt)
-	if len(tableMatches) < 2 {
-		return "", nil, fmt.Errorf("failed to extract table name from insert statement")
-	}
-	tableName := tableMatches[1]
-
-	// Extract column names using regex - making it case-insensitive with (?i)
-	colRegex := regexp.MustCompile(`(?i)INSERT\s+INTO\s+\w+\s*\((.*?)\)`)
-	colMatches := colRegex.FindStringSubmatch(insertStmt)
-	if len(colMatches) < 2 {
-		return "", nil, fmt.Errorf("failed to extract column names from insert statement")
-	}
-
-	// Process column names
-	colsStr := colMatches[1]
-	colsParts := strings.Split(colsStr, ",")
-	columns := make([]string, len(colsParts))
-	for i, col := range colsParts {
-		columns[i] = strings.TrimSpace(col)
-	}
-
-	return tableName, columns, nil
-}
-
-// getTableColumns retrieves the column names for a given table from the database
-func getTableColumns(db *sql.DB, tableName string) ([]string, error) {
-	// SQLite-specific query to get column information
-	rows, err := db.Query(fmt.Sprintf("PRAGMA table_info(%s)", tableName))
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var columns []string
-	for rows.Next() {
-		var cid int
-		var name string
-		var type_ string
-		var notnull int
-		var dflt_value interface{}
-		var pk int
-
-		if err := rows.Scan(&cid, &name, &type_, &notnull, &dflt_value, &pk); err != nil {
-			return nil, err
-		}
-		columns = append(columns, name)
-	}
-
-	if len(columns) == 0 {
-		return nil, fmt.Errorf("table %s does not exist or has no columns", tableName)
-	}
-
-	return columns, nil
-}
-
-// columnExists checks if a column exists in the list of table columns
-func columnExists(tableColumns []string, column string) bool {
-	for _, col := range tableColumns {
-		if col == column {
-			return true
-		}
-	}
-	return false
-}
-
-// seedCollection seeds a single collection based on its configuration
-func seedCollection(tx *sql.Tx, collection CollectionConfig) error {
+// seedCollection seeds a single collection with its items
+func seedCollection(app core.App, collection CollectionConfig, defaultPasswordHash string) error {
 	log.Printf("Seeding collection: %s", collection.Name)
 
 	for i, item := range collection.Items {
-		// Convert item to map
 		itemMap, ok := item.(map[string]interface{})
 		if !ok {
-			return fmt.Errorf("item %d in collection %s is not a map", i, collection.Name)
+			return fmt.Errorf("invalid item format in collection %s", collection.Name)
 		}
+
+		// Process environment variable tokens in the item
+		processItemValues(itemMap, defaultPasswordHash)
 
 		// Get the ID for checking existence
 		id, ok := itemMap["id"]
@@ -408,7 +290,7 @@ func seedCollection(tx *sql.Tx, collection CollectionConfig) error {
 
 		// Check if item exists
 		var count int
-		err := tx.QueryRow(collection.Select, id).Scan(&count)
+		err := app.DB().NewQuery(collection.Select).Bind(dbx.Params{"id": id}).Row(&count)
 		if err != nil {
 			return fmt.Errorf("failed to check if item exists in %s: %w", collection.Name, err)
 		}
@@ -420,15 +302,21 @@ func seedCollection(tx *sql.Tx, collection CollectionConfig) error {
 				return fmt.Errorf("failed to extract values for item %s in %s: %w", id, collection.Name, err)
 			}
 
+			// Create params map for the insert query
+			params := make(dbx.Params)
+			for key, value := range itemMap {
+				params[key] = value
+			}
+
 			// Insert item
-			_, err = tx.Exec(collection.Insert, values...)
+			_, err = app.DB().NewQuery(collection.Insert).Bind(params).Execute()
 			if err != nil {
 				// Check if it's a column count mismatch error
 				if strings.Contains(err.Error(), "values for") && strings.Contains(err.Error(), "columns") {
 					// Parse the expected number of columns from INSERT statement
-					expectedCols, _ := countPlaceholdersInStatement(collection.Insert)
+					expectedCols := strings.Count(collection.Insert, "{:")
 					actualCols := len(values)
-					tableName, _, _ := extractTableAndColumns(collection.Insert)
+					tableName := extractTableName(collection.Insert)
 
 					return fmt.Errorf("column count mismatch for table %s: statement expects %d columns but %d values provided\n"+
 						"SQL: %s\n"+
@@ -441,36 +329,14 @@ func seedCollection(tx *sql.Tx, collection CollectionConfig) error {
 
 			log.Printf("Inserted item %s in collection %s", id, collection.Name)
 		} else {
-			log.Printf("Skipped existing item %s in collection %s", id, collection.Name)
+			log.Printf("Skipping existing item %s in collection %s", id, collection.Name)
 		}
 	}
 
 	return nil
 }
 
-// countPlaceholdersInStatement counts the number of placeholders (?) in an SQL statement
-func countPlaceholdersInStatement(stmt string) (int, error) {
-	// Count the number of question marks (placeholders)
-	count := strings.Count(stmt, "?")
-
-	// Try to verify by parsing the statement - count commas in values section + 1
-	valuesRegex := regexp.MustCompile(`(?i)VALUES\s*\((.*?)\)`)
-	matches := valuesRegex.FindStringSubmatch(stmt)
-
-	if len(matches) >= 2 {
-		valuesPart := matches[1]
-		commaCount := strings.Count(valuesPart, ",")
-		expectedPlaceholders := commaCount + 1
-
-		if expectedPlaceholders != count {
-			return count, fmt.Errorf("mismatch between placeholders count (%d) and values section format (%d)", count, expectedPlaceholders)
-		}
-	}
-
-	return count, nil
-}
-
-// extractInsertValues extracts values from the item map in the order required by the insert statement
+// extractInsertValues extracts values from an item map in the order specified by the INSERT statement
 func extractInsertValues(insertStmt string, itemMap map[string]interface{}) ([]interface{}, error) {
 	// Extract column names from insert statement - making it case-insensitive with (?i)
 	re := regexp.MustCompile(`(?i)INSERT\s+INTO\s+\w+\s+\((.*?)\)`)
@@ -517,6 +383,18 @@ func convertDBColumnToFieldName(colName string) string {
 		// By default, keep as is - this assumes YAML fields match DB column names
 		return colName
 	}
+}
+
+// extractTableName extracts the table name from an INSERT statement
+func extractTableName(insertStmt string) string {
+	// Extract table name using regex - making it case-insensitive with (?i)
+	// This pattern matches both "INSERT INTO table (" and "INSERT INTO table" formats
+	tableRegex := regexp.MustCompile(`(?i)INSERT\s+INTO\s+(\w+)(?:\s*\(|\s+|$)`)
+	tableMatches := tableRegex.FindStringSubmatch(insertStmt)
+	if len(tableMatches) < 2 {
+		return ""
+	}
+	return tableMatches[1]
 }
 
 // ResolveReferences resolves reference placeholders in the seed data
@@ -587,21 +465,45 @@ func ResolveReferences(config *SeedConfig) error {
 	return nil
 }
 
+// SeedDatabaseFromYAML seeds the database using the provided YAML configuration
+func SeedDatabaseFromYAML(app core.App, configPath string) error {
+	config, err := LoadSeedConfig(configPath)
+	if err != nil {
+		return err
+	}
+
+	// Resolve references in the config
+	if err := ResolveReferences(config); err != nil {
+		return fmt.Errorf("failed to resolve references: %w", err)
+	}
+
+	// Process all collections in a single transaction
+	return app.RunInTransaction(func(txApp core.App) error {
+		for _, collection := range config.Collections {
+			if err := seedCollection(txApp, collection, config.DefaultPasswordHash); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 // RunSeedFromYAML is the entry point for the YAML-based seeding tool
-func RunSeedFromYAML(configPath string) {
+func RunSeedFromYAML(app core.App, configPath string) error {
 	// If configPath is not provided, use default
 	if configPath == "" {
 		workDir, err := os.Getwd()
 		if err != nil {
-			log.Fatalf("Failed to get current directory: %v", err)
+			return fmt.Errorf("failed to get current directory: %w", err)
 		}
 		configPath = filepath.Join(workDir, "test", "data", "seed_data.yaml")
 	}
 
 	// Seed the database
-	if err := SeedDatabaseFromYAML(configPath); err != nil {
-		log.Fatalf("Failed to seed database: %v", err)
+	if err := SeedDatabaseFromYAML(app, configPath); err != nil {
+		return fmt.Errorf("failed to seed database: %w", err)
 	}
 
 	log.Println("Database seeded successfully from YAML configuration!")
+	return nil
 }
