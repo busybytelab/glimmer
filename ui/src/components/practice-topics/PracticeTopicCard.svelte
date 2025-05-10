@@ -1,26 +1,32 @@
 <script lang="ts">
     import type { PracticeTopic } from '$lib/types';
+    import { goto } from '$app/navigation';
 
     export let topic: PracticeTopic;
-    export let onClick: (topic: PracticeTopic) => void = () => {};
-    export let onEdit: (topic: PracticeTopic) => void = () => {};
+    export let href: string = '';
+
+    function handleCardClick() {
+        goto(href);
+    }
+    
+    function handleEditClick(e: Event) {
+        e.stopPropagation();
+        goto(`/practice-topics/edit/${topic.id}`);
+    }
 </script>
 
 <div
-    class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer relative"
-    on:click={() => onClick(topic)}
-    on:keydown={(e) => e.key === 'Enter' && onClick(topic)}
+    class="relative bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
+    on:click={handleCardClick}
+    on:keydown={(e) => e.key === 'Enter' && handleCardClick()}
     tabindex="0"
     role="button"
     aria-label={`View ${topic.name}`}
 >
     <!-- Edit button positioned in the top-right corner -->
     <button 
-        class="absolute top-2 right-2 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full" 
-        on:click|stopPropagation={(e) => {
-            e.preventDefault();
-            onEdit(topic);
-        }}
+        class="absolute top-2 right-2 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full z-10" 
+        on:click={handleEditClick}
         aria-label="Edit topic"
     >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

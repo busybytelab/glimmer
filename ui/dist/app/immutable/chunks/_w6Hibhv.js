@@ -1,0 +1,2 @@
+import{p as t}from"./3tUVfVXT.js";function a(){if(t.authStore.isValid&&typeof t.authStore.token=="string"&&t.authStore.token!=="")return t.authStore.token;const e=localStorage.getItem("authToken");return e!==null?e:""}function r(e=!0){e&&t.authStore.isValid&&localStorage.setItem("authToken",t.authStore.token)}function n(){t.authStore.clear(),localStorage.removeItem("authToken")}export{n as c,a as g,r as s};
+//# sourceMappingURL=_w6Hibhv.js.map

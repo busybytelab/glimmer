@@ -3,10 +3,11 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 import path from 'path'
 import { createRequire } from 'module'
 import fs from 'fs'
+import { sveltekit } from '@sveltejs/kit/vite'
 
 const require = createRequire(import.meta.url)
 
-// Plugin to copy src/assets/glimmer.svg to root
+// Plugin to copy src/assets/glimmer.svg to dist
 const copyGlimmerSvgPlugin = () => {
   return {
     name: 'copy-glimmer-svg',
@@ -23,7 +24,7 @@ const copyGlimmerSvgPlugin = () => {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    svelte(),
+    sveltekit(),
     copyGlimmerSvgPlugin()
   ],
   resolve: {
@@ -35,7 +36,6 @@ export default defineConfig({
     postcss: './postcss.config.cjs'
   },
   base: '/',
-  publicDir: 'public',
   server: {
     port: 3000,
     proxy: {
@@ -44,14 +44,17 @@ export default defineConfig({
         changeOrigin: true,
         secure: false
       }
+    },
+    fs: {
+      // Allow serving files from one level up to the project root
+      allow: ['..']
     }
   },
   build: {
     outDir: 'dist',
-    rollupOptions: {
-      input: {
-        main: 'index.html'
-      }
-    }
+    sourcemap: true
+  },
+  optimizeDeps: {
+    include: ['prismjs', 'prismjs/themes/prism.css']
   }
 })
