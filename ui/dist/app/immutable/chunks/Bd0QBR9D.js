@@ -1,0 +1,2 @@
+import{ag as g,ah as d,ai as c,aj as l,u as m,ak as b,g as p,al as h,$ as k}from"./Dy_2QLcd.js";function x(n=!1){const s=g,e=s.l.u;if(!e)return;let f=()=>h(s.s);if(n){let a=0,t={};const _=k(()=>{let i=!1;const r=s.s;for(const o in r)r[o]!==t[o]&&(t[o]=r[o],i=!0);return i&&a++,a});f=()=>p(_)}e.b.length&&d(()=>{u(s,f),l(e.b)}),c(()=>{const a=m(()=>e.m.map(b));return()=>{for(const t of a)typeof t=="function"&&t()}}),e.a.length&&c(()=>{u(s,f),l(e.a)})}function u(n,s){if(n.l.s)for(const e of n.l.s)p(e);s()}export{x as i};
+//# sourceMappingURL=Bd0QBR9D.js.map

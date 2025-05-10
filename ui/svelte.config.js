@@ -6,12 +6,17 @@ import path from 'path';
 const config = {
 	kit: {
 		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
+			pages: 'dist',
+			assets: 'dist',
 			fallback: 'index.html',
 			precompress: false,
 			strict: true
 		}),
+		files: {
+			routes: 'src/routes',
+			lib: 'src/lib',
+			assets: 'src/assets'
+		},
 		paths: {
 			base: ''
 		},
@@ -19,9 +24,26 @@ const config = {
 			$lib: path.resolve('./src/lib'),
 			$components: path.resolve('./src/components')
 		},
-		appDir: 'app'
+		appDir: 'app',
+		prerender: {
+			handleHttpError: ({ path, referrer, message }) => {
+				if (message.includes('Not Found')) {
+					return;
+				}
+				throw new Error(message);
+			}
+		},
+		// Optimize for single bundle
+		inlineStyleThreshold: 0, // Inline all styles
+		version: {
+			name: Date.now().toString() // Force cache busting
+		}
 	},
-	preprocess: vitePreprocess()
+	preprocess: vitePreprocess({
+		postcss: {
+			configFilePath: './postcss.config.cjs'
+		}
+	})
 };
 
 export default config;

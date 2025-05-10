@@ -39,6 +39,7 @@ export interface PracticeTopic extends BaseSystemFields {
     system_prompt?: string;
     tags?: string[];
     llm_model?: string;
+    difficulty_level?: string;
 }
 
 export interface PracticeSession {
@@ -95,6 +96,10 @@ export interface Learner extends BaseSystemFields {
     avatar?: string;
     account: string;
     user: User;
+    expand?: {
+        user?: User;
+        account?: Account;
+    };
 }
 
 // Type for the PocketBase client with your collections

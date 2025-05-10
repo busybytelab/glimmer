@@ -3,11 +3,14 @@
 description: "Glimmer Test Seed Data - v1"
 db: "pb_data/data.db"
 default_password_hash: "$2a$10$UiEpp7dQEwBOXiF.0fbiDe9bxJunArer9B7VhEJk7WvG9g3iaifQe|mX1BMz3d4Bi40w9s7tImE1zvQ314591c3f53bdQR0KwoM888u8"
+
 collections:
+  # Users
   - name: "users"
     select: "SELECT COUNT(*) FROM users WHERE id = {:id}"
     insert: "INSERT INTO users (id, email, name, password, verified, emailVisibility, avatar, tokenKey, created, updated) VALUES ({:id}, {:email}, {:name}, {:password}, {:verified}, {:emailVisibility}, {:avatar}, {:tokenKey}, {:created}, {:updated})"
     items:
+      # Account 1 Users
       - id: "u1"
         email: "u1@home.local"
         name: "User 1"
@@ -30,10 +33,35 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      # Account 2 Users
+      - id: "u3"
+        email: "u3@home.local"
+        name: "User 3"
+        password: "__::env::TEST_USER_PASSWORD_HASH::default_password_hash::__"
+        verified: true
+        emailVisibility: false
+        avatar: ""
+        tokenKey: "u3TokenKey12345678901234567890123456789"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+      - id: "u4"
+        email: "u4@home.local"
+        name: "User 4"
+        password: "__::env::TEST_USER_PASSWORD_HASH::default_password_hash::__"
+        verified: true
+        emailVisibility: false
+        avatar: ""
+        tokenKey: "u4TokenKey12345678901234567890123456789"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  # Accounts
   - name: "accounts"
     select: "SELECT COUNT(*) FROM accounts WHERE id = {:id}"
     insert: "INSERT INTO accounts (id, name, owner, ollama_server_url, default_llm_model, default_language, practice_session_default_prompt_extension, created, updated) VALUES ({:id}, {:name}, {:owner}, {:ollama_server_url}, {:default_llm_model}, {:default_language}, {:practice_session_default_prompt_extension}, {:created}, {:updated})"
     items:
+      # Account 1
       - id: "a1"
         name: "Account 1"
         owner: "__ref::users::u1"
@@ -111,114 +139,96 @@ collections:
             • Required for multiple_choice
             • Should be encouraging and educational
             • Format: { "incorrect_answer": "explanation" }
-
-          EXAMPLES:
-
-          **Multiple Choice Example:**
-          ```json
-          {
-            "items": [
-              {
-                "question_text": "A pirate captain has 12 gold coins and wants to share them equally among his 3 best mates. How many coins does each mate get?",
-                "question_type": "multiple_choice",
-                "options": ["3", "4", "6", "12"],
-                "correct_answer": "4",
-                "explanation": "Ahoy! To share the treasure fairly, the captain needs to divide the 12 coins into 3 equal groups. Think of it like dealing cards: one for matey 1, one for matey 2, one for matey 3, then repeat! We use division: 12 ÷ 3 = 4. So each lucky pirate mate gets 4 shiny gold coins! Arrr! Knowing how to divide helps share things equally, whether it's treasure or cookies!",
-                "explanation_for_incorrect": {
-                  "3": "Close! 3 is the number of mates, but we need to find out how many coins *each* mate gets. Try dividing the total coins (12) by the number of mates (3).",
-                  "6": "Hmm, if each mate got 6 coins, you'd need 6 x 3 = 18 coins, but the captain only has 12! Remember to divide 12 by 3.",
-                  "12": "That's the total number of coins! The question asks how many *each* of the 3 mates gets when they share the 12 coins equally."
-                },
-                "hints": [
-                  "Think about 'sharing equally' - what math operation is that?",
-                  "You have 12 items to split into 3 groups.",
-                  "What number multiplied by 3 equals 12?"
-                ],
-                "difficulty_level": "easy"
-              }
-            ]
-          }
-          ```
-
-          **True/False Example:**
-          ```json
-          {
-            "items": [
-              {
-                "question_text": "True or False: Plants use sunlight, water, and carbon dioxide to make their own food.",
-                "question_type": "true_false",
-                "correct_answer": "True",
-                "explanation": "That's absolutely right! Plants are like amazing little chefs! They perform a process called photosynthesis. Using energy from sunlight (like their oven!), water (taken by roots), and carbon dioxide (from the air), they magically whip up their own sugary food (glucose) to grow. They even release oxygen, which we need to breathe! So cool!",
-                "hints": [
-                  "Think about what plants need to grow.",
-                  "What is the process called where plants make food?",
-                  "Does sunlight seem important for plants?"
-                ],
-                "difficulty_level": "easy"
-              }
-            ]
-          }
-          ```
-
-          **Short Answer Example:**
-          ```json
-          {
-            "items": [
-              {
-                "question_text": "What is the process called when plants make their own food using sunlight?",
-                "question_type": "short_answer",
-                "correct_answer": "photosynthesis",
-                "explanation": "Excellent! Photosynthesis is like a plant's superpower! It's the process where plants use sunlight (like their energy source), water, and carbon dioxide to create their own food (glucose) and release oxygen. It's like they have their own little kitchen inside their leaves! This amazing process is what makes plants so important for our planet - they provide food for themselves and oxygen for us!",
-                "hints": [
-                  "Think about what plants do with sunlight.",
-                  "It starts with 'photo' and ends with 'synthesis'.",
-                  "This process helps plants make their own food."
-                ],
-                "difficulty_level": "medium"
-              }
-            ]
-          }
-          ```
-
-          **Fill in the Blank Example:**
-          ```json
-          {
-            "items": [
-              {
-                "question_text": "The dog wagged ___ tail happily.",
-                "question_type": "fill_in_blank",
-                "correct_answer": "its",
-                "explanation": "Great job! The word 'its' (with no apostrophe) shows ownership or belonging, like the tail belongs to the dog. It's like saying the dog's tail. The word 'it's' (with an apostrophe) is a contraction, meaning 'it is' or 'it has' (like 'It's a sunny day!'). Remembering this difference helps make your writing super clear!",
-                "hints": [
-                  "Are you showing something belongs to the dog, or are you saying 'it is'?",
-                  "The word needed here is a possessive pronoun.",
-                  "Think: 'it's' = 'it is' or 'it has'. Does 'The dog wagged it is tail' make sense?"
-                ],
-                "difficulty_level": "medium",
-                "explanation_for_incorrect": {
-                  "it's": "Careful! 'It's' with the apostrophe means 'it is' or 'it has'. Does 'The dog wagged it is tail' make sense? We need the word that shows the tail *belongs* to the dog, which is 'its'."
-                }
-              }
-            ]
-          }
-          ```
-
-          IMPORTANT RULES:
-          1. Return ONLY valid JSON output
-          2. Include ALL required fields for each item
-          3. Follow the exact question_type formats
-          4. Keep explanations fun, engaging, and age-appropriate
-          5. Do not mix different topics unless explicitly instructed
-          6. Ensure all JSON is properly formatted and escaped
-          7. Make explanations help students understand the *why* behind the answer
-          8. Use positive and encouraging language throughout
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      # Account 2
+      - id: "a2"
+        name: "Account 2"
+        owner: "__ref::users::u3"
+        ollama_server_url: "http://localhost:11434"
+        default_llm_model: "gemma3:4b"
+        default_language: "en"
+        practice_session_default_prompt_extension: |-
+          
+          INSTRUCTIONS:
+          The practice items should be returned ONLY in valid JSON format, starting with '{' and ending with '}'. Do not include any text before or after the JSON object.
+
+          TARGET AUDIENCE:
+          - Age Range: Grades 7-9 (approximately 12-15 years old)
+          - Language: Age-appropriate, engaging, and encouraging
+          - Style: Fun, creative, and educational
+
+          JSON STRUCTURE:
+          {
+            "items": [
+              {
+                // Each item object follows the structure below
+              }
+            ]
+          }
+
+          ITEM FIELDS:
+
+          REQUIRED FIELDS (Must be included for every item):
+          - question_text: string
+            • The question text itself
+            • Must be clear and age-appropriate
+            • Should be engaging and relevant to the topic
+
+          - question_type: string
+            • Must be exactly one of: "multiple_choice", "true_false", "short_answer", "fill_in_blank"
+            • Determines the format of the answer and available fields
+
+          - correct_answer: string
+            • The correct answer as a string
+            • Format depends on question_type:
+              - multiple_choice: One of the options
+              - true_false: "True" or "False"
+              - short_answer: The expected answer
+              - fill_in_blank: The word or phrase to fill in
+
+          - explanation: string
+            • A detailed, teacher-like explanation
+            • Must be fun and engaging
+            • Should include:
+              - Clear reasoning
+              - Relevant examples or analogies
+              - Simple formulas or rules when applicable
+              - Connection to real-world applications
+              - Positive and encouraging tone
+
+          CONDITIONAL FIELDS (Required based on question_type):
+          - options: string[]
+            • Required for: multiple_choice
+            • Array of possible answer strings
+            • Must include the correct_answer
+            • Should include common misconceptions as distractors
+
+          RECOMMENDED FIELDS (Highly encouraged):
+          - difficulty_level: string
+            • Must be exactly one of: "easy", "medium", "hard"
+            • Should match the target age group's capabilities
+
+          - hints: string[]
+            • Array of progressive hints
+            • Should guide without giving away the answer
+            • Start general, become more specific
+
+          - explanation_for_incorrect: object
+            • Map of incorrect answers to explanations
+            • Required for multiple_choice
+            • Should be encouraging and educational
+            • Format: { "incorrect_answer": "explanation" }
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  # Instructors
   - name: "instructors"
     select: "SELECT COUNT(*) FROM instructors WHERE id = {:id}"
     insert: "INSERT INTO instructors (id, nickname, account, user, created, updated) VALUES ({:id}, {:nickname}, {:account}, {:user}, {:created}, {:updated})"
     items:
+      # Account 1 Instructor
       - id: "i1"
         nickname: "Teacher"
         account: "__ref::accounts::a1"
@@ -226,10 +236,20 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      # Account 2 Instructor
+      - id: "i2"
+        nickname: "Professor"
+        account: "__ref::accounts::a2"
+        user: "__ref::users::u3"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  # Learners
   - name: "learners"
     select: "SELECT COUNT(*) FROM learners WHERE id = {:id}"
     insert: "INSERT INTO learners (id, nickname, age, grade_level, learning_preferences, avatar, account, user, created, updated) VALUES ({:id}, {:nickname}, {:age}, {:grade_level}, {:learning_preferences}, {:avatar}, {:account}, {:user}, {:created}, {:updated})"
     items:
+      # Account 1 Learner
       - id: "l1"
         nickname: "Student1"
         age: 10
@@ -241,10 +261,24 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      # Account 2 Learner
+      - id: "l2"
+        nickname: "Student2"
+        age: 13
+        grade_level: "8th"
+        learning_preferences: "[\"Auditory\", \"Visual\"]"
+        avatar: "default_avatar.png"
+        account: "__ref::accounts::a2"
+        user: "__ref::users::u4"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  # Practice Topics
   - name: "practice_topics"
     select: "SELECT COUNT(*) FROM practice_topics WHERE id = {:id}"
     insert: "INSERT INTO practice_topics (id, name, description, subject, system_prompt, base_prompt, learning_goals, target_age_range, target_grade_level, llm_model, tags, account, created, updated) VALUES ({:id}, {:name}, {:description}, {:subject}, {:system_prompt}, {:base_prompt}, {:learning_goals}, {:target_age_range}, {:target_grade_level}, {:llm_model}, {:tags}, {:account}, {:created}, {:updated})"
     items:
+      # Account 1 Practice Topics
       - id: "pt1"
         name: "Basic Math"
         description: "Learn basic math operations"
@@ -351,10 +385,28 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      # Account 2 Practice Topics
+      - id: "pt3"
+        name: "Advanced Math"
+        description: "Learn advanced mathematical concepts"
+        subject: "Mathematics"
+        system_prompt: "You are a helpful advanced math tutor"
+        base_prompt: "Explain this advanced math problem in simple terms"
+        learning_goals: "Understand advanced mathematical concepts"
+        target_age_range: "12-15"
+        target_grade_level: "7-9"
+        llm_model: ""
+        tags: "[\"weekly\", \"math\", \"advanced\"]"
+        account: "__ref::accounts::a2"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  # Practice Items
   - name: "practice_items"
     select: "SELECT COUNT(*) FROM practice_items WHERE id = {:id}"
     insert: "INSERT INTO practice_items (id, question_text, question_type, correct_answer, options, explanation, explanation_for_incorrect, hints, difficulty_level, tags, status, practice_topic, account, created, updated) VALUES ({:id}, {:question_text}, {:question_type}, {:correct_answer}, {:options}, {:explanation}, {:explanation_for_incorrect}, {:hints}, {:difficulty_level}, {:tags}, {:status}, {:practice_topic}, {:account}, {:created}, {:updated})"
     items:
+      # Account 1 Practice Items
       - id: "pi1"
         question_text: "What is 2 + 2?"
         question_type: "multiple_choice"
@@ -452,10 +504,45 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      # Account 2 Practice Items
+      - id: "pi7"
+        question_text: "Solve for x: 2x + 5 = 13"
+        question_type: "short_answer"
+        correct_answer: "\"4\""
+        options: "[]"
+        explanation: "Excellent! Let's solve this step by step. We have the equation 2x + 5 = 13. First, we subtract 5 from both sides to isolate the term with x: 2x = 8. Then, we divide both sides by 2 to solve for x: x = 4. This is a fundamental skill in algebra that helps us solve real-world problems!"
+        explanation_for_incorrect: "{\"8\": \"You found 2x, but we need to find x. Remember to divide by 2 at the end.\", \"6.5\": \"You might have divided 13 by 2, but we need to subtract 5 first, then divide by 2.\"}"
+        hints: "[\"First, subtract 5 from both sides.\", \"Then, divide both sides by 2.\"]"
+        difficulty_level: "medium"
+        tags: "[\"algebra\"]"
+        status: "Generated"
+        practice_topic: "__ref::practice_topics::pt3"
+        account: "__ref::accounts::a2"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+      - id: "pi8"
+        question_text: "What is the value of x in the equation: 3x - 7 = 14?"
+        question_type: "multiple_choice"
+        correct_answer: "\"7\""
+        options: "[\"5\", \"6\", \"7\", \"8\"]"
+        explanation: "Great work! Let's solve this step by step. We have 3x - 7 = 14. First, we add 7 to both sides: 3x = 21. Then, we divide both sides by 3: x = 7. This is a key skill in algebra that helps us solve real-world problems!"
+        explanation_for_incorrect: "{\"5\": \"You might have subtracted 7 from 14, but we need to add 7 to both sides first.\", \"6\": \"Close! Remember to add 7 to both sides first, then divide by 3.\", \"8\": \"You might have added 7 to 14, but we need to divide by 3 at the end.\"}"
+        hints: "[\"First, add 7 to both sides.\", \"Then, divide both sides by 3.\"]"
+        difficulty_level: "medium"
+        tags: "[\"algebra\"]"
+        status: "Generated"
+        practice_topic: "__ref::practice_topics::pt3"
+        account: "__ref::accounts::a2"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  # Practice Sessions
   - name: "practice_sessions"
     select: "SELECT COUNT(*) FROM practice_sessions WHERE id = {:id}"
     insert: "INSERT INTO practice_sessions (id, name, assigned_at, completed_at, status, generation_prompt, practice_topic, practice_items, learner, created, updated) VALUES ({:id}, {:name}, {:assigned_at}, {:completed_at}, {:status}, {:generation_prompt}, {:practice_topic}, {:practice_items}, {:learner}, {:created}, {:updated})"
     items:
+      # Account 1 Practice Sessions
       - id: "ps1"
         name: "Math Practice Session"
         assigned_at: __::currentTimestamp::__
@@ -472,8 +559,7 @@ collections:
         name: "Math Practice Session 2"
         assigned_at: __::currentTimestamp::__
         completed_at: __::currentTimestamp::__
-        status: "
-        ]"
+        status: "Completed"
         generation_prompt: "Explain this math problem in simple terms"
         practice_topic: "__ref::practice_topics::pt1"
         practice_items: "[\"pi3\", \"pi4\", \"pi5\", \"pi6\"]"
@@ -481,10 +567,25 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      # Account 2 Practice Sessions
+      - id: "ps3"
+        name: "Advanced Math Practice"
+        assigned_at: __::currentTimestamp::__
+        completed_at: __::currentTimestamp::__
+        status: "Completed"
+        generation_prompt: "Generate advanced math problems"
+        practice_topic: "__ref::practice_topics::pt3"
+        practice_items: "[\"pi7\", \"pi8\"]"
+        learner: "__ref::learners::l2"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  # Practice Results
   - name: "practice_results"
     select: "SELECT COUNT(*) FROM practice_results WHERE id = {:id}"
     insert: "INSERT INTO practice_results (id, answer, attempt_number, evaluation_details, feedback, hint_level_reached, is_correct, score, started_at, submitted_at, learner, practice_item, practice_session, created, updated) VALUES ({:id}, {:answer}, {:attempt_number}, {:evaluation_details}, {:feedback}, {:hint_level_reached}, {:is_correct}, {:score}, {:started_at}, {:submitted_at}, {:learner}, {:practice_item}, {:practice_session}, {:created}, {:updated})"
     items:
+      # Account 1 Practice Results
       - id: "pr1"
         answer: "\"4\""
         attempt_number: 1
@@ -533,10 +634,45 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      # Account 2 Practice Results
+      - id: "pr4"
+        answer: "\"4\""
+        attempt_number: 1
+        evaluation_details: "{\"method\": \"exact_match\"}"
+        feedback: "Excellent work! You solved the equation correctly."
+        hint_level_reached: 0
+        is_correct: true
+        score: 100
+        started_at: __::currentTimestamp::__
+        submitted_at: __::currentTimestamp::__
+        learner: "__ref::learners::l2"
+        practice_item: "__ref::practice_items::pi7"
+        practice_session: "__ref::practice_sessions::ps3"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+      - id: "pr5"
+        answer: "\"6\""
+        attempt_number: 1
+        evaluation_details: "{\"method\": \"exact_match\"}"
+        feedback: "Not quite right. Remember to add 7 to both sides first, then divide by 3."
+        hint_level_reached: 1
+        is_correct: false
+        score: 0
+        started_at: __::currentTimestamp::__
+        submitted_at: __::currentTimestamp::__
+        learner: "__ref::learners::l2"
+        practice_item: "__ref::practice_items::pi8"
+        practice_session: "__ref::practice_sessions::ps3"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+
+  # Achievement Definitions
   - name: "achievement_definitions"
     select: "SELECT COUNT(*) FROM achievement_definitions WHERE id = {:id}"
     insert: "INSERT INTO achievement_definitions (id, name, description, icon, points, trigger_condition, account, created, updated) VALUES ({:id}, {:name}, {:description}, {:icon}, {:points}, {:trigger_condition}, {:account}, {:created}, {:updated})"
     items:
+      # Account 1 Achievement Definitions
       - id: "ad1"
         name: "First Perfect Score"
         description: "Achieved a perfect score on a practice session"
@@ -547,10 +683,12 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+  # Earned Achievements
   - name: "earned_achievements"
     select: "SELECT COUNT(*) FROM earned_achievements WHERE id = {:id}"
     insert: "INSERT INTO earned_achievements (id, earned_at, achievement_definition, learner, account, created, updated) VALUES ({:id}, {:earned_at}, {:achievement_definition}, {:learner}, {:account}, {:created}, {:updated})"
     items:
+      # Account 1 Earned Achievements
       - id: "ea1"
         earned_at: __::currentTimestamp::__
         achievement_definition: "__ref::achievement_definitions::ad1"

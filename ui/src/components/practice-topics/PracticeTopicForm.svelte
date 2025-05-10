@@ -4,6 +4,7 @@
 	import type { PracticeTopic } from '$lib/types';
 	import FormField from '../common/FormField.svelte';
 	import TextArea from '../common/TextArea.svelte';
+	import ExpandableTextArea from '../common/ExpandableTextArea.svelte';
 	import FormButton from '../common/FormButton.svelte';
 	import FormSection from '../common/FormSection.svelte';
 	import ErrorAlert from '../common/ErrorAlert.svelte';
@@ -61,7 +62,6 @@
 	let error: string | null = null;
 	let learningGoalsText = formData.learning_goals.join('\n');
 	let tagsText = formData.tags.join(', ');
-	let formSubmitted = false;
 	let isLoadingModels = false;
 	let modelError: string | null = null;
 	let availableModels: { id: string; name: string; isDefault?: boolean }[] = [];
@@ -122,7 +122,6 @@
 	}
 
 	async function handleSubmit() {
-		formSubmitted = true;
 		const validationError = validateForm();
 		if (validationError) {
 			error = validationError;
@@ -241,16 +240,15 @@
 	}
 </script>
 
-<div class="mx-auto px-4 sm:px-6 md:px-8">
 <FormSection title={topic ? "Edit Practice Topic" : "Create Practice Topic"} description="Enter the details for this practice topic">
-	<form on:submit|preventDefault={handleSubmit} class="p-4">
+	<form on:submit|preventDefault={handleSubmit} class="w-full">
 		{#if error}
-			<div class="mb-6">
+			<div class="px-4 mb-6">
 				<ErrorAlert message={error} />
 			</div>
 		{/if}
 
-		<div class="py-4 bg-white">
+		<div class="px-4 py-4 bg-white w-full">
 			<div class="grid grid-cols-6 gap-6">
 				<FormField 
 					id="name"
@@ -308,22 +306,28 @@
 					placeholder="Enter learning goals, one per line"
 				/>
 
-				<TextArea
+				<ExpandableTextArea
 					id="base_prompt"
 					label="Base Prompt"
 					bind:value={formData.base_prompt}
 					disabled={loading}
 					required={true}
 					cols="col-span-6"
+					minRows={4}
+					maxRows={12}
+					language="markdown"
 					placeholder="Enter a base prompt for generating practice items"
 				/>
 
-				<TextArea
+				<ExpandableTextArea
 					id="system_prompt"
 					label="System Prompt"
 					bind:value={formData.system_prompt}
 					disabled={loading}
 					cols="col-span-6"
+					minRows={4}
+					maxRows={12}
+					language="markdown"
 					placeholder="Enter a system prompt for the AI assistant"
 				/>
 
@@ -367,7 +371,7 @@
 			</div>
 		</div>
 
-		<div class="px-4 py-3 bg-gray-50 text-right sm:px-6 mt-4 -mx-4 -mb-4 border-t border-gray-200 flex justify-end space-x-4">
+		<div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-4">
 			<FormButton 
 				type="button" 
 				variant="secondary"
@@ -397,5 +401,4 @@
 			</FormButton>
 		</div>
 	</form>
-</FormSection>
-</div> 
+</FormSection> 

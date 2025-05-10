@@ -13,7 +13,7 @@ func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
 			"createRule": null,
-			"deleteRule": "@request.auth.account.id = account.id",
+			"deleteRule": "@request.auth.id = account.owner.id",
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
