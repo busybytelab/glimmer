@@ -10,19 +10,28 @@
     export let onAnswerChange: ((answer: string) => void) | undefined = undefined;
     export let printMode = false;
 
-    function handleAnswerChange(event: Event) {
-        const target = event.target as HTMLInputElement;
-        if (onAnswerChange) {
-            onAnswerChange(target.value);
-        }
-    }
+    let input: HTMLInputElement;
+    let lastFocused = false;
 
     // Split the question text by the blank placeholder
     $: parts = item.question_text.split('_____');
+
+    function handleInput() {
+        if (onAnswerChange) {
+            lastFocused = true;
+            onAnswerChange(item.user_answer || '');
+        }
+    }
+
+    // Restore focus after any updates
+    $: if (lastFocused && input) {
+        input.focus();
+        lastFocused = false;
+    }
 </script>
 
 <div class="border border-gray-200 rounded-lg p-4">
-    <QuestionHeader {index} />
+    <QuestionHeader {item} {index} />
     
     <div class="text-gray-600 mb-4">
         {#each parts as part, i}
@@ -32,11 +41,13 @@
                     <div class="inline-block w-32 border-b border-gray-400 mx-1"></div>
                 {:else}
                     <input
+                        bind:this={input}
                         type="text"
                         id={`question-${index}-blank-${i}-${item.id}`}
                         class="inline-block w-32 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         {disabled}
-                        on:input={handleAnswerChange}
+                        bind:value={item.user_answer}
+                        on:input={handleInput}
                     />
                 {/if}
             {/if}
@@ -57,10 +68,6 @@
             {#if item.explanation}
                 <h5 class="text-sm font-medium text-gray-900 mt-2 mb-2">Explanation:</h5>
                 <p class="text-gray-600">{item.explanation}</p>
-            {/if}
-            {#if item.hints_used}
-                <h5 class="text-sm font-medium text-gray-900 mt-2 mb-2">Hints Used:</h5>
-                <p class="text-gray-600">{item.hints_used}</p>
             {/if}
         </div>
     {/if}
