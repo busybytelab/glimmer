@@ -8,6 +8,8 @@
     import pb from '$lib/pocketbase';
     import ActionToolbar from '../../../components/common/ActionToolbar.svelte';
     import Breadcrumbs from '../../../components/common/Breadcrumbs.svelte';
+    import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
+    import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
 
     // Define the breadcrumb item type
     type BreadcrumbItem = {
@@ -202,87 +204,84 @@
 </style>
 
 {#if !printMode}
-    <div class="container mx-auto px-4 py-8 no-print">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <Breadcrumbs items={breadcrumbItems} />
-            </div>
-            <ActionToolbar actions={sessionActions} />
+<div class="container mx-auto px-4 py-8 no-print">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <Breadcrumbs items={breadcrumbItems} />
         </div>
-
-        {#if loading}
-            <div class="flex justify-center items-center h-64">
-                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-        {:else if error}
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <strong class="font-bold">Error!</strong>
-                <span class="block sm:inline"> {error}</span>
-            </div>
-        {:else if session}
-            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2">{session.name || 'Unnamed Practice'}</h2>
-                
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <span class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${session.status === 'Completed' ? 'bg-green-100 text-green-800' : 
-                        session.status === 'InProgress' ? 'bg-blue-100 text-blue-800' : 
-                        'bg-gray-100 text-gray-800'}`}>
-                        {session.status}
-                    </span>
-                    
-                    {#if session.assigned_at}
-                        <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                            Assigned: {new Date(session.assigned_at).toLocaleDateString()}
-                        </span>
-                    {/if}
-                    
-                    {#if session.completed_at}
-                        <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                            Completed: {new Date(session.completed_at).toLocaleDateString()}
-                        </span>
-                    {/if}
-                </div>
-
-                {#if session.expand?.learner}
-                    <div class="mb-4">
-                        <h3 class="text-sm font-medium text-gray-700 mb-2">Learner:</h3>
-                        <p class="text-gray-600">{session.expand.learner.name}</p>
-                    </div>
-                {/if}
-
-                {#if session.expand?.practice_topic}
-                    <div class="mb-4">
-                        <h3 class="text-sm font-medium text-gray-700 mb-2">Topic:</h3>
-                        <p class="text-gray-600">{session.expand.practice_topic.name}</p>
-                    </div>
-                {/if}
-
-                {#if practiceItems.length > 0}
-                    <div class="mt-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Practice Items</h3>
-                        <div class="space-y-6">
-                            {#each practiceItems as item, index}
-                                <div class="question-container">
-                                    <QuestionFactory
-                                        {item}
-                                        {index}
-                                        viewType={session.status === 'Completed' ? (isInstructor ? 'instructor' : 'answered') : 'learner'}
-                                        disabled={session.status === 'Completed'}
-                                        onAnswerChange={(answer) => handleAnswerChange(index, answer)}
-                                    />
-                                </div>
-                            {/each}
-                        </div>
-                    </div>
-                {:else}
-                    <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
-                        <p class="text-gray-600">No practice items available.</p>
-                    </div>
-                {/if}
-            </div>
-        {/if}
+        <ActionToolbar actions={sessionActions} />
     </div>
+
+    {#if loading}
+        <div class="flex justify-center items-center h-64">
+            <LoadingSpinner size="md" color="primary" />
+        </div>
+    {:else if error}
+        <ErrorAlert message={error} />
+    {:else if session}
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">{session.name || 'Unnamed Practice'}</h2>
+            
+            <div class="flex flex-wrap gap-2 mb-4">
+                <span class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                    ${session.status === 'Completed' ? 'bg-green-100 text-green-800' : 
+                    session.status === 'InProgress' ? 'bg-blue-100 text-blue-800' : 
+                    'bg-gray-100 text-gray-800'}`}>
+                    {session.status}
+                </span>
+                
+                {#if session.assigned_at}
+                    <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        Assigned: {new Date(session.assigned_at).toLocaleDateString()}
+                    </span>
+                {/if}
+                
+                {#if session.completed_at}
+                    <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        Completed: {new Date(session.completed_at).toLocaleDateString()}
+                    </span>
+                {/if}
+            </div>
+
+            {#if session.expand?.learner}
+                <div class="mb-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Learner:</h3>
+                    <p class="text-gray-600">{session.expand.learner.name}</p>
+                </div>
+            {/if}
+
+            {#if session.expand?.practice_topic}
+                <div class="mb-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Topic:</h3>
+                    <p class="text-gray-600">{session.expand.practice_topic.name}</p>
+                </div>
+            {/if}
+
+            {#if practiceItems.length > 0}
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Practice Items</h3>
+                    <div class="space-y-6">
+                        {#each practiceItems as item, index}
+                            <div class="question-container">
+                                <QuestionFactory
+                                    {item}
+                                    {index}
+                                    viewType={session.status === 'Completed' ? (isInstructor ? 'instructor' : 'answered') : 'learner'}
+                                    disabled={session.status === 'Completed'}
+                                    onAnswerChange={(answer) => handleAnswerChange(index, answer)}
+                                />
+                            </div>
+                        {/each}
+                    </div>
+                </div>
+            {:else}
+                <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
+                    <p class="text-gray-600">No practice items available.</p>
+                </div>
+            {/if}
+        </div>
+    {/if}
+</div>
 {/if}
 
 <!-- Print-only version that shows when printing -->

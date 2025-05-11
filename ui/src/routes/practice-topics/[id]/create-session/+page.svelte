@@ -8,6 +8,8 @@
     import { practiceService } from '$lib/services/practice';
     import ActionToolbar from '../../../../components/common/ActionToolbar.svelte';
     import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
+    import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
+    import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
 
     // Define the breadcrumb item type
     type BreadcrumbItem = {
@@ -174,13 +176,10 @@
 
     {#if loading}
         <div class="flex justify-center items-center h-64">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            <LoadingSpinner size="md" color="primary" />
         </div>
     {:else if error}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <strong class="font-bold">Error!</strong>
-            <span class="block sm:inline"> {error}</span>
-        </div>
+        <ErrorAlert message={error} />
     {:else if topic}
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
             <h2 class="text-xl font-semibold text-gray-900 mb-2">{topic.name}</h2>
@@ -234,7 +233,7 @@
             <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
                 <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
                     <div class="flex flex-col items-center">
-                        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mb-4"></div>
+                        <LoadingSpinner size="lg" color="primary" />
                         <h3 class="text-xl font-semibold text-gray-900 mb-2">Creating Practice Session</h3>
                         <p class="text-gray-600 text-center mb-4">
                             We're generating personalized practice items for {selectedLearner?.nickname || 'the learner'}.

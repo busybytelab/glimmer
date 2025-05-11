@@ -4,6 +4,8 @@
 	import { onMount } from 'svelte';
 	import { saveAuthToken } from '$lib/auth';
 	import { page } from '$app/stores';
+	import ErrorAlert from '../../components/common/ErrorAlert.svelte';
+	import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
 	// Use the public URL instead of importing the asset
 	const glimmerLogoUrl = '/glimmer.svg';
 
@@ -89,10 +91,7 @@
 		</div>
 		<form on:submit|preventDefault={handleSubmit} class="space-y-4">
 			{#if $error}
-				<div class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-3 py-2 rounded relative text-sm" role="alert">
-					<strong class="font-bold">Error!</strong>
-					<span class="block sm:inline">{$error}</span>
-				</div>
+				<ErrorAlert message={$error} />
 			{/if}
 			<div class="space-y-2">
 				<div>
@@ -161,10 +160,9 @@
 					class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-secondary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
 				>
 					{#if isSubmitting}
-						<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-						</svg>
+						<div class="w-5 h-5 mr-3">
+							<LoadingSpinner size="sm" color="white" />
+						</div>
 						Signing in...
 					{:else}
 						Sign in

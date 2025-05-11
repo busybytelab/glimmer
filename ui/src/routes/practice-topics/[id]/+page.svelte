@@ -1,11 +1,14 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
     import type { PracticeTopic } from '$lib/types';
     import pb from '$lib/pocketbase';
+    import { user } from '$lib/stores';
     import ActionToolbar from '../../../components/common/ActionToolbar.svelte';
     import Breadcrumbs from '../../../components/common/Breadcrumbs.svelte';
+    import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
+    import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
 
     // Define the breadcrumb item type
     type BreadcrumbItem = {
@@ -197,13 +200,10 @@
 
     {#if loading}
         <div class="flex justify-center items-center h-64">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            <LoadingSpinner size="md" color="primary" />
         </div>
     {:else if error}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <strong class="font-bold">Error!</strong>
-            <span class="block sm:inline"> {error}</span>
-        </div>
+        <ErrorAlert message={error} />
     {:else if topic}
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
             <h2 class="text-xl font-semibold text-gray-900 mb-2">{topic.name}</h2>
