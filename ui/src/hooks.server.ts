@@ -20,7 +20,6 @@ export const handle: Handle = async ({ event, resolve }) => {
             }
             const value = trimmed.split('=')[1];
             if (value && value !== 'null' && value.trim().length > 0) {
-                console.log('authCookie', value);
                 return true;
             }
             return false;
@@ -28,7 +27,6 @@ export const handle: Handle = async ({ event, resolve }) => {
     
     // Check if we have a valid auth cookie
     const isAuthenticated = !!authCookie;
-    console.log('isAuthenticated', isAuthenticated ? authCookie : 'no');
 
     // If authenticated and trying to access login page, redirect to dashboard
     if (isAuthenticated && isPublic) {

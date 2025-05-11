@@ -1,0 +1,2 @@
+import{t as p,a as s}from"./Bm7YDail.js";import"./Cp0t8ydx.js";import{t as l}from"./DwP7UOR7.js";import{a as n}from"./CGzTdwYZ.js";import{p as e}from"./DCRH5Z1i.js";var b=p("<div></div>");function h(t,o){let i=e(o,"size",8,"md"),r=e(o,"color",8,"primary");const m={sm:"h-8 w-8",md:"h-12 w-12",lg:"h-32 w-32"},d=r()==="primary"?"border-primary":r()==="gray"?"border-gray-900 dark:border-white":`border-${r()}`;var a=b();l(()=>n(a,1,`animate-spin rounded-full border-t-2 border-b-2 ${d} ${m[i()]??""}`)),s(t,a)}export{h as L};
+//# sourceMappingURL=D1v2Wa_-.js.map
