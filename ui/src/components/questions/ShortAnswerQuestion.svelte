@@ -10,27 +10,38 @@
     export let onAnswerChange: ((answer: string) => void) | undefined = undefined;
     export let printMode = false;
 
-    function handleAnswerChange(event: Event) {
-        const target = event.target as HTMLTextAreaElement;
+    let textarea: HTMLTextAreaElement;
+    let lastFocused = false;
+
+    function handleInput() {
         if (onAnswerChange) {
-            onAnswerChange(target.value);
+            lastFocused = true;
+            onAnswerChange(item.user_answer || '');
         }
+    }
+
+    // Restore focus after any updates
+    $: if (lastFocused && textarea) {
+        textarea.focus();
+        lastFocused = false;
     }
 </script>
 
 <div class="border border-gray-200 rounded-lg p-4">
-    <QuestionHeader {index} />
+    <QuestionHeader {item} {index} />
     <p class="text-gray-600 mb-4">{item.question_text}</p>
     
     {#if printMode}
         <div class="h-32 border border-gray-300 rounded-md"></div>
     {:else}
         <textarea
+            bind:this={textarea}
             id={`question-${index}-${item.id}`}
             class="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             placeholder="Type your answer here..."
             {disabled}
-            on:input={handleAnswerChange}
+            bind:value={item.user_answer}
+            on:input={handleInput}
         ></textarea>
     {/if}
 
@@ -49,9 +60,9 @@
                 <h5 class="text-sm font-medium text-gray-900 mt-2 mb-2">Explanation:</h5>
                 <p class="text-gray-600">{item.explanation}</p>
             {/if}
-            {#if item.hints_used}
+            {#if item.hint_level_reached}
                 <h5 class="text-sm font-medium text-gray-900 mt-2 mb-2">Hints Used:</h5>
-                <p class="text-gray-600">{item.hints_used}</p>
+                <p class="text-gray-600">{item.hint_level_reached}</p>
             {/if}
         </div>
     {/if}

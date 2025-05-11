@@ -4,12 +4,25 @@
     import QuestionFactory from '../../../components/questions/QuestionFactory.svelte';
     import { sessionService, type SessionWithExpandedData } from '$lib/services/session';
     import { page } from '$app/stores';
-    import { goto } from '$app/navigation';
+    import { goto, beforeNavigate, afterNavigate } from '$app/navigation';
     import pb from '$lib/pocketbase';
     import ActionToolbar from '../../../components/common/ActionToolbar.svelte';
     import Breadcrumbs from '../../../components/common/Breadcrumbs.svelte';
     import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
+    import { debounce } from '$lib/utils/debounce';
+    import type { RecordModel } from 'pocketbase';
+
+    // Define practice result interface to work with PocketBase RecordModel
+    interface PracticeResult extends RecordModel {
+        practice_item: string;
+        answer: string;
+        is_correct: boolean;
+        score: number;
+        feedback: string;
+        hint_level_reached: number;
+        attempt_number: number;
+    }
 
     // Define the breadcrumb item type
     type BreadcrumbItem = {
@@ -25,6 +38,22 @@
     let isInstructor = false;
     let printMode = false;
     let breadcrumbItems: BreadcrumbItem[] = [];
+    let savingItems: Set<number> = new Set();
+
+    // Track the currently focused element
+    let focusedElement: HTMLElement | null = null;
+
+    // Store the element before navigation
+    beforeNavigate(() => {
+        focusedElement = document.activeElement as HTMLElement;
+    });
+
+    // Restore focus after navigation
+    afterNavigate(() => {
+        if (focusedElement) {
+            focusedElement.focus();
+        }
+    });
 
     onMount(async () => {
         try {
@@ -70,6 +99,34 @@
             }
 
             practiceItems = sessionService.parsePracticeItems(session);
+
+            // Fetch existing practice results for this session and learner
+            const results = await pb.collection('practice_results').getList(1, 100, {
+                filter: `practice_session = "${session.id}" && learner = "${session.learner}"`,
+                expand: 'practice_item,learner',
+                sort: '-created'
+            });
+
+            // Map results to practice items
+            if (results.items.length > 0) {
+                practiceItems = practiceItems.map(item => {
+                    const result = results.items.find((r): r is PracticeResult => 
+                        'practice_item' in r && r.practice_item === item.id
+                    );
+                    if (result) {
+                        return {
+                            ...item,
+                            user_answer: result.answer,
+                            is_correct: result.is_correct,
+                            score: result.score,
+                            feedback: result.feedback,
+                            hint_level_reached: result.hint_level_reached,
+                            attempt_number: result.attempt_number
+                        };
+                    }
+                    return item;
+                });
+            }
         } catch (err) {
             console.error('Failed to load session:', err);
             error = err instanceof Error ? err.message : 'Failed to load practice session';
@@ -107,10 +164,64 @@
         }
     }
 
-    function handleAnswerChange(index: number, answer: string) {
-        if (practiceItems[index]) {
-            practiceItems[index].user_answer = answer;
+    // Create a debounced version of handleAnswerChange
+    const debouncedSaveAnswer = debounce(async (index: number, answer: string) => {
+        if (!session || !practiceItems[index]) return;
+
+        try {
+            // Add this index to the set of saving items
+            savingItems.add(index);
+            
+            // We've already updated the answer in the handleAnswerChange function,
+            // so we don't need to update it again here
+            
+            // Create or update practice result
+            const practiceItem = practiceItems[index];
+            const now = new Date().toISOString();
+
+            // Check if a result already exists for this item
+            const existingResults = await pb.collection('practice_results').getList(1, 1, {
+                filter: `practice_item = "${practiceItem.id}" && practice_session = "${session.id}"`,
+                sort: '-created'
+            });
+
+            let result;
+            if (existingResults.items.length > 0) {
+                // Update existing result
+                result = await pb.collection('practice_results').update(existingResults.items[0].id, {
+                    answer: answer,
+                    submitted_at: now,
+                    attempt_number: (existingResults.items[0].attempt_number || 0) + 1
+                });
+            } else {
+                // Create new result
+                result = await pb.collection('practice_results').create({
+                    practice_item: practiceItem.id,
+                    practice_session: session.id,
+                    learner: session.learner,
+                    answer: answer,
+                    started_at: now,
+                    submitted_at: now,
+                    attempt_number: 1
+                });
+            }
+
+            // No need to update the DOM here as we've already done it in handleAnswerChange
+        } catch (err) {
+            console.error('Failed to save answer:', err);
+            error = 'Failed to save answer: ' + (err instanceof Error ? err.message : String(err));
+        } finally {
+            // Remove this index from the set of saving items
+            savingItems.delete(index);
         }
+    }, 1000); // Wait 1 second after the last change before saving
+
+    async function handleAnswerChange(index: number, answer: string) {
+        // Update the answer immediately for a responsive UI
+        practiceItems[index].user_answer = answer;
+        
+        // Pass to the debounced save function
+        debouncedSaveAnswer(index, answer);
     }
 
     function handlePrint() {
@@ -219,42 +330,16 @@
     {:else if error}
         <ErrorAlert message={error} />
     {:else if session}
-        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-2">{session.name || 'Unnamed Practice'}</h2>
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">{session.name || 'Practice Session'}</h2>
             
-            <div class="flex flex-wrap gap-2 mb-4">
-                <span class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${session.status === 'Completed' ? 'bg-green-100 text-green-800' : 
-                    session.status === 'InProgress' ? 'bg-blue-100 text-blue-800' : 
-                    'bg-gray-100 text-gray-800'}`}>
-                    {session.status}
-                </span>
-                
-                {#if session.assigned_at}
-                    <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                        Assigned: {new Date(session.assigned_at).toLocaleDateString()}
-                    </span>
+                {#if session.expand?.practice_topic}
+                    <p class="text-gray-600 mb-4">Topic: {session.expand.practice_topic.name}</p>
                 {/if}
-                
-                {#if session.completed_at}
-                    <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                        Completed: {new Date(session.completed_at).toLocaleDateString()}
-                    </span>
-                {/if}
-            </div>
 
             {#if session.expand?.learner}
-                <div class="mb-4">
-                    <h3 class="text-sm font-medium text-gray-700 mb-2">Learner:</h3>
-                    <p class="text-gray-600">{session.expand.learner.name}</p>
-                </div>
-            {/if}
-
-            {#if session.expand?.practice_topic}
-                <div class="mb-4">
-                    <h3 class="text-sm font-medium text-gray-700 mb-2">Topic:</h3>
-                    <p class="text-gray-600">{session.expand.practice_topic.name}</p>
-                </div>
+                    <p class="text-gray-600 mb-4">Learner: {session.expand.learner.name}</p>
             {/if}
 
             {#if practiceItems.length > 0}
@@ -267,7 +352,7 @@
                                     {item}
                                     {index}
                                     viewType={session.status === 'Completed' ? (isInstructor ? 'instructor' : 'answered') : 'learner'}
-                                    disabled={session.status === 'Completed'}
+                                    disabled={session.status === 'Completed' || savingItems.has(index)}
                                     onAnswerChange={(answer) => handleAnswerChange(index, answer)}
                                 />
                             </div>
@@ -279,6 +364,7 @@
                     <p class="text-gray-600">No practice items available.</p>
                 </div>
             {/if}
+            </div>
         </div>
     {/if}
 </div>
@@ -307,7 +393,7 @@
                             {index}
                             printMode={true}
                             viewType={session.status === 'Completed' ? (isInstructor ? 'instructor' : 'answered') : 'learner'}
-                            disabled={session.status === 'Completed'}
+                            disabled={session.status === 'Completed' || savingItems.has(index)}
                             onAnswerChange={(answer) => handleAnswerChange(index, answer)}
                         />
                     </div>

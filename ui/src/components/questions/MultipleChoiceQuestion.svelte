@@ -19,7 +19,7 @@
 </script>
 
 <div class="border border-gray-200 rounded-lg p-4">
-    <QuestionHeader {index} />
+    <QuestionHeader {item} {index} />
     <p class="text-gray-600 mb-4">{item.question_text}</p>
     
     <div class="space-y-2">
@@ -35,6 +35,7 @@
                         value={option}
                         class="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
                         {disabled}
+                        checked={item.user_answer === option}
                         on:change={handleAnswerChange}
                     />
                 {/if}
@@ -63,9 +64,9 @@
                 <h5 class="text-sm font-medium text-gray-900 mt-2 mb-2">Explanation:</h5>
                 <p class="text-gray-600">{item.explanation}</p>
             {/if}
-            {#if item.hints_used}
+            {#if item.hint_level_reached}
                 <h5 class="text-sm font-medium text-gray-900 mt-2 mb-2">Hints Used:</h5>
-                <p class="text-gray-600">{item.hints_used}</p>
+                <p class="text-gray-600">{item.hint_level_reached}</p>
             {/if}
         </div>
     {/if}

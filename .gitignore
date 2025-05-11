@@ -2,6 +2,8 @@
 
 # Pocketbase data directory
 /pb_data*
+# ignore auto-generated migrations, actual migrations are in internal/migrations
+/migrations/
 
 .private/
 .env

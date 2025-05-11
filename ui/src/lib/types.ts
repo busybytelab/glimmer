@@ -12,12 +12,11 @@ export interface PracticeItem {
     id: string;
     question_text: string;
     question_type: string;
-    options?: string;
+    options?: string[];
     correct_answer: string;
-    explanation: string;
-    explanation_for_incorrect?: string;
-    hints?: string;
-    difficulty_level?: string;
+    explanation?: string;
+    hints?: string[];
+    difficulty_level: number;
     status: string;
     tags?: string[];
     practice_topic: string;
@@ -25,7 +24,11 @@ export interface PracticeItem {
     created: string;
     updated: string;
     user_answer?: string;
-    hints_used?: string;
+    is_correct?: boolean;
+    score?: number;
+    feedback?: string;
+    hint_level_reached?: number;
+    attempt_number?: number;
 }
 
 export interface PracticeTopic extends BaseSystemFields {
