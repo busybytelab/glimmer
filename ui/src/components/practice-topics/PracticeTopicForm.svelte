@@ -148,7 +148,6 @@
 				dataToSend.tags = (dataToSend.tags as string).split(',').map(tag => tag.trim()).filter(Boolean);
 			}
 			
-			console.log('Data being sent to server:', dataToSend);
 			
 			if (!topic) {
 				// For new topics, get the user's account and instructor info
@@ -198,10 +197,7 @@
 				// Create new topic
 				result = await pb.collection('practice_topics').create(dataToSend);
 			}
-			
-			// Log the response from the server to see what tags look like
-			console.log('Response from server:', result);
-			
+						
 			// Dispatch the update event with the result
 			dispatch('update', result as unknown as PracticeTopic);
 		} catch (err) {
@@ -216,7 +212,6 @@
 		const inputElement = event.target as HTMLInputElement;
 		tagsText = inputElement.value;
 		formData.tags = tagsText.split(',').map(tag => tag.trim()).filter(Boolean);
-		console.log('Tags updated through input:', formData.tags);
 	}
 
 	async function handleDelete() {

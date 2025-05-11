@@ -39,4 +39,15 @@ export function saveAuthToken(rememberMe: boolean = true): void {
 export function clearAuthToken(): void {
   pb.authStore.clear();
   localStorage.removeItem('authToken');
+}
+
+// Public routes that don't require authentication
+export const PUBLIC_ROUTES = ['/login', '/forgot-password', '/reset-password'] as const;
+
+// Type for public routes
+export type PublicRoute = typeof PUBLIC_ROUTES[number];
+
+// Helper function to check if a path is a public route
+export function isPublicRoute(path: string): boolean {
+    return PUBLIC_ROUTES.some(route => path.startsWith(route));
 } 

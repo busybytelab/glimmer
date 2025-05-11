@@ -1,0 +1,2 @@
+import{p as t}from"./NYO04WNS.js";function n(){if(t.authStore.isValid&&typeof t.authStore.token=="string"&&t.authStore.token!=="")return t.authStore.token;const e=localStorage.getItem("authToken");return e!==null?e:""}function u(e=!0){e&&t.authStore.isValid&&localStorage.setItem("authToken",t.authStore.token)}function s(){t.authStore.clear(),localStorage.removeItem("authToken")}const r=["/login","/forgot-password","/reset-password"];function i(e){return r.some(o=>e.startsWith(o))}export{s as c,n as g,i,u as s};
+//# sourceMappingURL=DZ250PhT.js.map

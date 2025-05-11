@@ -16,8 +16,10 @@ func init() {
 
 		// update collection data
 		if err := json.Unmarshal([]byte(`{
-			"viewRule": "id = @request.auth.id || @collection.instructors.user.id ?= @request.auth.id",
-			"listRule": "id = @request.auth.id || @collection.instructors.user.id ?= @request.auth.id",
+			"viewRule": "id = @request.auth.id || (@collection.learners.user ?= id && @collection.learners.account ?= @collection.instructors.account && @collection.instructors.user ?= @request.auth.id)",
+			"listRule": "id = @request.auth.id || (@collection.learners.user ?= id && @collection.learners.account ?= @collection.instructors.account && @collection.instructors.user ?= @request.auth.id)",
+			"updateRule": "id = @request.auth.id || (@collection.learners.user ?= id && @collection.learners.account ?= @collection.instructors.account && @collection.instructors.user ?= @request.auth.id)",
+			"createRule": "id = @request.auth.id || @collection.accounts.owner = @request.auth.id",
 			"authAlert": {
 				"enabled": false
 			}
@@ -36,6 +38,8 @@ func init() {
 		if err := json.Unmarshal([]byte(`{
 			"viewRule": null,
 			"listRule": null,
+			"updateRule": null,
+			"createRule": null,
 			"authAlert": {
 				"enabled": true
 			}

@@ -13,7 +13,7 @@ func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
 			"createRule": null,
-			"deleteRule": null,
+			"deleteRule": "@request.auth.id = account.owner.id || @collection.instructors.user.id = @request.auth.id",
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -121,12 +121,12 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [],
-			"listRule": null,
+			"listRule": "@request.auth.id = account.owner.id || @collection.instructors.user.id = @request.auth.id || @collection.learners.account.id = account.id",
 			"name": "%s",
 			"system": false,
 			"type": "base",
-			"updateRule": null,
-			"viewRule": null
+			"updateRule": "@request.auth.id = account.owner.id || @collection.instructors.user.id = @request.auth.id",
+			"viewRule": "@request.auth.id = account.owner.id || @collection.instructors.user.id = @request.auth.id || @collection.learners.account.id = account.id"
 		}`, domain.CollectionAchievementDefinitions, domain.CollectionLearners, domain.CollectionAccounts, domain.CollectionEarnedAchievements, domain.CollectionEarnedAchievements)
 
 		collection := &core.Collection{}

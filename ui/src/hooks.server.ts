@@ -1,8 +1,6 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { building } from '$app/environment';
-
-// List of public routes that don't require authentication
-const publicRoutes = ['/login', '/forgot-password', '/reset-password'];
+import { isPublicRoute } from '$lib/auth';
 
 export const handle: Handle = async ({ event, resolve }) => {
     // Skip auth check during build
@@ -11,23 +9,34 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
 
     const path = event.url.pathname;
-    const isPublicRoute = publicRoutes.some(route => path.startsWith(route));
+    const isPublic = isPublicRoute(path);
 
     // Get auth token from cookies
     const authCookie = event.request.headers.get('cookie')?.split(';')
-        .find(c => c.trim().startsWith('pb_auth='));
+        .find(c => {
+            const trimmed = c.trim();
+            if (!trimmed.startsWith('pb_auth_token=')) {
+                return false;
+            }
+            const value = trimmed.split('=')[1];
+            if (value && value !== 'null' && value.trim().length > 0) {
+                console.log('authCookie', value);
+                return true;
+            }
+            return false;
+        });
     
     // Check if we have a valid auth cookie
     const isAuthenticated = !!authCookie;
-    console.log('path: '+ path + ', isAuthenticated: ' + isAuthenticated + ', isPublicRoute: ' + isPublicRoute);
+    console.log('isAuthenticated', isAuthenticated ? authCookie : 'no');
 
     // If authenticated and trying to access login page, redirect to dashboard
-    if (isAuthenticated && isPublicRoute) {
+    if (isAuthenticated && isPublic) {
         throw redirect(303, '/dashboard');
     }
 
     // Redirect to login if not authenticated and trying to access protected route
-    if (!isAuthenticated && !isPublicRoute) {
+    if (!isAuthenticated && !isPublic) {
         // Get the current URL including search params
         const returnUrl = event.url.pathname + event.url.search;
         // Only encode if there's actually a returnUrl
@@ -35,12 +44,6 @@ export const handle: Handle = async ({ event, resolve }) => {
         const redirectUrl = `/login${encodedReturnUrl ? `?returnUrl=${encodedReturnUrl}` : ''}`;
         throw redirect(303, redirectUrl);
     }
-
-    if (!isAuthenticated && isPublicRoute) {
-        const returnUrl = event.url.search;
-        console.log('returnUrl: ' + returnUrl);
-
-    }    
 
     return await resolve(event);
 }; 
