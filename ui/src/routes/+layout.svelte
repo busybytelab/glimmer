@@ -5,10 +5,8 @@
   import { getAuthToken, clearAuthToken } from '$lib/auth';
   import type { Instructor, Learner } from '$lib/types';
   import SideNav from '../components/layout/SideNav.svelte';
+  import { isPublicRoute } from '$lib/auth';
   import '../app.css';
-
-  // List of public routes that don't require authentication
-  const publicRoutes = ['/login', '/forgot-password', '/reset-password'];
 
   // Sidebar state for layout
   let sidebarOpen = true;
@@ -19,17 +17,15 @@
   }
 
   // Check if current route is public
-  $: isPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
+  $: isPublic = isPublicRoute(window.location.pathname);
 
   // Function to handle the auth flow
   async function initializeAuth() {
     isAuthLoading.set(true);
     error.set(null);
-    
     try {
       // Get token using our utility function
       const token = getAuthToken();
-      
       // Only proceed with auth verification if we have a token
       if (token) {
         // Set token in PocketBase if it's not already set
@@ -42,15 +38,14 @@
             model: pb.authStore.model
           }));
         }
+
         
         try {
           // Refresh auth state, which validates the token and gets fresh user data
           await pb.collection('users').authRefresh();
-          
           // Token is valid, get user data
           if (pb.authStore.isValid) {
             const userData = await pb.collection('users').getOne(pb.authStore.record?.id ?? '');
-            
             // First check if user is an instructor
             try {
               const instructor = await pb.collection('instructors').getFirstListItem(`user="${pb.authStore.record?.id}"`);
@@ -66,7 +61,7 @@
 
             // Then check if user is a learner
             try {
-              const learner = await pb.collection('learners').getFirstListItem(`user="${pb.authStore.record?.id}"`, { requestKey: null });
+              const learner = await pb.collection('learners').getFirstListItem(`user.id="${pb.authStore.record?.id}"`, { requestKey: null });
               if (learner) {
                 learner.user = userData;
                 user.set(learner as unknown as Learner);
@@ -76,6 +71,8 @@
             } catch (err) {
               // No learner found
             }
+
+            console.log('WARNING: no instructor or learner found');
 
             // If we get here, user exists in main users collection but not in instructors/learners
             // Clear auth state and show login
@@ -139,7 +136,7 @@
     </button>
   </div>
 {:else}
-  {#if $isAuthenticated && $user && !isPublicRoute}
+  {#if $isAuthenticated && $user && !isPublic}
     <!-- Authenticated layout -->
     <div class="h-screen flex overflow-hidden bg-gray-100 print:h-auto print:overflow-visible">
       <!-- Mobile sidebar -->

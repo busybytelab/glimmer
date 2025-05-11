@@ -12,8 +12,6 @@ import (
 func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
-			"createRule": null,
-			"deleteRule": null,
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -171,12 +169,10 @@ func init() {
 					"required": true,
 					"system": false,
 					"type": "relation",
-					
-						"collectionId": "pbc_%s",
-						"cascadeDelete": true,
-						"maxSelect": 1,
-						"minSelect": 1
-					
+					"collectionId": "pbc_%s",
+					"cascadeDelete": true,
+					"maxSelect": 1,
+					"minSelect": 1
 				},
 				{
 					"autogeneratePattern": "",
@@ -220,12 +216,14 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [],
-			"listRule": "@request.auth.id != null",
 			"name": "%s",
 			"system": false,
 			"type": "base",
-			"updateRule": "@request.auth.id != null",
-			"viewRule": "@request.auth.id != null"
+			"createRule": "@request.auth.id = account.owner",
+			"deleteRule": "@request.auth.id = account.owner",
+			"listRule": "@request.auth.id = account.owner || (@collection.learners.account ?= account && @collection.learners.user = @request.auth.id)",
+			"updateRule": "@request.auth.id = account.owner",
+			"viewRule": "@request.auth.id = account.owner || (@collection.learners.account ?= account && @collection.learners.user = @request.auth.id)"
 		}`, domain.CollectionPracticeTopics, domain.CollectionAccounts, domain.CollectionPracticeItems, domain.CollectionPracticeItems)
 
 		collection := &core.Collection{}

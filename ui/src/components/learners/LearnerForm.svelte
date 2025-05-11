@@ -79,9 +79,7 @@
 			if (typeof dataToSend.learning_preferences === 'string') {
 				dataToSend.learning_preferences = (dataToSend.learning_preferences as string).split('\n').map(pref => pref.trim()).filter(Boolean);
 			}
-			
-			console.log('Data being sent to server:', dataToSend);
-			
+						
 			let result;
 			if (learner) {
 				// Update existing learner

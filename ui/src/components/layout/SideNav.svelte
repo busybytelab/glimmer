@@ -1,4 +1,5 @@
 <script lang="ts">
+    import pb from '$lib/pocketbase';
     // Use the public URL instead of importing the asset
     const glimmerLogoUrl = '/glimmer.svg';
     import { goto } from '$app/navigation';
@@ -56,9 +57,15 @@
             <button 
                 class="flex items-center justify-center w-full p-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors"
                 on:click={() => {
-                    // Clear auth token and reload
+                    // Clear PocketBase auth store
+                    pb.authStore.clear();
+                    // Clear the auth cookie
+                    document.cookie = 'pb_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+                    // Clear localStorage
                     localStorage.removeItem('pocketbase_auth');
-                    window.location.href = '/';
+                    localStorage.removeItem('authToken');
+                    // Redirect to login
+                    window.location.href = '/login';
                 }}
             >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
