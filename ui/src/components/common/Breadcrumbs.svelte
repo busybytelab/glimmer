@@ -30,7 +30,7 @@
     <ol class="inline-flex items-center space-x-1 md:space-x-2">
         {#if showHomeIcon && items.length > 0}
             <li class="inline-flex items-center">
-                <a href="/" class="inline-flex items-center text-sm text-gray-700 hover:text-gray-900">
+                <a href="/" class="inline-flex items-center text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d={getIconPath('home')}></path>
                     </svg>
@@ -43,13 +43,13 @@
             <li>
                 <div class="flex items-center">
                     {#if index > 0 || showHomeIcon}
-                        <span class="mx-1 md:mx-2 text-gray-400">{divider}</span>
+                        <span class="mx-1 md:mx-2 text-gray-400 dark:text-gray-500">{divider}</span>
                     {/if}
                     
                     {#if item.href && index !== items.length - 1}
                         <a 
                             href={item.href} 
-                            class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                            class="inline-flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                         >
                             {#if item.icon}
                                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -60,7 +60,7 @@
                         </a>
                     {:else}
                         <span 
-                            class="inline-flex items-center text-sm font-medium text-gray-500"
+                            class="inline-flex items-center text-sm font-medium text-gray-500 dark:text-gray-400"
                             aria-current={index === items.length - 1 ? 'page' : undefined}
                         >
                             {#if item.icon}

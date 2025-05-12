@@ -6,9 +6,9 @@
 	export let loadingText: string = "Loading...";
 
 	const variants = {
-		primary: "bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 border-indigo-600",
-		secondary: "bg-gray-600 hover:bg-gray-700 focus:ring-gray-500 border-gray-600",
-		danger: "bg-red-600 hover:bg-red-700 focus:ring-red-500 border-red-600"
+		primary: "bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 border-indigo-600 dark:bg-indigo-700 dark:hover:bg-indigo-800 dark:border-indigo-700",
+		secondary: "bg-gray-600 hover:bg-gray-700 focus:ring-gray-500 border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-800 dark:border-gray-700",
+		danger: "bg-red-600 hover:bg-red-700 focus:ring-red-500 border-red-600 dark:bg-red-700 dark:hover:bg-red-800 dark:border-red-700"
 	};
 </script>
 
@@ -16,7 +16,7 @@
 	{type} 
 	class={`inline-flex justify-center py-2 px-5 border shadow-sm text-sm font-medium rounded-md text-white 
 	${variants[variant]} 
-	focus:outline-none focus:ring-2 focus:ring-offset-2
+	focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800
 	transition-all duration-200 ease-in-out
 	disabled:opacity-50 disabled:cursor-not-allowed
 	`}

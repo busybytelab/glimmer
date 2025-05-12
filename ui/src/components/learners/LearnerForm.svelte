@@ -128,7 +128,7 @@
 			</div>
 		{/if}
 
-		<div class="px-4 py-4 bg-white w-full">
+		<div class="px-4 py-4 bg-white dark:bg-gray-800 w-full">
 			<div class="grid grid-cols-6 gap-6">
 				<FormField
 					label="Nickname"
@@ -182,7 +182,7 @@
 			</div>
 		</div>
 
-		<div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-4">
+		<div class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-4">
 			<FormButton
 				type="button"
 				variant="secondary"

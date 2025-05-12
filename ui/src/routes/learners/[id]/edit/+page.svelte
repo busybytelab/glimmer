@@ -6,6 +6,8 @@
 	import pb from '$lib/pocketbase';
 	import LearnerForm from '../../../../components/learners/LearnerForm.svelte';
 	import FormButton from '../../../../components/common/FormButton.svelte';
+	import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
+	import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
 
 	let learner: Learner | null = null;
 	let loading = true;
@@ -47,11 +49,11 @@
 		}
 	}
 
-	function handleLearnerUpdate(updatedLearner: Learner) {
+	function handleLearnerUpdate() {
 		goto('/learners');
 	}
 
-	function handleLearnerDelete(learnerId: string) {
+	function handleLearnerDelete() {
 		goto('/learners');
 	}
 
@@ -60,9 +62,9 @@
 	}
 </script>
 
-<div class="container mx-auto px-4 py-8 max-w-7xl">
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
 	<div class="flex justify-between items-center mb-6">
-		<h1 class="text-2xl font-bold text-gray-900">
+		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">
 			{learner ? 'Edit Learner' : 'Loading...'}
 		</h1>
 		<FormButton
@@ -76,19 +78,16 @@
 
 	{#if loading}
 		<div class="flex justify-center items-center h-64">
-			<div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+			<LoadingSpinner size="md" color="primary" />
 		</div>
 	{:else if error}
-		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-			<strong class="font-bold">Error!</strong>
-			<span class="block sm:inline"> {error}</span>
-		</div>
+		<ErrorAlert message={error} />
 	{:else if learner}
 		<div class="w-full">
 			<LearnerForm
 				{learner}
-				on:update={({ detail }) => handleLearnerUpdate(detail)}
-				on:delete={({ detail }) => handleLearnerDelete(detail)}
+				on:update={() => handleLearnerUpdate()}
+				on:delete={() => handleLearnerDelete()}
 				on:cancel={handleCancel}
 			/>
 		</div>

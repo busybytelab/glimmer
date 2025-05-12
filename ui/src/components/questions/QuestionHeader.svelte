@@ -4,6 +4,6 @@
     export let index: number;
 </script>
 
-<h4 class="text-md font-medium text-gray-900 mb-2">
+<h4 class="text-md font-medium text-gray-900 dark:text-white mb-2">
     Question {index + 1}{#if item?.id} (ID: {item.id}){/if}
 </h4> 

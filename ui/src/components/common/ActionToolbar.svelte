@@ -49,11 +49,11 @@
         type VariantType = 'primary' | 'secondary' | 'danger' | 'success' | 'warning';
         
         const variantClasses: Record<VariantType, string> = {
-            primary: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 border-indigo-600 text-white',
-            secondary: 'bg-gray-600 hover:bg-gray-700 focus:ring-gray-500 border-gray-600 text-white',
-            danger: 'bg-red-600 hover:bg-red-700 focus:ring-red-500 border-red-600 text-white',
-            success: 'bg-green-600 hover:bg-green-700 focus:ring-green-500 border-green-600 text-white',
-            warning: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500 border-yellow-600 text-white'
+            primary: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 border-indigo-600 text-white dark:bg-indigo-700 dark:hover:bg-indigo-800',
+            secondary: 'bg-gray-600 hover:bg-gray-700 focus:ring-gray-500 border-gray-600 text-white dark:bg-gray-700 dark:hover:bg-gray-800',
+            danger: 'bg-red-600 hover:bg-red-700 focus:ring-red-500 border-red-600 text-white dark:bg-red-700 dark:hover:bg-red-800',
+            success: 'bg-green-600 hover:bg-green-700 focus:ring-green-500 border-green-600 text-white dark:bg-green-700 dark:hover:bg-green-800',
+            warning: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500 border-yellow-600 text-white dark:bg-yellow-700 dark:hover:bg-yellow-800'
         };
         
         return `${baseClass} ${variantClasses[variant as VariantType]}`;
@@ -96,7 +96,7 @@
         <!-- Dropdown for very small screens -->
         <div class="relative">
             <button 
-                class="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                class="inline-flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
                 on:click={() => showDropdown = !showDropdown}
             >
                 <span>Actions</span>
@@ -106,18 +106,18 @@
             </button>
             
             {#if showDropdown}
-                <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 dark:ring-gray-700 focus:outline-none z-10">
                     <div class="py-1">
                         {#each actions as action}
                             <button
-                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                                 on:click={() => {
                                     showDropdown = false;
                                     action.onClick();
                                 }}
                                 disabled={action.disabled}
                             >
-                                <svg class="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <svg class="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                     <path d={getIconPath(action.icon)} />
                                 </svg>
                                 {action.label}

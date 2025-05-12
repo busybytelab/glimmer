@@ -243,7 +243,7 @@
 			</div>
 		{/if}
 
-		<div class="px-4 py-4 bg-white w-full">
+		<div class="px-4 py-4 bg-white dark:bg-gray-800 w-full">
 			<div class="grid grid-cols-6 gap-6">
 				<FormField 
 					id="name"
@@ -357,7 +357,7 @@
 				{#if formData.tags.length > 0}
 					<div class="mt-2 flex flex-wrap gap-2">
 						{#each formData.tags as tag}
-							<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+							<span class="bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 text-xs font-medium px-2.5 py-0.5 rounded">
 								{tag}
 							</span>
 						{/each}
@@ -366,7 +366,7 @@
 			</div>
 		</div>
 
-		<div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-4">
+		<div class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-4">
 			<FormButton 
 				type="button" 
 				variant="secondary"

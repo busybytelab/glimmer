@@ -166,7 +166,7 @@
     };
 </script>
 
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="flex justify-between items-center mb-6">
         <div>
             <Breadcrumbs items={breadcrumbItems} />

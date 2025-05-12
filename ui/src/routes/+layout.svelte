@@ -121,15 +121,15 @@
 </style>
 
 {#if $isAuthLoading}
-  <div class="flex justify-center items-center h-screen">
+  <div class="flex justify-center items-center h-screen bg-content">
     <LoadingSpinner size="lg" color="gray" />
   </div>
 {:else if $error}
-  <div class="flex flex-col items-center justify-center h-screen">
+  <div class="flex flex-col items-center justify-center h-screen bg-content">
     <ErrorAlert message={$error} />
     <button 
       on:click={() => window.location.reload()} 
-      class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      class="mt-4 bg-blue-500 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-800 text-white font-bold py-2 px-4 rounded"
     >
       Try Again
     </button>
@@ -137,12 +137,12 @@
 {:else}
   {#if $isAuthenticated && $user && !isPublic}
     <!-- Authenticated layout -->
-    <div class="h-screen flex overflow-hidden bg-gray-100 print:h-auto print:overflow-visible">
+    <div class="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900 print:h-auto print:overflow-visible">
       <!-- Mobile sidebar -->
       {#if sidebarOpen}
         <div class="md:hidden fixed inset-0 flex z-40 print:hidden">
           <button
-            class="fixed inset-0 bg-gray-600 bg-opacity-75"
+            class="fixed inset-0 bg-gray-600 bg-opacity-75 dark:bg-black dark:bg-opacity-80"
             on:click={() => sidebarOpen = false}
             on:keydown={(e) => e.key === 'Escape' && (sidebarOpen = false)}
             aria-label="Close sidebar overlay"
@@ -160,7 +160,7 @@
         <div class="md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 print:hidden">
           <button
             on:click={toggleSidebar}
-            class="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-secondary"
+            class="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-secondary"
           >
             <span class="sr-only">Open sidebar</span>
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -168,13 +168,15 @@
             </svg>
           </button>
         </div>
-        <main class="flex-1 relative z-0 overflow-y-auto focus:outline-none h-full print:h-auto print:overflow-visible print:relative print:z-0">
+        <main class="flex-1 relative z-0 overflow-y-auto focus:outline-none h-full bg-content print:h-auto print:overflow-visible print:relative print:z-0">
           <slot />
         </main>
       </div>
     </div>
   {:else}
     <!-- Unauthenticated layout -->
-    <slot />
+    <div class="bg-content min-h-screen">
+      <slot />
+    </div>
   {/if}
 {/if} 
