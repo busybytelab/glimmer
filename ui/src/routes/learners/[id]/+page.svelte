@@ -5,6 +5,8 @@
 	import type { Learner } from '$lib/types';
 	import pb from '$lib/pocketbase';
 	import FormButton from '../../../components/common/FormButton.svelte';
+	import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
+	import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
 
 	let learner: Learner | null = null;
 	let loading = true;
@@ -48,13 +50,13 @@
 
 	function editLearner() {
 		if (!learner) return;
-		goto(`/learners/edit/${learner.id}`);
+		goto(`/learners/${learner.id}/edit`);
 	}
 </script>
 
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
 	<div class="flex justify-between items-center mb-6">
-		<h1 class="text-2xl font-bold text-gray-900">Learner Profile</h1>
+		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Learner Profile</h1>
 		<FormButton
 			type="button"
 			variant="primary"
@@ -66,47 +68,44 @@
 
 	{#if loading}
 		<div class="flex justify-center items-center h-64">
-			<div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+			<LoadingSpinner size="md" color="primary" />
 		</div>
 	{:else if error}
-		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-			<strong class="font-bold">Error!</strong>
-			<span class="block sm:inline"> {error}</span>
-		</div>
+		<ErrorAlert message={error} />
 	{:else if learner}
-		<div class="bg-white shadow-md rounded-lg p-6">
+		<div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
 			<div class="flex items-center space-x-4 mb-6">
 				{#if learner.avatar}
 					<img src={learner.avatar} alt={learner.nickname} class="w-16 h-16 rounded-full" />
 				{:else}
-					<div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-						<span class="text-2xl text-gray-500">{learner.nickname[0].toUpperCase()}</span>
+					<div class="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+						<span class="text-2xl text-gray-500 dark:text-gray-300">{learner.nickname[0].toUpperCase()}</span>
 					</div>
 				{/if}
 				<div>
-					<h2 class="text-xl font-semibold text-gray-900">{learner.nickname}</h2>
-					<p class="text-gray-600">{learner.user.name}</p>
+					<h2 class="text-xl font-semibold text-gray-900 dark:text-white">{learner.nickname}</h2>
+					<p class="text-gray-600 dark:text-gray-400">{learner.user.name}</p>
 				</div>
 			</div>
 
 			<div class="grid grid-cols-2 gap-4 mb-6">
-				<div class="bg-gray-50 p-3 rounded">
-					<div class="text-sm font-semibold text-gray-700 mb-1">Age:</div>
-					<div>{learner.age}</div>
+				<div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+					<div class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Age:</div>
+					<div class="dark:text-gray-200">{learner.age}</div>
 				</div>
 				
-				<div class="bg-gray-50 p-3 rounded">
-					<div class="text-sm font-semibold text-gray-700 mb-1">Grade Level:</div>
-					<div>{learner.grade_level || 'Not specified'}</div>
+				<div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+					<div class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Grade Level:</div>
+					<div class="dark:text-gray-200">{learner.grade_level || 'Not specified'}</div>
 				</div>
 			</div>
 
 			{#if learner.learning_preferences && learner.learning_preferences.length > 0}
 				<div class="mb-6">
-					<div class="text-sm font-semibold text-gray-700 mb-2">Learning Preferences:</div>
+					<div class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Learning Preferences:</div>
 					<div class="flex flex-wrap gap-2">
 						{#each learner.learning_preferences as preference}
-							<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+							<span class="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs font-medium px-2.5 py-0.5 rounded">
 								{preference}
 							</span>
 						{/each}

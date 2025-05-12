@@ -2,7 +2,6 @@
     import pb from '$lib/pocketbase';
     // Use the public URL instead of importing the asset
     const glimmerLogoUrl = '/glimmer.svg';
-    import { goto } from '$app/navigation';
     import { page } from '$app/stores';
     
     export let isOpen: boolean = true;
@@ -28,11 +27,11 @@
     }
 </script>
 
-<aside class={`bg-white border-r border-gray-200 w-64 flex-shrink-0 ${isOpen ? '' : 'hidden'} md:block`}>
+<aside class={`bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-64 flex-shrink-0 ${isOpen ? '' : 'hidden'} md:block`}>
     <div class="h-full flex flex-col">
-        <div class="flex items-center justify-center h-16 border-b border-gray-200">
+        <div class="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700">
             <img src={glimmerLogoUrl} alt="Glimmer Logo" class="h-8 w-8 mr-2" />
-            <div class="text-xl font-semibold text-gray-800">Glimmer</div>
+            <div class="text-xl font-semibold text-gray-800 dark:text-white">Glimmer</div>
         </div>
         
         <nav class="flex-1 overflow-y-auto p-4">
@@ -41,7 +40,11 @@
                     <li>
                         <a 
                             href={item.href}
-                            class={`flex items-center p-2 rounded-md hover:bg-gray-100 transition-colors ${isActive(item.href) ? 'bg-gray-100 text-indigo-600' : 'text-gray-700'}`}
+                            class={`flex items-center p-2 rounded-md transition-colors ${
+                                isActive(item.href) 
+                                    ? 'bg-gray-100 dark:bg-gray-700 text-indigo-600 dark:text-indigo-400' 
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            }`}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={item.icon} />
@@ -53,9 +56,9 @@
             </ul>
         </nav>
         
-        <div class="p-4 border-t border-gray-200">
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
             <button 
-                class="flex items-center justify-center w-full p-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors"
+                class="flex items-center justify-center w-full p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
                 on:click={() => {
                     // Clear PocketBase auth store
                     pb.authStore.clear();

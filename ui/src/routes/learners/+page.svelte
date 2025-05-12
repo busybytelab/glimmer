@@ -5,6 +5,8 @@
 	import type { Learner } from '$lib/types';
 	import LearnersList from '../../components/learners/LearnersList.svelte';
 	import FormButton from '../../components/common/FormButton.svelte';
+	import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
+	import ErrorAlert from '../../components/common/ErrorAlert.svelte';
 
 	let learners: Learner[] = [];
 	let loading = true;
@@ -66,9 +68,9 @@
 	}
 </script>
 
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
 	<div class="flex justify-between items-center mb-6">
-		<h1 class="text-2xl font-bold text-gray-900">Learners</h1>
+		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Learners</h1>
 		<FormButton
 			type="button"
 			on:click={handleCreateNew}
@@ -79,13 +81,10 @@
 
 	{#if loading}
 		<div class="flex justify-center items-center h-64">
-			<div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+			<LoadingSpinner size="md" color="primary" />
 		</div>
 	{:else if error}
-		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-			<strong class="font-bold">Error!</strong>
-			<span class="block sm:inline"> {error}</span>
-		</div>
+		<ErrorAlert message={error} />
 	{:else}
 	<LearnersList
 	{learners}

@@ -18,22 +18,22 @@
     }
 </script>
 
-<div class="border border-gray-200 rounded-lg p-4">
+<div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
     <QuestionHeader {item} {index} />
-    <p class="text-gray-600 mb-4">{item.question_text}</p>
+    <p class="text-gray-700 dark:text-gray-300 mb-4">{item.question_text}</p>
     
     <div class="space-y-2">
         {#each (typeof item.options === 'string' ? JSON.parse(item.options) : item.options) as option, optionIndex}
             <div class="flex items-center">
                 {#if printMode}
-                    <div class="w-4 h-4 border border-gray-400 rounded mr-2"></div>
+                    <div class="w-4 h-4 border border-gray-400 dark:border-gray-500 rounded mr-2"></div>
                 {:else}
                     <input
                         type="radio"
                         id={`question-${index}-option-${optionIndex}-${item.id}`}
                         name={`question-${index}-${item.id}`}
                         value={option}
-                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
                         {disabled}
                         checked={item.user_answer === option}
                         on:change={handleAnswerChange}
@@ -41,7 +41,7 @@
                 {/if}
                 <label 
                     for={printMode ? undefined : `question-${index}-option-${optionIndex}-${item.id}`}
-                    class="ml-3 text-gray-700"
+                    class="ml-3 text-gray-700 dark:text-gray-300"
                 >
                     {option}
                 </label>
@@ -50,23 +50,23 @@
     </div>
 
     {#if showAnswer}
-        <div class="mt-4 p-4 bg-gray-50 rounded-md">
-            <h5 class="text-sm font-medium text-gray-900 mb-2">Your Answer:</h5>
-            <p class="text-gray-600">{item.user_answer || 'Not answered'}</p>
+        <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
+            <h5 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Your Answer:</h5>
+            <p class="text-gray-700 dark:text-gray-300">{item.user_answer || 'Not answered'}</p>
         </div>
     {/if}
 
     {#if showInstructorInfo}
-        <div class="mt-4 p-4 bg-gray-50 rounded-md">
-            <h5 class="text-sm font-medium text-gray-900 mb-2">Correct Answer:</h5>
-            <p class="text-gray-600">{item.correct_answer}</p>
+        <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
+            <h5 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Correct Answer:</h5>
+            <p class="text-gray-700 dark:text-gray-300">{item.correct_answer}</p>
             {#if item.explanation}
-                <h5 class="text-sm font-medium text-gray-900 mt-2 mb-2">Explanation:</h5>
-                <p class="text-gray-600">{item.explanation}</p>
+                <h5 class="text-sm font-medium text-gray-900 dark:text-white mt-2 mb-2">Explanation:</h5>
+                <p class="text-gray-700 dark:text-gray-300">{item.explanation}</p>
             {/if}
             {#if item.hint_level_reached}
-                <h5 class="text-sm font-medium text-gray-900 mt-2 mb-2">Hints Used:</h5>
-                <p class="text-gray-600">{item.hint_level_reached}</p>
+                <h5 class="text-sm font-medium text-gray-900 dark:text-white mt-2 mb-2">Hints Used:</h5>
+                <p class="text-gray-700 dark:text-gray-300">{item.hint_level_reached}</p>
             {/if}
         </div>
     {/if}

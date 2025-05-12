@@ -315,7 +315,7 @@
 </style>
 
 {#if !printMode}
-<div class="container mx-auto px-4 py-8 no-print">
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
     <div class="flex justify-between items-center mb-6">
         <div>
             <Breadcrumbs items={breadcrumbItems} />
@@ -330,21 +330,21 @@
     {:else if error}
         <ErrorAlert message={error} />
     {:else if session}
-        <div class="bg-white shadow rounded-lg">
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
             <div class="px-4 py-5 sm:p-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-4">{session.name || 'Practice Session'}</h2>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">{session.name || 'Practice Session'}</h2>
             
                 {#if session.expand?.practice_topic}
-                    <p class="text-gray-600 mb-4">Topic: {session.expand.practice_topic.name}</p>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">Topic: {session.expand.practice_topic.name}</p>
                 {/if}
 
             {#if session.expand?.learner}
-                    <p class="text-gray-600 mb-4">Learner: {session.expand.learner.name}</p>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">Learner: {session.expand.learner.name}</p>
             {/if}
 
             {#if practiceItems.length > 0}
                 <div class="mt-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Practice Items</h3>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Practice Items</h3>
                     <div class="space-y-6">
                         {#each practiceItems as item, index}
                             <div class="question-container">
@@ -360,8 +360,8 @@
                     </div>
                 </div>
             {:else}
-                <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
-                    <p class="text-gray-600">No practice items available.</p>
+                <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-4 rounded-md">
+                    <p class="text-gray-600 dark:text-gray-300">No practice items available.</p>
                 </div>
             {/if}
             </div>

@@ -57,7 +57,7 @@
         {printMode}
     />
 {:else}
-    <div class="border border-red-200 rounded-lg p-4 bg-red-50">
-        <p class="text-red-600">Unsupported question type: {item.question_type}, id: {item.id}</p>
+    <div class="border border-red-200 dark:border-red-800 rounded-lg p-4 bg-red-50 dark:bg-red-900/30">
+        <p class="text-red-600 dark:text-red-400">Unsupported question type: {item.question_type}, id: {item.id}</p>
     </div>
 {/if}

@@ -27,17 +27,17 @@
     }
 </script>
 
-<div class="border border-gray-200 rounded-lg p-4">
+<div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
     <QuestionHeader {item} {index} />
-    <p class="text-gray-600 mb-4">{item.question_text}</p>
+    <p class="text-gray-700 dark:text-gray-300 mb-4">{item.question_text}</p>
     
     {#if printMode}
-        <div class="h-32 border border-gray-300 rounded-md"></div>
+        <div class="h-32 border border-gray-300 dark:border-gray-600 rounded-md"></div>
     {:else}
         <textarea
             bind:this={textarea}
             id={`question-${index}-${item.id}`}
-            class="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            class="w-full h-32 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
             placeholder="Type your answer here..."
             {disabled}
             bind:value={item.user_answer}
@@ -46,23 +46,23 @@
     {/if}
 
     {#if showAnswer}
-        <div class="mt-4 p-4 bg-gray-50 rounded-md">
-            <h5 class="text-sm font-medium text-gray-900 mb-2">Your Answer:</h5>
-            <p class="text-gray-600">{item.user_answer || 'Not answered'}</p>
+        <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
+            <h5 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Your Answer:</h5>
+            <p class="text-gray-700 dark:text-gray-300">{item.user_answer || 'Not answered'}</p>
         </div>
     {/if}
 
     {#if showInstructorInfo}
-        <div class="mt-4 p-4 bg-gray-50 rounded-md">
-            <h5 class="text-sm font-medium text-gray-900 mb-2">Correct Answer:</h5>
-            <p class="text-gray-600">{item.correct_answer}</p>
+        <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
+            <h5 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Correct Answer:</h5>
+            <p class="text-gray-700 dark:text-gray-300">{item.correct_answer}</p>
             {#if item.explanation}
-                <h5 class="text-sm font-medium text-gray-900 mt-2 mb-2">Explanation:</h5>
-                <p class="text-gray-600">{item.explanation}</p>
+                <h5 class="text-sm font-medium text-gray-900 dark:text-white mt-2 mb-2">Explanation:</h5>
+                <p class="text-gray-700 dark:text-gray-300">{item.explanation}</p>
             {/if}
             {#if item.hint_level_reached}
-                <h5 class="text-sm font-medium text-gray-900 mt-2 mb-2">Hints Used:</h5>
-                <p class="text-gray-600">{item.hint_level_reached}</p>
+                <h5 class="text-sm font-medium text-gray-900 dark:text-white mt-2 mb-2">Hints Used:</h5>
+                <p class="text-gray-700 dark:text-gray-300">{item.hint_level_reached}</p>
             {/if}
         </div>
     {/if}

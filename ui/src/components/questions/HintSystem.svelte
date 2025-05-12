@@ -23,7 +23,7 @@
 {#if hints.length > 0}
     <div class="mt-2">
         <button
-            class="inline-flex items-center px-2 py-1 text-sm text-indigo-600 hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="inline-flex items-center px-2 py-1 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
             on:click={requestHint}
             disabled={disabled || !hasMoreHints}
             title={hasMoreHints ? 'Get a hint' : 'No more hints available'}
@@ -35,9 +35,9 @@
         </button>
 
         {#if currentHintLevel > 0}
-            <div class="mt-2 p-3 bg-indigo-50 rounded-md">
-                <h5 class="text-sm font-medium text-indigo-900 mb-1">Current Hint:</h5>
-                <p class="text-sm text-indigo-700">{hints[currentHintLevel - 1]}</p>
+            <div class="mt-2 p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-md">
+                <h5 class="text-sm font-medium text-indigo-900 dark:text-indigo-200 mb-1">Current Hint:</h5>
+                <p class="text-sm text-indigo-700 dark:text-indigo-300">{hints[currentHintLevel - 1]}</p>
             </div>
         {/if}
     </div>

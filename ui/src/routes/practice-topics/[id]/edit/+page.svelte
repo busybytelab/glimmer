@@ -7,6 +7,8 @@
     import PracticeTopicForm from '../../../../components/practice-topics/PracticeTopicForm.svelte';
     import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
     import ActionToolbar from '../../../../components/common/ActionToolbar.svelte';
+    import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
+    import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
 
     // Define the breadcrumb item type
     type BreadcrumbItem = {
@@ -104,11 +106,11 @@
         ];
     }
 
-    function handleTopicUpdate(_updatedTopic: PracticeTopic) {
+    function handleTopicUpdate() {
         goto('/practice-topics');
     }
 
-    function handleTopicDelete(_topicId: string) {
+    function handleTopicDelete() {
         goto('/practice-topics');
     }
 
@@ -128,7 +130,7 @@
     ];
 </script>
 
-<div class="container mx-auto px-4 py-8 max-w-7xl">
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
     <div class="flex justify-between items-center mb-6">
         <div>
             <Breadcrumbs items={breadcrumbItems} />
@@ -138,19 +140,16 @@
 
     {#if loading}
         <div class="flex justify-center items-center h-64">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            <LoadingSpinner size="md" color="primary" />
         </div>
     {:else if error}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <strong class="font-bold">Error!</strong>
-            <span class="block sm:inline"> {error}</span>
-        </div>
+        <ErrorAlert message={error} />
     {:else if topic}
         <div class="w-full">
             <PracticeTopicForm
                 {topic}
-                on:update={({ detail }) => handleTopicUpdate(detail)}
-                on:delete={({ detail }) => handleTopicDelete(detail)}
+                on:update={() => handleTopicUpdate()}
+                on:delete={() => handleTopicDelete()}
                 on:cancel={handleCancel}
             />
         </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { isAuthLoading } from '$lib/stores';
     import { building } from '$app/environment';
+    import LoadingSpinner from '../common/LoadingSpinner.svelte';
 
     // Skip auth check during build
     if (building) {
@@ -10,7 +11,7 @@
 
 {#if $isAuthLoading}
     <div class="flex justify-center items-center h-screen">
-        <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+        <LoadingSpinner size="lg" color="gray" />
     </div>
 {:else}
     <slot />
