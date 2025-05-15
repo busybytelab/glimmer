@@ -6,19 +6,22 @@ import (
 	"errors"
 	"sync"
 	"time"
+
+	"github.com/busybytelab.com/glimmer/internal/domain"
 )
 
 // MemoryCacheStorage implements the CacheStorage interface using an in-memory map
 type MemoryCacheStorage struct {
-	chatCache     map[string]*ChatCacheEntry
-	imageDscCache map[string]*ImageCacheEntry
-	mutex         sync.RWMutex
+	chatCache            map[string]*ChatCacheEntry
+	chatWithHistoryCache map[string]*ChatCacheEntry
+	imageDscCache        map[string]*ImageCacheEntry
+	mutex                sync.RWMutex
 }
 
 // ChatCacheEntry represents a cached chat response
 type ChatCacheEntry struct {
 	Response  string
-	Usage     *Usage
+	Usage     *domain.Usage
 	CreatedAt time.Time
 	TTL       time.Duration // 0 means no expiration
 }
@@ -26,7 +29,7 @@ type ChatCacheEntry struct {
 // ImageCacheEntry represents a cached image description
 type ImageCacheEntry struct {
 	Description string
-	Usage       *Usage
+	Usage       *domain.Usage
 	CreatedAt   time.Time
 	TTL         time.Duration // 0 means no expiration
 }
@@ -34,8 +37,9 @@ type ImageCacheEntry struct {
 // NewMemoryCacheStorage creates a new memory-backed cache storage
 func NewMemoryCacheStorage() CacheStorage {
 	return &MemoryCacheStorage{
-		chatCache:     make(map[string]*ChatCacheEntry),
-		imageDscCache: make(map[string]*ImageCacheEntry),
+		chatCache:            make(map[string]*ChatCacheEntry),
+		chatWithHistoryCache: make(map[string]*ChatCacheEntry),
+		imageDscCache:        make(map[string]*ImageCacheEntry),
 	}
 }
 
@@ -72,7 +76,7 @@ func (m *MemoryCacheStorage) GetChatResponse(cacheKey string) (*ChatResponse, er
 	}
 
 	// Create a copy of usage data to avoid concurrent access issues
-	usageCopy := &Usage{
+	usageCopy := &domain.Usage{
 		LlmModelName:     entry.Usage.LlmModelName,
 		CacheHit:         true, // Override to indicate a cache hit
 		Cost:             entry.Usage.Cost,
@@ -93,9 +97,9 @@ func (m *MemoryCacheStorage) SetChatResponse(cacheKey string, params *ChatParame
 	ttl := 24 * time.Hour
 
 	// Create a copy of usage data to avoid concurrent access issues
-	var usageCopy *Usage
+	var usageCopy *domain.Usage
 	if response.Usage != nil {
-		usageCopy = &Usage{
+		usageCopy = &domain.Usage{
 			LlmModelName:     response.Usage.LlmModelName,
 			CacheHit:         response.Usage.CacheHit,
 			Cost:             response.Usage.Cost,
@@ -114,6 +118,95 @@ func (m *MemoryCacheStorage) SetChatResponse(cacheKey string, params *ChatParame
 
 	m.mutex.Lock()
 	m.chatCache[cacheKey] = entry
+	m.mutex.Unlock()
+
+	return nil
+}
+
+// GetChatWithHistoryCacheKey generates a cache key for a chat request with message history
+func (m *MemoryCacheStorage) GetChatWithHistoryCacheKey(messages []*domain.ChatItem, systemPrompt, model string) string {
+	hasher := sha256.New()
+
+	// Add system prompt
+	hasher.Write([]byte(systemPrompt))
+
+	// Add model
+	if model == "" {
+		model = "default"
+	}
+	hasher.Write([]byte(model))
+
+	// Add all messages in sequence
+	for _, msg := range messages {
+		hasher.Write([]byte(msg.Role))
+		hasher.Write([]byte(msg.Content))
+	}
+
+	return "history-" + hex.EncodeToString(hasher.Sum(nil))
+}
+
+// GetChatWithHistoryResponse retrieves a cached chat with history response
+func (m *MemoryCacheStorage) GetChatWithHistoryResponse(cacheKey string) (*ChatResponse, error) {
+	m.mutex.RLock()
+	entry, exists := m.chatWithHistoryCache[cacheKey]
+	m.mutex.RUnlock()
+
+	if !exists {
+		return nil, errors.New("record not found")
+	}
+
+	// Check expiration
+	if entry.TTL > 0 && time.Since(entry.CreatedAt) > entry.TTL {
+		// Remove expired entry
+		m.mutex.Lock()
+		delete(m.chatWithHistoryCache, cacheKey)
+		m.mutex.Unlock()
+		return nil, errors.New("record expired")
+	}
+
+	// Create a copy of usage data to avoid concurrent access issues
+	usageCopy := &domain.Usage{
+		LlmModelName:     entry.Usage.LlmModelName,
+		CacheHit:         true, // Override to indicate a cache hit
+		Cost:             entry.Usage.Cost,
+		PromptTokens:     entry.Usage.PromptTokens,
+		CompletionTokens: entry.Usage.CompletionTokens,
+		TotalTokens:      entry.Usage.TotalTokens,
+	}
+
+	return &ChatResponse{
+		Response: entry.Response,
+		Usage:    usageCopy,
+	}, nil
+}
+
+// SetChatWithHistoryResponse stores a chat with history response in the cache
+func (m *MemoryCacheStorage) SetChatWithHistoryResponse(cacheKey string, messages []*domain.ChatItem, systemPrompt, model string, response *ChatResponse) error {
+	// Shorter TTL for conversation history responses (6 hours) since conversations evolve
+	ttl := 6 * time.Hour
+
+	// Create a copy of usage data to avoid concurrent access issues
+	var usageCopy *domain.Usage
+	if response.Usage != nil {
+		usageCopy = &domain.Usage{
+			LlmModelName:     response.Usage.LlmModelName,
+			CacheHit:         response.Usage.CacheHit,
+			Cost:             response.Usage.Cost,
+			PromptTokens:     response.Usage.PromptTokens,
+			CompletionTokens: response.Usage.CompletionTokens,
+			TotalTokens:      response.Usage.TotalTokens,
+		}
+	}
+
+	entry := &ChatCacheEntry{
+		Response:  response.Response,
+		Usage:     usageCopy,
+		CreatedAt: time.Now(),
+		TTL:       ttl,
+	}
+
+	m.mutex.Lock()
+	m.chatWithHistoryCache[cacheKey] = entry
 	m.mutex.Unlock()
 
 	return nil
@@ -146,7 +239,7 @@ func (m *MemoryCacheStorage) GetDescribeImageResponse(cacheKey string) (*Describ
 	}
 
 	// Create a copy of usage data to avoid concurrent access issues
-	usageCopy := &Usage{
+	usageCopy := &domain.Usage{
 		LlmModelName:     entry.Usage.LlmModelName,
 		CacheHit:         true, // Override to indicate a cache hit
 		Cost:             entry.Usage.Cost,
@@ -167,9 +260,9 @@ func (m *MemoryCacheStorage) SetDescribeImageResponse(cacheKey string, params *D
 	ttl := 24 * time.Hour
 
 	// Create a copy of usage data to avoid concurrent access issues
-	var usageCopy *Usage
+	var usageCopy *domain.Usage
 	if response.Usage != nil {
-		usageCopy = &Usage{
+		usageCopy = &domain.Usage{
 			LlmModelName:     response.Usage.LlmModelName,
 			CacheHit:         response.Usage.CacheHit,
 			Cost:             response.Usage.Cost,

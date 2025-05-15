@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/busybytelab.com/glimmer/internal/domain"
 	"github.com/ollama/ollama/api"
 	"github.com/rs/zerolog/log"
 )
@@ -198,10 +199,116 @@ func (o *ollamaPlatform) Chat(params *ChatParameters) (*ChatResponse, error) {
 	// Create the response
 	return &ChatResponse{
 		Response: responseText,
-		Usage: &Usage{
+		Usage: &domain.Usage{
 			LlmModelName:     model,
 			CacheHit:         false,
 			Cost:             0, // Ollama is free, so cost is 0
+			PromptTokens:     promptTokens,
+			CompletionTokens: completionTokens,
+			TotalTokens:      totalTokens,
+		},
+	}, nil
+}
+
+// ChatWithHistory sends a chat request with message history to Ollama
+func (o *ollamaPlatform) ChatWithHistory(messages []*domain.ChatItem, params *ChatParameters) (*ChatResponse, error) {
+	client, err := o.getClient()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Ollama client: %w", err)
+	}
+
+	if len(messages) == 0 {
+		return nil, fmt.Errorf("no messages provided")
+	}
+
+	// Determine model to use
+	modelName := o.cfg.Model // Default model from config
+	if params.Model != "" {
+		modelName = params.Model // Override with model from params if provided
+	}
+	if modelName == "" {
+		return nil, ErrModelNotSpecified
+	}
+
+	// Convert domain.ChatItem to api.Message
+	apiMessages := make([]api.Message, 0, len(messages)+1)
+
+	// Add system prompt as a system message if provided
+	if params.SystemPrompt != "" {
+		apiMessages = append(apiMessages, api.Message{
+			Role:    "system",
+			Content: params.SystemPrompt,
+		})
+	}
+
+	// Add the rest of the messages
+	for _, msg := range messages {
+		apiMessages = append(apiMessages, api.Message{
+			Role:    msg.Role, // Assuming roles like "user", "assistant", "system" are compatible
+			Content: msg.Content,
+		})
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), defaultOllamaTimeout)
+	defer cancel()
+
+	log.Debug().
+		Str("model", modelName).
+		Int("messagesCount", len(apiMessages)).
+		Bool("hasSystemPrompt", params.SystemPrompt != "").
+		Msg("Sending historical chat request to Ollama")
+
+	// Use the same fallback logic from the existing Chat method
+	resp, err := client.ChatWithModel(ctx, modelName, apiMessages, false, nil)
+	if err != nil {
+		// If primary URL fails and fallback is configured, try the fallback
+		if o.cfg.FallbackURL != "" {
+			log.Warn().
+				Str("primary", o.cfg.URL).
+				Str("fallback", o.cfg.FallbackURL).
+				Err(err).
+				Msg("Primary Ollama URL failed, attempting fallback")
+
+			fallbackClient, fallbackErr := NewOllamaClient(o.cfg.FallbackURL, defaultOllamaTimeout)
+			if fallbackErr != nil {
+				return nil, fmt.Errorf("failed to create fallback client: %w", fallbackErr)
+			}
+
+			resp, err = fallbackClient.ChatWithModel(ctx, modelName, apiMessages, false, nil)
+			if err != nil {
+				return nil, fmt.Errorf("failed to use fallback: %w", err)
+			}
+		} else {
+			return nil, fmt.Errorf("failed to chat with Ollama: %w", err)
+		}
+	}
+
+	// Ensure resp and resp.Message are not nil before accessing fields
+	if resp == nil {
+		log.Error().Str("model", modelName).Msg("Ollama chat response was nil")
+		return nil, fmt.Errorf("Ollama chat response was nil for model %s", modelName)
+	}
+
+	// Use token counts from Ollama API response when available
+	promptTokens := resp.PromptEvalCount
+	completionTokens := resp.EvalCount
+	totalTokens := promptTokens + completionTokens
+
+	log.Debug().
+		Str("model", modelName).
+		Int("promptTokens", promptTokens).
+		Int("completionTokens", completionTokens).
+		Int("totalTokens", totalTokens).
+		Str("response", resp.Message.Content).
+		Msg("Ollama chat with history response received")
+
+	// Create the response
+	return &ChatResponse{
+		Response: resp.Message.Content,
+		Usage: &domain.Usage{
+			LlmModelName:     modelName,
+			CacheHit:         false, // Cache handling is done by cachedPlatform decorator
+			Cost:             0,     // Ollama is typically local, so cost is 0
 			PromptTokens:     promptTokens,
 			CompletionTokens: completionTokens,
 			TotalTokens:      totalTokens,

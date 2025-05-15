@@ -1,5 +1,7 @@
 package llm
 
+import "github.com/busybytelab.com/glimmer/internal/domain"
+
 // CacheStorage interface for storing and retrieving LLM responses
 type CacheStorage interface {
 	// GetChatCacheKey generates a cache key for a chat request
@@ -10,6 +12,15 @@ type CacheStorage interface {
 
 	// SetChatResponse stores a chat response in the cache
 	SetChatResponse(cacheKey string, params *ChatParameters, response *ChatResponse) error
+
+	// GetChatWithHistoryCacheKey generates a cache key for a chat request with message history
+	GetChatWithHistoryCacheKey(messages []*domain.ChatItem, systemPrompt, model string) string
+
+	// GetChatWithHistoryResponse retrieves a cached chat with history response
+	GetChatWithHistoryResponse(cacheKey string) (*ChatResponse, error)
+
+	// SetChatWithHistoryResponse stores a chat with history response in the cache
+	SetChatWithHistoryResponse(cacheKey string, messages []*domain.ChatItem, systemPrompt, model string, response *ChatResponse) error
 
 	// GetDescribeImageCacheKey generates a cache key for an image description request
 	GetDescribeImageCacheKey(params *DescribeImageParameters) string

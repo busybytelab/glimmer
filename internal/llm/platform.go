@@ -2,9 +2,11 @@ package llm
 
 import (
 	"errors"
-	"github.com/rs/zerolog/log"
 	"io"
 	"sort"
+
+	"github.com/busybytelab.com/glimmer/internal/domain"
+	"github.com/rs/zerolog/log"
 )
 
 type (
@@ -17,23 +19,15 @@ type (
 		IsDefault bool   `json:"isDefault"`
 	}
 
-	Usage struct {
-		LlmModelName     string  `json:"llmModelName"`
-		CacheHit         bool    `json:"cacheHit"`
-		Cost             float64 `json:"cost"`
-		PromptTokens     int     `json:"promptTokens"`
-		CompletionTokens int     `json:"completionTokens"`
-		TotalTokens      int     `json:"totalTokens"`
-	}
-
 	DescribeImageResult struct {
-		Description string `json:"description"`
-		Usage       *Usage `json:"usage"`
+		Description string        `json:"description"`
+		Usage       *domain.Usage `json:"usage"`
 	}
 
 	Platform interface {
 		Type() PlatformType
 		Chat(params *ChatParameters) (*ChatResponse, error)
+		ChatWithHistory(messages []*domain.ChatItem, params *ChatParameters) (*ChatResponse, error)
 		DescribeImage(params *DescribeImageParameters) (*DescribeImageResponse, error)
 		Models() ([]*ModelInfo, error)
 	}
@@ -52,7 +46,7 @@ type (
 
 	ChatResponse struct {
 		Response string
-		Usage    *Usage
+		Usage    *domain.Usage
 	}
 
 	DescribeImageParameters struct {
@@ -63,7 +57,7 @@ type (
 
 	DescribeImageResponse struct {
 		Description string
-		Usage       *Usage
+		Usage       *domain.Usage
 	}
 )
 

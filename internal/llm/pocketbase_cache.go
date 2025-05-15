@@ -43,7 +43,7 @@ func (p *PocketBaseCacheStorage) GetChatResponse(key string) (*ChatResponse, err
 		Msg("Cache hit")
 
 	// Create usage information
-	usage := &Usage{
+	usage := &domain.Usage{
 		LlmModelName:     cached.ModelName,
 		CacheHit:         true,
 		Cost:             0, // No cost for cache hit
@@ -99,6 +99,75 @@ func (p *PocketBaseCacheStorage) SetDescribeImageResponse(key string, params *De
 func (p *PocketBaseCacheStorage) GetChatCacheKey(params *ChatParameters) string {
 	modelName := params.Model
 	return generateCacheKey(params.Prompt, params.SystemPrompt, modelName, "")
+}
+
+// GetChatWithHistoryCacheKey generates a cache key for a chat request with message history
+func (p *PocketBaseCacheStorage) GetChatWithHistoryCacheKey(messages []*domain.ChatItem, systemPrompt, model string) string {
+	// Create a hash of:
+	// 1. System prompt
+	// 2. Model name
+	// 3. All messages sequentially
+
+	// Create a unique key based on message content
+	messagesKey := ""
+	for _, msg := range messages {
+		// Include role and content to make key unique
+		messagesKey += fmt.Sprintf("%s:%s|", msg.Role, msg.Content)
+	}
+
+	// Generate a hash that includes all the conversation history
+	return generateCacheKey(messagesKey, systemPrompt, model, "history")
+}
+
+// GetChatWithHistoryResponse retrieves a cached chat with history response
+func (p *PocketBaseCacheStorage) GetChatWithHistoryResponse(key string) (*ChatResponse, error) {
+	// Reuse the existing GetChatResponse method since the storage mechanism is the same
+	return p.GetChatResponse(key)
+}
+
+// SetChatWithHistoryResponse stores a chat with history response in the cache
+func (p *PocketBaseCacheStorage) SetChatWithHistoryResponse(key string, messages []*domain.ChatItem, systemPrompt, model string, response *ChatResponse) error {
+	// Find the last user message for the prompt field
+	lastUserMsg := ""
+	for i := len(messages) - 1; i >= 0; i-- {
+		if messages[i].Role == domain.ChatItemRoleUser {
+			lastUserMsg = messages[i].Content
+			break
+		}
+	}
+
+	// Create a summary prefix for the system prompt field
+	// We'll include a marker to indicate this is a conversation history cache
+	enhancedSystemPrompt := fmt.Sprintf("[CHAT_HISTORY] Messages: %d | %s",
+		len(messages),
+		systemPrompt)
+
+	// Trim it if needed to fit in the database field
+	if len(enhancedSystemPrompt) > 1000 {
+		enhancedSystemPrompt = enhancedSystemPrompt[:1000]
+	}
+
+	// Prepare the record
+	resp := &LLMResponseRecord{
+		Key:              key,
+		Prompt:           lastUserMsg,          // Store the last user message
+		SystemPrompt:     enhancedSystemPrompt, // Store system prompt with some history info
+		Response:         response.Response,
+		ModelName:        response.Usage.LlmModelName,
+		Backend:          string(response.Usage.LlmModelName),
+		PromptTokens:     response.Usage.PromptTokens,
+		CompletionTokens: response.Usage.CompletionTokens,
+		TotalTokens:      response.Usage.TotalTokens,
+		Cost:             response.Usage.Cost,
+	}
+
+	// Save the record
+	if err := p.dao.SaveLLMResponseRecord(resp); err != nil {
+		log.Error().Err(err).Msg("Failed to save LLM response with history in pocketbase")
+		return err
+	}
+
+	return nil
 }
 
 // GetDescribeImageCacheKey generates a cache key for image description parameters

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/busybytelab.com/glimmer/internal/domain"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 	"github.com/rs/zerolog/log"
@@ -177,7 +178,120 @@ func (o *openAIPlatform) Chat(params *ChatParameters) (*ChatResponse, error) {
 	// Create the response
 	return &ChatResponse{
 		Response: resp.Choices[0].Message.Content,
-		Usage: &Usage{
+		Usage: &domain.Usage{
+			LlmModelName:     model,
+			CacheHit:         false,
+			Cost:             cost,
+			PromptTokens:     int(resp.Usage.PromptTokens),
+			CompletionTokens: int(resp.Usage.CompletionTokens),
+			TotalTokens:      int(resp.Usage.TotalTokens),
+		},
+	}, nil
+}
+
+// ChatWithHistory sends a chat request with message history to OpenAI
+func (o *openAIPlatform) ChatWithHistory(messages []*domain.ChatItem, params *ChatParameters) (*ChatResponse, error) {
+	if len(messages) == 0 {
+		return nil, fmt.Errorf("no messages provided")
+	}
+
+	model := params.Model
+	if model == "" {
+		log.Debug().Str("model", o.cfg.Model).Msg("params model is empty, using default model")
+		model = o.cfg.Model
+	}
+
+	if model == "" {
+		return nil, ErrModelNotSpecified
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), openAITimeout)
+	defer cancel()
+
+	// Convert domain.ChatItem to openai.ChatCompletionMessageParamUnion
+	openaiMessages := make([]openai.ChatCompletionMessageParamUnion, 0, len(messages)+1) // +1 for system prompt
+
+	// Add system prompt as first message if provided
+	if params.SystemPrompt != "" {
+		openaiMessages = append(openaiMessages, openai.ChatCompletionMessageParamUnion{
+			OfSystem: &openai.ChatCompletionSystemMessageParam{
+				Content: openai.ChatCompletionSystemMessageParamContentUnion{
+					OfString: openai.String(params.SystemPrompt),
+				},
+			},
+		})
+	}
+
+	// Add the rest of the messages
+	for _, msg := range messages {
+		var openAIMsg openai.ChatCompletionMessageParamUnion
+		switch msg.Role {
+		case domain.ChatItemRoleSystem:
+			openAIMsg = openai.ChatCompletionMessageParamUnion{
+				OfSystem: &openai.ChatCompletionSystemMessageParam{
+					Content: openai.ChatCompletionSystemMessageParamContentUnion{
+						OfString: openai.String(msg.Content),
+					},
+				},
+			}
+		case domain.ChatItemRoleUser:
+			openAIMsg = openai.ChatCompletionMessageParamUnion{
+				OfUser: &openai.ChatCompletionUserMessageParam{
+					Content: openai.ChatCompletionUserMessageParamContentUnion{
+						OfString: openai.String(msg.Content),
+					},
+				},
+			}
+		case domain.ChatItemRoleAssistant:
+			openAIMsg = openai.ChatCompletionMessageParamUnion{
+				OfAssistant: &openai.ChatCompletionAssistantMessageParam{
+					Content: openai.ChatCompletionAssistantMessageParamContentUnion{
+						OfString: openai.String(msg.Content),
+					},
+				},
+			}
+		default:
+			log.Warn().Str("role", msg.Role).Msg("Unknown message role encountered while converting to OpenAI format")
+			return nil, fmt.Errorf("unknown message role: %s", msg.Role)
+		}
+		openaiMessages = append(openaiMessages, openAIMsg)
+	}
+
+	// Create chat completion request
+	req := openai.ChatCompletionNewParams{
+		Model:    model,
+		Messages: openaiMessages,
+	}
+
+	// Send the request
+	resp, err := o.client.Chat.Completions.New(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("error sending chat request: %w", err)
+	}
+
+	// Ensure we have at least one choice
+	if len(resp.Choices) == 0 {
+		return nil, fmt.Errorf("no response from API")
+	}
+
+	// Calculate cost
+	cost := float64(resp.Usage.TotalTokens) * o.cfg.CostPerMillionToken / 1_000_000
+
+	log.Debug().
+		Str("model", model).
+		Int64("promptTokens", resp.Usage.PromptTokens).
+		Int64("completionTokens", resp.Usage.CompletionTokens).
+		Int64("totalTokens", resp.Usage.TotalTokens).
+		Float64("cost", cost).
+		Int("messageCount", len(messages)).
+		Bool("hasSystemPrompt", params.SystemPrompt != "").
+		Msg("OpenAI chat with history response received")
+
+	// Create the response
+	return &ChatResponse{
+		Response: resp.Choices[0].Message.Content,
+		Usage: &domain.Usage{
 			LlmModelName:     model,
 			CacheHit:         false,
 			Cost:             cost,
@@ -253,7 +367,7 @@ func (o *openAIPlatform) DescribeImage(params *DescribeImageParameters) (*Descri
 	// Create the response
 	return &DescribeImageResponse{
 		Description: resp.Choices[0].Message.Content,
-		Usage: &Usage{
+		Usage: &domain.Usage{
 			LlmModelName:     model,
 			CacheHit:         false,
 			Cost:             cost,

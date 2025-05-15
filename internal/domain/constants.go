@@ -12,4 +12,6 @@ const (
 	CollectionPracticeResults        = "practice_results"
 	CollectionAchievementDefinitions = "achievement_definitions"
 	CollectionEarnedAchievements     = "earned_achievements"
+	CollectionChats                  = "chats"
+	CollectionChatItems              = "chat_items"
 )
