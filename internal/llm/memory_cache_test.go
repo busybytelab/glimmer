@@ -3,6 +3,7 @@ package llm
 import (
 	"testing"
 
+	"github.com/busybytelab.com/glimmer/internal/domain"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +26,7 @@ func TestMemoryCacheStorage(t *testing.T) {
 	}
 
 	// Create a chat response for testing
-	usage := &Usage{
+	usage := &domain.Usage{
 		LlmModelName:     testModel,
 		CacheHit:         false,
 		Cost:             0.0,
@@ -119,7 +120,7 @@ func TestMemoryCacheStorage(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Cache hit
-		hitUsage := &Usage{
+		hitUsage := &domain.Usage{
 			LlmModelName:     usage.LlmModelName,
 			CacheHit:         true,
 			Cost:             0.0,
@@ -135,5 +136,87 @@ func TestMemoryCacheStorage(t *testing.T) {
 		hitResponse, err := storage.GetDescribeImageResponse(imgKey)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedResponse, hitResponse)
+	})
+
+	// Test chat with history functionality
+	t.Run("ChatWithHistoryCaching", func(t *testing.T) {
+		// Create some test chat items
+		messages := []*domain.ChatItem{
+			{
+				ID:      "msg1",
+				Role:    domain.ChatItemRoleSystem,
+				Content: "You are a helpful assistant",
+				Order:   0,
+			},
+			{
+				ID:      "msg2",
+				Role:    domain.ChatItemRoleUser,
+				Content: "Hello",
+				Order:   1,
+			},
+			{
+				ID:      "msg3",
+				Role:    domain.ChatItemRoleAssistant,
+				Content: "Hi there! How can I help you today?",
+				Order:   2,
+			},
+			{
+				ID:      "msg4",
+				Role:    domain.ChatItemRoleUser,
+				Content: "What is the capital of France?",
+				Order:   3,
+			},
+		}
+
+		// Get a cache key for the history
+		historyKey := storage.GetChatWithHistoryCacheKey(messages, testSystemPrompt, testModel)
+		assert.NotEmpty(t, historyKey)
+
+		// Initially, there should be no response in the cache
+		cachedResponse, err := storage.GetChatWithHistoryResponse(historyKey)
+		assert.Error(t, err)
+		assert.Nil(t, cachedResponse)
+
+		// Set the response in the cache
+		historyResponse := &ChatResponse{
+			Response: "Paris is indeed the capital of France",
+			Usage: &domain.Usage{
+				LlmModelName:     testModel,
+				CacheHit:         false,
+				Cost:             0.001,
+				PromptTokens:     50, // More tokens due to conversation history
+				CompletionTokens: 10,
+				TotalTokens:      60,
+			},
+		}
+
+		err = storage.SetChatWithHistoryResponse(historyKey, messages, testSystemPrompt, testModel, historyResponse)
+		assert.NoError(t, err)
+
+		// Now we should be able to get the response from the cache
+		cachedResponse, err = storage.GetChatWithHistoryResponse(historyKey)
+		assert.NoError(t, err)
+		assert.NotNil(t, cachedResponse)
+
+		// The cached response should match the original
+		assert.Equal(t, historyResponse.Response, cachedResponse.Response)
+		assert.True(t, cachedResponse.Usage.CacheHit) // Should be marked as a cache hit
+		assert.Equal(t, testModel, cachedResponse.Usage.LlmModelName)
+		assert.Equal(t, historyResponse.Usage.PromptTokens, cachedResponse.Usage.PromptTokens)
+		assert.Equal(t, historyResponse.Usage.CompletionTokens, cachedResponse.Usage.CompletionTokens)
+		assert.Equal(t, historyResponse.Usage.TotalTokens, cachedResponse.Usage.TotalTokens)
+
+		// Modifying messages should give a different key
+		modifiedMessages := make([]*domain.ChatItem, len(messages))
+		copy(modifiedMessages, messages)
+		modifiedMessages[3].Content = "What is the capital of Germany?"
+
+		modifiedKey := storage.GetChatWithHistoryCacheKey(modifiedMessages, testSystemPrompt, testModel)
+		assert.NotEqual(t, historyKey, modifiedKey)
+
+		// No response for the modified key
+		cachedResponse, err = storage.GetChatWithHistoryResponse(modifiedKey)
+		assert.Error(t, err)
+		assert.Nil(t, cachedResponse)
 	})
 }

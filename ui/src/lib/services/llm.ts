@@ -32,7 +32,7 @@ export type ChatResponse = {
 
 class LLMService {
     private static instance: LLMService;
-    private baseUrl = '/api/llm';
+    private baseUrl = '/api/glimmer/v1/llm';
 
     private constructor() {}
 

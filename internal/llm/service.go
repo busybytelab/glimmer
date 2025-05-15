@@ -3,6 +3,7 @@ package llm
 import (
 	"io"
 
+	"github.com/busybytelab.com/glimmer/internal/domain"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/rs/zerolog/log"
 )
@@ -10,8 +11,9 @@ import (
 // Service provides a high-level API for interacting with LLM platforms
 type (
 	Service interface {
-		Chat(prompt string, systemPrompt string, options ...ChatOption) (string, *Usage, error)
-		DescribeImage(reader io.Reader, fileName string, prompt string, systemPrompt string) (string, *Usage, error)
+		Chat(prompt string, systemPrompt string, options ...ChatOption) (string, *domain.Usage, error)
+		ChatWithHistory(messages []*domain.ChatItem, systemPrompt string, options ...ChatOption) (string, *domain.Usage, error)
+		DescribeImage(reader io.Reader, fileName string, prompt string, systemPrompt string) (string, *domain.Usage, error)
 		Info() Info
 	}
 
@@ -76,7 +78,7 @@ func AppService(config *Config, app core.App) Service {
 }
 
 // Chat sends a chat request to the configured LLM platform
-func (s *service) Chat(prompt string, systemPrompt string, options ...ChatOption) (string, *Usage, error) {
+func (s *service) Chat(prompt string, systemPrompt string, options ...ChatOption) (string, *domain.Usage, error) {
 	params := &ChatParameters{
 		Prompt:       prompt,
 		SystemPrompt: systemPrompt,
@@ -106,8 +108,44 @@ func (s *service) Chat(prompt string, systemPrompt string, options ...ChatOption
 	return response.Response, response.Usage, nil
 }
 
+// ChatWithHistory sends a chat request with message history and explicit system prompt
+func (s *service) ChatWithHistory(messages []*domain.ChatItem, systemPrompt string, options ...ChatOption) (string, *domain.Usage, error) {
+	// Create initial parameters
+	params := &ChatParameters{
+		Prompt:       "", // Not used directly when we have message history
+		SystemPrompt: systemPrompt,
+		Model:        "", // Will use platform default or option
+	}
+
+	// Apply any custom options
+	for _, option := range options {
+		option(params)
+	}
+
+	// Call platform with message history and system prompt
+	// The actual platform implementation will need to handle message history and system prompt
+	// We're passing the existing ChatParameters, which already has systemPrompt field
+	// Messages are passed separately - platforms will need to be updated to handle this pattern
+	response, err := s.platform.ChatWithHistory(messages, params)
+	if err != nil {
+		return "", nil, err
+	}
+
+	log.Debug().
+		Str("model", response.Usage.LlmModelName).
+		Bool("cacheHit", response.Usage.CacheHit).
+		Int("promptTokens", response.Usage.PromptTokens).
+		Int("completionTokens", response.Usage.CompletionTokens).
+		Int("totalTokens", response.Usage.TotalTokens).
+		Float64("cost", response.Usage.Cost).
+		Int("messageCount", len(messages)).
+		Msg("Chat with history completion performed")
+
+	return response.Response, response.Usage, nil
+}
+
 // DescribeImage sends an image to the configured LLM platform for description
-func (s *service) DescribeImage(reader io.Reader, fileName string, prompt string, systemPrompt string) (string, *Usage, error) {
+func (s *service) DescribeImage(reader io.Reader, fileName string, prompt string, systemPrompt string) (string, *domain.Usage, error) {
 	params := &DescribeImageParameters{
 		ChatParameters: ChatParameters{
 			Prompt:       prompt,

@@ -35,7 +35,7 @@ class PracticeService {
     }
 
     private async makeRequest(request: CreatePracticeSessionRequest): Promise<PracticeSession> {
-        const response = await fetch('/api/practice/session', {
+        const response = await fetch('/api/glimmer/v1/practice/session', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

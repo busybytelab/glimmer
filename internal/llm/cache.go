@@ -3,6 +3,9 @@ package llm
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
+
+	"github.com/busybytelab.com/glimmer/internal/domain"
 	"github.com/rs/zerolog/log"
 )
 
@@ -16,7 +19,7 @@ type cachedPlatform struct {
 // cacheEntry represents a cached response
 type cacheEntry struct {
 	Response string
-	Usage    *Usage
+	Usage    *domain.Usage
 }
 
 // newCachedPlatform creates a new cached platform wrapper
@@ -153,6 +156,80 @@ func (c *cachedPlatform) DescribeImage(params *DescribeImageParameters) (*Descri
 	}
 
 	return result, nil
+}
+
+// ChatWithHistory implements conversation history chat with caching
+func (c *cachedPlatform) ChatWithHistory(messages []*domain.ChatItem, params *ChatParameters) (*ChatResponse, error) {
+	if len(messages) == 0 {
+		return nil, errors.New("no messages provided for chat with history")
+	}
+
+	// Generate cache key for this conversation history
+	cacheKey := c.storage.GetChatWithHistoryCacheKey(messages, params.SystemPrompt, params.Model)
+
+	// Check if we should use cache
+	shouldUseCache := true
+	if params.Cache != nil {
+		if params.Cache.DisableCache {
+			log.Debug().Str("cacheKey", cacheKey).Msg("Cache disabled for this chat with history request")
+			shouldUseCache = false
+		}
+	}
+
+	// Check if we have a cached response and should use it
+	if shouldUseCache {
+		if response, err := c.storage.GetChatWithHistoryResponse(cacheKey); err == nil {
+			log.Debug().
+				Str("cacheKey", cacheKey).
+				Int("messagesCount", len(messages)).
+				Bool("hasSystemPrompt", params.SystemPrompt != "").
+				Msg("Cache hit for chat with history")
+
+			// If IgnoreCache is set, ignore the cached response
+			if params.Cache != nil && params.Cache.IgnoreCache {
+				log.Debug().Str("cacheKey", cacheKey).Msg("Ignoring cache hit due to IgnoreCache parameter")
+			} else {
+				// Make sure CacheHit is set to true for cached responses
+				if response.Usage != nil {
+					response.Usage.CacheHit = true
+				}
+				return response, nil
+			}
+		}
+	}
+
+	log.Debug().
+		Str("cacheKey", cacheKey).
+		Int("messagesCount", len(messages)).
+		Bool("hasSystemPrompt", params.SystemPrompt != "").
+		Msg("Cache miss for chat with history")
+
+	// If not cached or ignoring cache, call the delegate platform
+	response, err := c.delegate.ChatWithHistory(messages, params)
+	if err != nil {
+		return nil, err
+	}
+
+	// Mark as not a cache hit
+	if response.Usage != nil {
+		response.Usage.CacheHit = false
+	}
+
+	// Store the response if caching is not disabled
+	if shouldUseCache {
+		if err := c.storage.SetChatWithHistoryResponse(cacheKey, messages, params.SystemPrompt, params.Model, response); err != nil {
+			// Just log the error but don't fail the request
+			log.Error().Err(err).Msg("Failed to cache LLM response with history")
+		} else {
+			log.Debug().
+				Str("cacheKey", cacheKey).
+				Int("messagesCount", len(messages)).
+				Bool("hasSystemPrompt", params.SystemPrompt != "").
+				Msg("Stored chat with history response in cache")
+		}
+	}
+
+	return response, nil
 }
 
 // generateCacheKey creates a hash from the prompt, system prompt, model name and backend

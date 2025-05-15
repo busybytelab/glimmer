@@ -4,13 +4,16 @@ import (
 	"context"
 	"errors"
 	"io/fs"
+	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 
 	"github.com/busybytelab.com/glimmer/internal/llm"
+	chatRoute "github.com/busybytelab.com/glimmer/internal/route/chat"
 	llmRoute "github.com/busybytelab.com/glimmer/internal/route/llm"
 	practiceRoute "github.com/busybytelab.com/glimmer/internal/route/practice"
 	"github.com/pocketbase/pocketbase"
@@ -28,6 +31,7 @@ type Application struct {
 	embedFs      fs.FS
 	config       *Config
 	llmService   llm.Service
+	chatService  llm.ChatService
 }
 
 // create a new application instance with the provided filesystem for static files.
@@ -73,14 +77,49 @@ func (app *Application) setupCommands() {
 func (app *Application) setupRoutes() {
 	llmRoutes := llmRoute.New(app.llmService)
 	practiceRoute := practiceRoute.NewPracticeSessionRoute(app.llmService)
-	app.pb.OnServe().BindFunc(func(e *core.ServeEvent) error {
-		// LLM chat API endpoint for common chat requests
-		e.Router.POST("/api/llm/chat", llmRoutes.HandleChatRequest).Bind(apis.RequireAuth())
-		e.Router.GET("/api/llm/info", llmRoutes.HandleInfoRequest).Bind(apis.RequireAuth())
-		e.Router.POST("/api/practice/session", practiceRoute.HandleCreatePracticeSession).Bind(apis.RequireAuth())
+	chatRoutes := chatRoute.New(app.chatService)
 
-		// UI static files
-		e.Router.GET("/{path...}", apis.Static(app.embedFs, true))
+	app.pb.OnServe().BindFunc(func(e *core.ServeEvent) error {
+		// API routes - register these first for priority
+
+		// LLM chat API endpoint for common chat requests
+		e.Router.POST("/api/glimmer/v1/llm/chat", llmRoutes.HandleChatRequest).Bind(apis.RequireAuth())
+		e.Router.GET("/api/glimmer/v1/llm/info", llmRoutes.HandleInfoRequest).Bind(apis.RequireAuth())
+		e.Router.POST("/api/glimmer/v1/practice/session", practiceRoute.HandleCreatePracticeSession).Bind(apis.RequireAuth())
+
+		// Chat API endpoints
+		e.Router.POST("/api/glimmer/v1/chat", chatRoutes.HandleChatRequest).Bind(apis.RequireAuth())
+
+		// Create a custom handler for static files that ensures correct MIME types
+		staticHandler := func(c *core.RequestEvent) error {
+			// Get requested path
+			reqPath := c.Request.URL.Path
+
+			// Skip API routes explicitly
+			if strings.HasPrefix(reqPath, "/api/") {
+				return c.NotFoundError("API route not found", nil)
+			}
+
+			// JavaScript modules need specific MIME types
+			if strings.HasSuffix(reqPath, ".js") {
+				// Set the handler to set the Content-Type header
+				fs := http.FileServer(http.FS(app.embedFs))
+				w := c.Response
+
+				// Set the correct MIME type for JavaScript modules
+				w.Header().Set("Content-Type", "application/javascript")
+
+				// Serve the file
+				fs.ServeHTTP(w, c.Request)
+				return nil
+			}
+
+			// For other static files, use the default handler
+			return apis.Static(app.embedFs, true)(c)
+		}
+
+		// Handle all non-API static requests with the custom handler
+		e.Router.GET("/{path...}", staticHandler)
 
 		// must call e.Next() to continue the serve chain
 		return e.Next()
@@ -99,6 +138,10 @@ func (app *Application) setupLLMService() {
 	app.llmService = llm.AppService(llmConfig, app.pb)
 
 	log.Info().Msg("LLM service initialized")
+	// Initialize the chat service with PocketBase app and LLM service
+	app.chatService = llm.NewChatService(app.pb, app.llmService)
+
+	log.Info().Msg("Chat service initialized")
 }
 
 // configure signal handling for graceful shutdown

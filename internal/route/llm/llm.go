@@ -3,6 +3,7 @@ package llm
 import (
 	"net/http"
 
+	"github.com/busybytelab.com/glimmer/internal/domain"
 	"github.com/busybytelab.com/glimmer/internal/llm"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/rs/zerolog/log"
@@ -18,8 +19,8 @@ type (
 
 	// ChatResponse defines the response body for the LLM chat endpoint
 	ChatResponse struct {
-		Response string     `json:"response"`
-		Usage    *llm.Usage `json:"usage,omitempty"`
+		Response string        `json:"response"`
+		Usage    *domain.Usage `json:"usage,omitempty"`
 	}
 
 	LLMRoutes interface {
