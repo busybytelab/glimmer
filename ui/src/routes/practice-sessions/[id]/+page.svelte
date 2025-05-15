@@ -1,7 +1,9 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import type { PracticeItem } from '$lib/types';
+    import type { PracticeItem, PracticeResult, BreadcrumbItem } from '$lib/types';
+    import { QuestionViewType } from '$lib/types';
     import QuestionFactory from '../../../components/questions/QuestionFactory.svelte';
+    import ViewSelector from '../../../components/questions/ViewSelector.svelte';
     import { sessionService, type SessionWithExpandedData } from '$lib/services/session';
     import { page } from '$app/stores';
     import { goto, beforeNavigate, afterNavigate } from '$app/navigation';
@@ -11,25 +13,6 @@
     import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
     import { debounce } from '$lib/utils/debounce';
-    import type { RecordModel } from 'pocketbase';
-
-    // Define practice result interface to work with PocketBase RecordModel
-    interface PracticeResult extends RecordModel {
-        practice_item: string;
-        answer: string;
-        is_correct: boolean;
-        score: number;
-        feedback: string;
-        hint_level_reached: number;
-        attempt_number: number;
-    }
-
-    // Define the breadcrumb item type
-    type BreadcrumbItem = {
-        label: string;
-        href?: string;
-        icon?: string;
-    };
 
     let session: SessionWithExpandedData | null = null;
     let practiceItems: PracticeItem[] = [];
@@ -39,6 +22,13 @@
     let printMode = false;
     let breadcrumbItems: BreadcrumbItem[] = [];
     let savingItems: Set<number> = new Set();
+    let selectedViewType: QuestionViewType = QuestionViewType.LEARNER;
+    
+    // Smart hint system: Track consecutive incorrect attempts per question
+    // The key is the practice item ID
+    let consecutiveIncorrectAttempts = new Map<string, number>();
+    // Number of incorrect attempts before showing hints
+    const HINT_THRESHOLD = 2;
 
     // Track the currently focused element
     let focusedElement: HTMLElement | null = null;
@@ -62,6 +52,8 @@
             if (sessionId) {
                 await loadSession(sessionId);
                 await checkUserRole();
+                // Set default view type based on role and session status
+                selectedViewType = determineInitialViewType();
                 updateBreadcrumbs();
             } else {
                 error = 'Invalid session ID';
@@ -73,6 +65,23 @@
             loading = false;
         }
     });
+    
+    function determineInitialViewType(): QuestionViewType {
+        if (!session) return QuestionViewType.LEARNER;
+        
+        // Instructors default to instructor view
+        if (isInstructor) return QuestionViewType.INSTRUCTOR;
+        
+        // Completed sessions show in answered mode for learners
+        if (session.status === 'Completed') return QuestionViewType.ANSWERED;
+        
+        // Default to learner view
+        return QuestionViewType.LEARNER;
+    }
+    
+    function handleViewChange(newViewType: QuestionViewType) {
+        selectedViewType = newViewType;
+    }
 
     async function checkUserRole() {
         try {
@@ -99,6 +108,18 @@
             }
 
             practiceItems = sessionService.parsePracticeItems(session);
+            
+            // Attach learner data to each practice item to make it available in the component
+            if (session && session.expand?.learner) {
+                const learnerData = session.expand.learner;
+                practiceItems = practiceItems.map(item => ({
+                    ...item,
+                    expand: {
+                        ...item.expand,
+                        learner: learnerData
+                    }
+                }));
+            }
 
             // Fetch existing practice results for this session and learner
             const results = await pb.collection('practice_results').getList(1, 100, {
@@ -109,8 +130,9 @@
 
             // Map results to practice items
             if (results.items.length > 0) {
+                const learnerData = session && session.expand?.learner;
                 practiceItems = practiceItems.map(item => {
-                    const result = results.items.find((r): r is PracticeResult => 
+                    const result = results.items.find((r: any): r is PracticeResult => 
                         'practice_item' in r && r.practice_item === item.id
                     );
                     if (result) {
@@ -121,7 +143,11 @@
                             score: result.score,
                             feedback: result.feedback,
                             hint_level_reached: result.hint_level_reached,
-                            attempt_number: result.attempt_number
+                            attempt_number: result.attempt_number,
+                            expand: {
+                                ...item.expand,
+                                learner: learnerData
+                            }
                         };
                     }
                     return item;
@@ -163,6 +189,17 @@
             error = 'Failed to delete practice session: ' + (err instanceof Error ? err.message : String(err));
         }
     }
+    
+    // New function to evaluate answer correctness
+    function evaluateAnswer(item: PracticeItem, userAnswer: string): boolean {
+        if (!userAnswer || !item.correct_answer) return false;
+        
+        // Handle string normalization for text comparison
+        const normalizedUserAnswer = String(userAnswer).trim().toLowerCase();
+        const normalizedCorrectAnswer = String(item.correct_answer).trim().toLowerCase();
+        // TODO: this is basic implementation, later we add more sophisticated evaluation
+        return normalizedUserAnswer === normalizedCorrectAnswer;
+    }
 
     // Create a debounced version of handleAnswerChange
     const debouncedSaveAnswer = debounce(async (index: number, answer: string) => {
@@ -178,6 +215,19 @@
             // Create or update practice result
             const practiceItem = practiceItems[index];
             const now = new Date().toISOString();
+            
+            // Evaluate if the answer is correct
+            const isCorrect = evaluateAnswer(practiceItem, answer);
+            
+            // Track attempts for hint system
+            if (isCorrect) {
+                // Reset consecutive incorrect attempts on correct answer
+                consecutiveIncorrectAttempts.set(practiceItem.id, 0);
+            } else {
+                // Increment consecutive incorrect attempts
+                const currentAttempts = consecutiveIncorrectAttempts.get(practiceItem.id) || 0;
+                consecutiveIncorrectAttempts.set(practiceItem.id, currentAttempts + 1);
+            }
 
             // Check if a result already exists for this item
             const existingResults = await pb.collection('practice_results').getList(1, 1, {
@@ -185,26 +235,36 @@
                 sort: '-created'
             });
 
-            let result;
             if (existingResults.items.length > 0) {
                 // Update existing result
-                result = await pb.collection('practice_results').update(existingResults.items[0].id, {
+                await pb.collection('practice_results').update(existingResults.items[0].id, {
                     answer: answer,
+                    is_correct: isCorrect,
                     submitted_at: now,
                     attempt_number: (existingResults.items[0].attempt_number || 0) + 1
                 });
             } else {
                 // Create new result
-                result = await pb.collection('practice_results').create({
+                await pb.collection('practice_results').create({
                     practice_item: practiceItem.id,
                     practice_session: session.id,
                     learner: session.learner,
                     answer: answer,
+                    is_correct: isCorrect,
                     started_at: now,
                     submitted_at: now,
                     attempt_number: 1
                 });
             }
+
+            // Update the local state to reflect correctness
+            practiceItems[index] = {
+                ...practiceItems[index],
+                is_correct: isCorrect
+            };
+            
+            // Force a Svelte update
+            practiceItems = [...practiceItems];
 
             // No need to update the DOM here as we've already done it in handleAnswerChange
         } catch (err) {
@@ -222,6 +282,40 @@
         
         // Pass to the debounced save function
         debouncedSaveAnswer(index, answer);
+    }
+    
+    // Handle hint request for a specific practice item
+    async function handleHintRequest(index: number, level: number) {
+        if (!session || !practiceItems[index]) return;
+        
+        const practiceItem = practiceItems[index];
+        
+        try {
+            // Update local state first for immediate UI feedback
+            practiceItems[index] = {
+                ...practiceItem,
+                hint_level_reached: level
+            };
+            
+            // Force a Svelte update
+            practiceItems = [...practiceItems];
+            
+            // Find the existing practice result
+            const existingResults = await pb.collection('practice_results').getList(1, 1, {
+                filter: `practice_item = "${practiceItem.id}" && practice_session = "${session.id}"`,
+                sort: '-created'
+            });
+            
+            if (existingResults.items.length > 0) {
+                // Update the hint level in the database
+                await pb.collection('practice_results').update(existingResults.items[0].id, {
+                    hint_level_reached: level
+                });
+            }
+        } catch (err) {
+            console.error('Failed to update hint level:', err);
+            error = 'Failed to update hint level: ' + (err instanceof Error ? err.message : String(err));
+        }
     }
 
     function handlePrint() {
@@ -338,32 +432,45 @@
                     <p class="text-gray-600 dark:text-gray-300 mb-4">Topic: {session.expand.practice_topic.name}</p>
                 {/if}
 
-            {#if session.expand?.learner}
-                    <p class="text-gray-600 dark:text-gray-300 mb-4">Learner: {session.expand.learner.name}</p>
-            {/if}
+                {#if session.expand?.learner}
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">Learner: {session.expand.learner.nickname}</p>
+                {/if}
+                
+                {#if isInstructor}
+                    <ViewSelector 
+                        viewType={selectedViewType}
+                        onViewChange={handleViewChange}
+                        isInstructor={isInstructor}
+                    />
+                {/if}
 
-            {#if practiceItems.length > 0}
-                <div class="mt-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Practice Items</h3>
-                    <div class="space-y-6">
-                        {#each practiceItems as item, index}
-                            <div class="question-container">
-                                <QuestionFactory
-                                    {item}
-                                    {index}
-                                    viewType={session.status === 'Completed' ? (isInstructor ? 'instructor' : 'answered') : 'learner'}
-                                    disabled={session.status === 'Completed' || savingItems.has(index)}
-                                    onAnswerChange={(answer) => handleAnswerChange(index, answer)}
-                                />
-                            </div>
-                        {/each}
+                {#if practiceItems.length > 0}
+                    <div class="mt-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Practice Items</h3>
+                        <div class="space-y-6">
+                            {#each practiceItems as item, index}
+                                {@const attemptsCount = item.id ? (consecutiveIncorrectAttempts.get(item.id) || 0) : 0}
+                                {@const showHintsForItem = Boolean(attemptsCount >= HINT_THRESHOLD)}
+                                <div class="question-container">
+                                    <QuestionFactory
+                                        {item}
+                                        {index}
+                                        viewType={selectedViewType}
+                                        disabled={selectedViewType !== QuestionViewType.LEARNER || session.status === 'Completed' || savingItems.has(index)}
+                                        onAnswerChange={(answer) => handleAnswerChange(index, answer)}
+                                        {isInstructor}
+                                        showHints={showHintsForItem}
+                                        onHintRequested={(level) => handleHintRequest(index, level)}
+                                    />
+                                </div>
+                            {/each}
+                        </div>
                     </div>
-                </div>
-            {:else}
-                <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-4 rounded-md">
-                    <p class="text-gray-600 dark:text-gray-300">No practice items available.</p>
-                </div>
-            {/if}
+                {:else}
+                    <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-4 rounded-md">
+                        <p class="text-gray-600 dark:text-gray-300">No practice items available.</p>
+                    </div>
+                {/if}
             </div>
         </div>
     {/if}
@@ -381,23 +488,28 @@
             {/if}
             
             {#if session.expand?.learner}
-                <p class="text-lg">Learner: {session.expand.learner.name}</p>
+                <p class="text-lg">Learner: {session.expand.learner.nickname}</p>
             {/if}
         </div>
 
         {#if practiceItems.length > 0}
-                {#each practiceItems as item, index}
-                    <div class="print-item question-container">
-                        <QuestionFactory
-                            {item}
-                            {index}
-                            printMode={true}
-                            viewType={session.status === 'Completed' ? (isInstructor ? 'instructor' : 'answered') : 'learner'}
-                            disabled={session.status === 'Completed' || savingItems.has(index)}
-                            onAnswerChange={(answer) => handleAnswerChange(index, answer)}
-                        />
-                    </div>
-                {/each}
+            {#each practiceItems as item, index}
+                {@const attemptsCount = item.id ? (consecutiveIncorrectAttempts.get(item.id) || 0) : 0}
+                {@const showHintsForItem = Boolean(attemptsCount >= HINT_THRESHOLD)}
+                <div class="print-item question-container">
+                    <QuestionFactory
+                        {item}
+                        {index}
+                        printMode={true}
+                        viewType={selectedViewType}
+                        disabled={true}
+                        onAnswerChange={(answer) => handleAnswerChange(index, answer)}
+                        {isInstructor}
+                        showHints={showHintsForItem}
+                        onHintRequested={(level) => handleHintRequest(index, level)}
+                    />
+                </div>
+            {/each}
         {:else}
             <p>No practice items available.</p>
         {/if}

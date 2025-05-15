@@ -1,6 +1,8 @@
 <script lang="ts">
     import type { PracticeItem } from '$lib/types';
     import QuestionHeader from './QuestionHeader.svelte';
+    import QuestionAnswerInfo from './QuestionAnswerInfo.svelte';
+    import QuestionInstructorInfo from './QuestionInstructorInfo.svelte';
 
     export let item: PracticeItem;
     export let index: number;
@@ -16,14 +18,22 @@
             onAnswerChange(target.value);
         }
     }
+    
+    // Determine if each option is the correct answer
+    $: options = typeof item.options === 'string' ? JSON.parse(item.options) : item.options;
+    
+    // Helper for immediate feedback
+    $: isAnswered = !!item.user_answer;
+    $: showFeedback = isAnswered && item.is_correct !== undefined && !showAnswer;
 </script>
 
-<div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
+<div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800
+            {showFeedback ? (item.is_correct ? 'border-green-300 dark:border-green-600' : 'border-red-300 dark:border-red-600') : ''}">
     <QuestionHeader {item} {index} />
     <p class="text-gray-700 dark:text-gray-300 mb-4">{item.question_text}</p>
     
     <div class="space-y-2">
-        {#each (typeof item.options === 'string' ? JSON.parse(item.options) : item.options) as option, optionIndex}
+        {#each options as option, optionIndex}
             <div class="flex items-center">
                 {#if printMode}
                     <div class="w-4 h-4 border border-gray-400 dark:border-gray-500 rounded mr-2"></div>
@@ -41,33 +51,38 @@
                 {/if}
                 <label 
                     for={printMode ? undefined : `question-${index}-option-${optionIndex}-${item.id}`}
-                    class="ml-3 text-gray-700 dark:text-gray-300"
+                    class="ml-3 {showInstructorInfo && option === item.correct_answer 
+                        ? 'text-green-600 dark:text-green-400 font-medium' 
+                        : 'text-gray-700 dark:text-gray-300'} {item.user_answer === option 
+                        ? 'font-medium border-b border-indigo-300 dark:border-indigo-500' 
+                        : ''}"
                 >
-                    {option}
+                    {option} {showInstructorInfo && option === item.correct_answer ? '✓' : ''}
                 </label>
             </div>
         {/each}
     </div>
-
-    {#if showAnswer}
-        <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
-            <h5 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Your Answer:</h5>
-            <p class="text-gray-700 dark:text-gray-300">{item.user_answer || 'Not answered'}</p>
-        </div>
-    {/if}
-
-    {#if showInstructorInfo}
-        <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
-            <h5 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Correct Answer:</h5>
-            <p class="text-gray-700 dark:text-gray-300">{item.correct_answer}</p>
-            {#if item.explanation}
-                <h5 class="text-sm font-medium text-gray-900 dark:text-white mt-2 mb-2">Explanation:</h5>
-                <p class="text-gray-700 dark:text-gray-300">{item.explanation}</p>
-            {/if}
-            {#if item.hint_level_reached}
-                <h5 class="text-sm font-medium text-gray-900 dark:text-white mt-2 mb-2">Hints Used:</h5>
-                <p class="text-gray-700 dark:text-gray-300">{item.hint_level_reached}</p>
+    
+    {#if showFeedback}
+        <div class="mt-4 text-sm">
+            {#if item.is_correct}
+                <p class="text-green-600 dark:text-green-400 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    Correct!
+                </p>
+            {:else}
+                <p class="text-red-600 dark:text-red-400 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    Try again
+                </p>
             {/if}
         </div>
     {/if}
+
+    <QuestionAnswerInfo {item} {showAnswer} {showInstructorInfo} />
+    <QuestionInstructorInfo {item} {showInstructorInfo} />
 </div> 

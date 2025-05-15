@@ -11,9 +11,9 @@
 	export let learner: Learner | null = null;
 
 	const dispatch = createEventDispatcher<{
-		update: Learner;
-		delete: string;
-		cancel: void;
+		update: { detail: Learner };
+		delete: { detail: string };
+		cancel: { detail: void };
 	}>();
 
 	type FormData = {
@@ -90,7 +90,7 @@
 			}
 			
 			// Dispatch the update event with the result
-			dispatch('update', result as unknown as Learner);
+			dispatch('update', { detail: result as unknown as Learner });
 		} catch (err) {
 			console.error('Failed to save learner:', err);
 			error = 'Failed to save learner';
@@ -110,7 +110,7 @@
 			loading = true;
 			error = null;
 			await pb.collection('learners').delete(learner.id);
-			dispatch('delete', learner.id);
+			dispatch('delete', { detail: learner.id });
 		} catch (err) {
 			console.error('Failed to delete learner:', err);
 			error = 'Failed to delete learner';
@@ -186,7 +186,7 @@
 			<FormButton
 				type="button"
 				variant="secondary"
-				on:click={() => dispatch('cancel')}
+				on:click={() => dispatch('cancel', { detail: undefined })}
 			>
 				Cancel
 			</FormButton>
