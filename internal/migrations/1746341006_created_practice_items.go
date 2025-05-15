@@ -194,6 +194,45 @@ func init() {
 					
 				},
 				{
+					"cascadeDelete": false,
+					"collectionId": "pbc_instructors",
+					"hidden": false,
+					"id": "reviewer_column",
+					"maxSelect": 1,
+					"minSelect": 0,
+					"name": "reviewer",
+					"presentable": false,
+					"required": false,
+					"system": false,
+					"type": "relation"
+				},
+				{
+					"hidden": false,
+					"id": "review_date_column",
+					"max": "",
+					"min": "",
+					"name": "review_date",
+					"presentable": false,
+					"required": false,
+					"system": false,
+					"type": "date"
+				},
+				{
+					"hidden": false,
+					"id": "review_status_column",
+					"maxSelect": 1,
+					"name": "review_status",
+					"presentable": false,
+					"required": false,
+					"system": false,
+					"type": "select",
+					"values": [
+						"APPROVED",
+						"IGNORE",
+						"NEED_EDIT"
+					]
+				},
+				{
 					"hidden": false,
 					"id": "created_column",
 					"name": "created",

@@ -3,7 +3,7 @@ import type { PracticeSession, PracticeItem } from '$lib/types';
 
 export interface SessionWithExpandedData extends PracticeSession {
     expand?: {
-        learner?: { id: string; name: string };
+        learner?: { id: string; nickname: string };
         practice_topic?: { id: string; name: string };
         practice_items?: PracticeItem[];
     };

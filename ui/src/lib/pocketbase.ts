@@ -1,5 +1,23 @@
+/**
+ * PocketBase Client Instance
+ * 
+ * This file initializes and exports the application's PocketBase client.
+ * It provides a typed instance with collection methods for all models.
+ * 
+ * USAGE GUIDELINES:
+ * - Import this instance when you need to interact with the database
+ * - Example: import pb from '$lib/pocketbase';
+ * - Use pb.collection('collection_name') to access a specific collection
+ * - The client is already typed to provide proper types for each collection
+ * 
+ * DO NOT:
+ * - Initialize new PocketBase instances elsewhere
+ * - Add type definitions here (use pocketbase-types.ts instead)
+ * - Add service methods here (create separate service files)
+ */
+
 import PocketBase from 'pocketbase';
-import type { TypedPocketBase } from './types';
+import type { PocketBaseCollections } from './pocketbase-types';
 
 // Get the PocketBase URL from environment variables
 // In development, it's typically http://localhost:8787
@@ -24,7 +42,7 @@ const getPocketBaseUrl = () => {
 };
 
 // Create a typed PocketBase client instance
-const pb = new PocketBase(getPocketBaseUrl()) as TypedPocketBase;
+const pb = new PocketBase(getPocketBaseUrl()) as PocketBaseCollections;
 
 // Configure PocketBase to use cookies
 pb.authStore.onChange(() => {

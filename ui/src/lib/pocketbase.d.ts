@@ -19,74 +19,37 @@ declare module 'pocketbase' {
         authRefresh(): Promise<any>;
     }
 
-    export interface PracticeItem {
+    // Base record type that matches PocketBase's structure
+    export interface PocketBaseRecord {
         id: string;
-        question_text: string;
-        question_type: string;
-        options?: string[];
-        correct_answer: string;
-        explanation: string;
-        explanation_for_incorrect?: Record<string, string>;
-        hints?: string[];
-        difficulty_level?: 'Easy' | 'Medium' | 'Hard';
-        status: 'Generated' | 'NeedsReview' | 'Approved' | 'Rejected';
-        tags?: string[];
         created: string;
         updated: string;
+        collectionId: string;
+        collectionName: string;
+        expand?: Record<string, any>;
     }
 
-    export interface PracticeTopic {
-        id: string;
-        name: string;
-        subject: string;
-        description?: string;
-        target_age_range?: string;
-        target_grade_level?: string;
-        learning_goals?: string[];
-        base_prompt: string;
-        system_prompt?: string;
-        tags?: string[];
-        created: string;
-        updated: string;
+    // Type for record service
+    export interface RecordService<T = any> {
+        getFullList(options?: any): Promise<T[]>;
+        getList(page?: number, perPage?: number, options?: any): Promise<{ page: number; perPage: number; totalItems: number; totalPages: number; items: T[] }>;
+        getOne(id: string, options?: any): Promise<T>;
+        getFirstListItem(filter: string, options?: any): Promise<T>;
+        create(data: any, options?: any): Promise<T>;
+        update(id: string, data: any, options?: any): Promise<T>;
+        delete(id: string, options?: any): Promise<boolean>;
     }
 
-    export interface Account {
-        id: string;
-        llm_api_key?: string;
-        ollama_server_url?: string;
-        default_llm_model?: string;
-        default_language?: string;
-        created: string;
-        updated: string;
-    }
-
-    export interface User {
-        id: string;
-        email: string;
-        name: string;
-        created: string;
-        updated: string;
-    }
-
-    export interface Instructor {
-        id: string;
-        nickname: string;
-        account: string;
-        user: User;
-        created: string;
-        updated: string;
-    }
-
-    export interface Learner {
-        id: string;
-        nickname: string;
-        age: number;
-        grade_level?: string;
-        learning_preferences?: string[];
-        avatar?: string;
-        account: string;
-        user: User;
-        created: string;
-        updated: string;
+    // Type for the PocketBase client with collections
+    export interface PocketBaseCollections extends PocketBase {
+        collection(idOrName: string): RecordService; // fallback for any other collection
+        collection(idOrName: 'practice_items'): RecordService<import('./types').PracticeItem>;
+        collection(idOrName: 'practice_topics'): RecordService<import('./types').PracticeTopic>;
+        collection(idOrName: 'practice_sessions'): RecordService<import('./types').PracticeSession>;
+        collection(idOrName: 'practice_results'): RecordService<import('./types').PracticeResult>;
+        collection(idOrName: 'accounts'): RecordService<import('./types').Account>;
+        collection(idOrName: 'users'): RecordService<import('./types').User>;
+        collection(idOrName: 'instructors'): RecordService<import('./types').Instructor>;
+        collection(idOrName: 'learners'): RecordService<import('./types').Learner>;
     }
 } 

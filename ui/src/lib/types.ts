@@ -1,37 +1,173 @@
-import PocketBase, { RecordService } from 'pocketbase';
+/**
+ * Application Data Models and UI Types
+ * 
+ * This file contains all data model interfaces that represent the application's
+ * domain entities and UI-specific type definitions.
+ * 
+ * USAGE GUIDELINES:
+ * - Add all data model interfaces that represent database collections here
+ * - Add UI-specific type definitions that are used across components
+ * - All data models should extend PocketBaseRecord for consistency
+ * - Keep types focused on data structure, not service behavior
+ * - Document complex types with JSDoc comments
+ * 
+ * DO NOT ADD:
+ * - Service interfaces (add to pocketbase-types.ts instead)
+ * - PocketBase client types (add to pocketbase-types.ts instead)
+ * - Component-specific types (keep those in the component files)
+ */
 
-// Base types for system fields that PocketBase adds to all records
-interface BaseSystemFields {
+// Base record type that matches PocketBase's structure
+interface PocketBaseRecord {
     id: string;
     created: string;
     updated: string;
+    collectionId: string;
+    collectionName: string;
+    expand?: Record<string, any>;
 }
 
+// -------------------------------------------------------------------------
+// Enums and Constants
+// -------------------------------------------------------------------------
+
+/**
+ * Question view types for controlling display and interaction modes
+ * 
+ * @description Determines how questions are displayed and interacted with based on user role and context
+ */
+export enum QuestionViewType {
+    /** Learner actively answering questions */
+    LEARNER = 'learner',
+    
+    /** Learner viewing their answered questions (read-only) */
+    ANSWERED = 'answered',
+    
+    /** Instructor viewing full details including correct answers and explanations */
+    INSTRUCTOR = 'instructor',
+    
+    /** Learner viewing question with hint */
+    HINT = 'hint',
+    
+    /** Learner correcting previously answered question */
+    CORRECTION = 'correction',
+    
+    /** Instructor viewing newly generated questions (for review/approval) */
+    GENERATED = 'generated'
+}
+
+/**
+ * Question types supported by the application
+ * 
+ * @description These values must match the backend's question type identifiers
+ */
+export enum QuestionType {
+    /** Multiple choice questions with radio button options */
+    MULTIPLE_CHOICE = 'multiple_choice',
+    
+    /** True/False questions */
+    TRUE_FALSE = 'true_false',
+    
+    /** Short answer questions with text input */
+    SHORT_ANSWER = 'short_answer',
+    
+    /** Fill-in-the-blank questions */
+    FILL_IN_BLANK = 'fill_in_blank'
+}
+
+/**
+ * Review status values for practice items
+ * @values 'APPROVED' | 'IGNORE' | 'NEED_EDIT'
+ */
+export type ReviewStatus = 'APPROVED' | 'IGNORE' | 'NEED_EDIT';
+
+// -------------------------------------------------------------------------
+// Collection Models
+// -------------------------------------------------------------------------
+
 // Your collection types
-export interface PracticeItem {
-    id: string;
+export interface PracticeItem extends PocketBaseRecord {
+    /** The question text to be presented to the learner */
     question_text: string;
+    
+    /** The type of question (e.g., multiple choice, true/false) */
     question_type: string;
-    options?: string[];
-    correct_answer: string;
-    explanation?: string;
-    hints?: string[];
-    difficulty_level: number;
+    
+    /** Available options for multiple choice questions */
+    options?: Record<string, any>;
+    
+    /** The correct answer(s) for the question */
+    correct_answer: Record<string, any>;
+    
+    /** Explanation of why the answer is correct */
+    explanation: string;
+    
+    /** Specific explanations for incorrect answer choices */
+    explanation_for_incorrect?: Record<string, any>;
+    
+    /** Optional hints to help learners */
+    hints?: Record<string, any>;
+    
+    /** The difficulty level of the question */
+    difficulty_level?: string;
+    
+    /** Current status of the practice item */
     status: string;
-    tags?: string[];
+    
+    /** Associated tags for categorization */
+    tags?: Record<string, any>;
+    
+    /** Reference to the practice topic this item belongs to */
     practice_topic: string;
+    
+    /** Reference to the account that owns this item */
     account: string;
-    created: string;
-    updated: string;
+
+    /** Reference to the instructor who reviewed this item */
+    reviewer?: string;
+
+    /** Date when the item was reviewed */
+    review_date?: string;
+
+    /** Current review status */
+    review_status?: ReviewStatus;
+
+    // Fields added at runtime (not in database)
     user_answer?: string;
     is_correct?: boolean;
     score?: number;
     feedback?: string;
     hint_level_reached?: number;
     attempt_number?: number;
+
+    // Expand types for relations
+    expand?: {
+        practice_topic?: PracticeTopic;
+        account?: Account;
+        reviewer?: Instructor;
+    };
 }
 
-export interface PracticeTopic extends BaseSystemFields {
+// Practice result interface for tracking user responses
+export interface PracticeResult extends PocketBaseRecord {
+    practice_item: string;
+    practice_session: string;
+    learner: string;
+    answer: string;
+    is_correct: boolean;
+    score: number;
+    feedback: string;
+    hint_level_reached: number;
+    attempt_number: number;
+    started_at: string;
+    submitted_at: string;
+}
+
+// -------------------------------------------------------------------------
+// Other Collection Models
+// -------------------------------------------------------------------------
+
+export interface PracticeTopic extends PocketBaseRecord {
     name: string;
     subject: string;
     description?: string;
@@ -45,8 +181,7 @@ export interface PracticeTopic extends BaseSystemFields {
     difficulty_level?: string;
 }
 
-export interface PracticeSession {
-    id: string;
+export interface PracticeSession extends PocketBaseRecord {
     name?: string;
     status: string;
     assigned_at: string;
@@ -57,12 +192,10 @@ export interface PracticeSession {
     account: string;
     practice_items: string;
     score?: number;
-    created: string;
-    updated: string;
     expand?: {
         learner?: {
             id: string;
-            name: string;
+            nickname: string;
         };
         practice_topic?: {
             id: string;
@@ -72,7 +205,7 @@ export interface PracticeSession {
     };
 }
 
-export interface Account extends BaseSystemFields {
+export interface Account extends PocketBaseRecord {
     owner: User;
     llm_api_key?: string;
     ollama_server_url?: string;
@@ -80,18 +213,18 @@ export interface Account extends BaseSystemFields {
     default_language?: string;
 }
 
-export interface User extends BaseSystemFields {
+export interface User extends PocketBaseRecord {
     email: string;
     name: string;
 }
 
-export interface Instructor extends BaseSystemFields {
+export interface Instructor extends PocketBaseRecord {
     nickname: string;
     account: string;
     user: User;
 }
 
-export interface Learner extends BaseSystemFields {
+export interface Learner extends PocketBaseRecord {
     nickname: string;
     age: number;
     grade_level?: string;
@@ -105,14 +238,12 @@ export interface Learner extends BaseSystemFields {
     };
 }
 
-// Type for the PocketBase client with your collections
-export interface TypedPocketBase extends PocketBase {
-    collection(idOrName: string): RecordService; // fallback for any other collection
-    collection(idOrName: 'practice_items'): RecordService<PracticeItem>;
-    collection(idOrName: 'practice_topics'): RecordService<PracticeTopic>;
-    collection(idOrName: 'practice_sessions'): RecordService<PracticeSession>;
-    collection(idOrName: 'accounts'): RecordService<Account>;
-    collection(idOrName: 'users'): RecordService<User>;
-    collection(idOrName: 'instructors'): RecordService<Instructor>;
-    collection(idOrName: 'learners'): RecordService<Learner>;
+// -------------------------------------------------------------------------
+// UI-specific Types
+// -------------------------------------------------------------------------
+
+export interface BreadcrumbItem {
+    label: string;
+    href?: string;
+    icon?: string;
 } 
