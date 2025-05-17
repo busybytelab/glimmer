@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./src/**/*.{html,js,svelte,ts}'],
-  darkMode: 'media', // Use 'media' for OS preference detection
+  darkMode: 'class', // Changed from 'media' to 'class' for manual theme toggling
   theme: {
     extend: {
       colors: {

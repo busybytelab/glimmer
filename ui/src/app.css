@@ -20,24 +20,22 @@
   --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary: #3498db;
-    --secondary: #2c3e50;
-    --success: #27ae60;
-    --danger: #c0392b;
-    --warning: #f39c12;
-    --info: #2980b9;
-    --light: #34495e;
-    --dark: #ecf0f1;
-    --text-primary: #ecf0f1;
-    --text-secondary: #bdc3c7;
-    --border-color: #2d3748;
-    --background-color: #121826;
-    --card-background: #1a202c;
-    --input-background: #2d3748;
-    --shadow-color: rgba(0, 0, 0, 0.5);
-  }
+.dark {
+  --primary: #3498db;
+  --secondary: #2c3e50;
+  --success: #27ae60;
+  --danger: #c0392b;
+  --warning: #f39c12;
+  --info: #2980b9;
+  --light: #34495e;
+  --dark: #ecf0f1;
+  --text-primary: #ecf0f1;
+  --text-secondary: #bdc3c7;
+  --border-color: #2d3748;
+  --background-color: #121826;
+  --card-background: #1a202c;
+  --input-background: #2d3748;
+  --shadow-color: rgba(0, 0, 0, 0.5);
 }
 
 /* Print styles */

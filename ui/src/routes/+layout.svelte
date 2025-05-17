@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { isAuthenticated, user, isAuthLoading, error } from '$lib/stores';
+  import { isAuthenticated, user, isAuthLoading, error, theme } from '$lib/stores';
   import pb from '$lib/pocketbase';
   import { getAuthToken, clearAuthToken } from '$lib/auth';
   import type { Instructor, Learner } from '$lib/types';
@@ -104,6 +104,12 @@
   onMount(() => {
     // Initialize auth
     initializeAuth();
+    
+    // Initialize theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      theme.set(savedTheme as 'light' | 'dark');
+    }
   });
 </script>
 
