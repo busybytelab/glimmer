@@ -109,7 +109,8 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [
-				"CREATE INDEX `+"`"+`idx_chat_order`+"`"+` ON `+"`"+`%s`+"`"+` (`+"`"+`chat`+"`"+`, `+"`"+`order`+"`"+`)"
+				"CREATE INDEX `+"`"+`idx_chat_order`+"`"+` ON `+"`"+`%s`+"`"+` (`+"`"+`chat`+"`"+`, `+"`"+`order`+"`"+`)",
+				"CREATE INDEX `+"`"+`idx_chat_items_content`+"`"+` ON `+"`"+`%s`+"`"+` (`+"`"+`content`+"`"+`)"
 			],
 			"listRule": "@request.auth.id = chat.user",
 			"name": "%s",
@@ -117,7 +118,7 @@ func init() {
 			"type": "base",
 			"updateRule": "@request.auth.id = chat.user",
 			"viewRule": "@request.auth.id = chat.user"
-		}`, domain.CollectionChats, domain.CollectionChatItems, domain.CollectionChatItems, domain.CollectionChatItems)
+		}`, domain.CollectionChats, domain.CollectionChatItems, domain.CollectionChatItems, domain.CollectionChatItems, domain.CollectionChatItems)
 
 		collection := &core.Collection{}
 		if err := json.Unmarshal([]byte(jsonData), &collection); err != nil {

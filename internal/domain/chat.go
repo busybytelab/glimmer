@@ -25,6 +25,7 @@ type Chat struct {
 	Model        string      `json:"model"`
 	TotalTokens  int         `json:"total_tokens"`
 	TotalCost    float64     `json:"total_cost"`
+	Archived     bool        `json:"archived"`
 	Created      time.Time   `json:"created"`
 	Updated      time.Time   `json:"updated"`
 	Items        []*ChatItem `json:"items,omitempty"`

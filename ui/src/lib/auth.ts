@@ -16,6 +16,17 @@ export function getAuthToken(): string {
 }
 
 /**
+ * Gets the current user ID from PocketBase's authStore.
+ * @returns The user ID or null if not authenticated.
+ */
+export function getCurrentUserId(): string | null {
+  if (pb.authStore.isValid && pb.authStore.model) {
+    return pb.authStore.model.id;
+  }
+  return null;
+}
+
+/**
  * Checks if the user is currently authenticated.
  * @returns True if authenticated, false otherwise.
  */

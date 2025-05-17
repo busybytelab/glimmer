@@ -109,6 +109,16 @@ func init() {
 				},
 				{
 					"hidden": false,
+					"id": "archived_column",
+					"name": "archived",
+					"presentable": false,
+					"required": false,
+					"system": false,
+					"type": "bool",
+					"default": false
+				},
+				{
+					"hidden": false,
 					"id": "created_column",
 					"name": "created",
 					"onCreate": true,
