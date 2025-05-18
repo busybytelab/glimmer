@@ -11,9 +11,9 @@
   import '../app.css';
 
   // Sidebar state for layout
-  let sidebarOpen = true;
+  let sidebarOpen = false; // Start with closed sidebar on mobile
 
-  // Toggle sidebar
+  // Toggle sidebar function
   function toggleSidebar() {
     sidebarOpen = !sidebarOpen;
   }
@@ -144,25 +144,34 @@
   {#if $isAuthenticated && $user && !isPublic}
     <!-- Authenticated layout -->
     <div class="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900 print:h-auto print:overflow-visible">
-      <!-- Mobile sidebar -->
+      <!-- Mobile sidebar - overlay when opened -->
       {#if sidebarOpen}
         <div class="md:hidden fixed inset-0 flex z-40 print:hidden">
-          <button
+          <!-- Overlay backdrop - behind the sidebar -->
+          <div 
             class="fixed inset-0 bg-gray-600 bg-opacity-75 dark:bg-black dark:bg-opacity-80"
-            on:click={() => sidebarOpen = false}
-            on:keydown={(e) => e.key === 'Escape' && (sidebarOpen = false)}
+            on:click={toggleSidebar}
+            on:keydown={(e) => e.key === 'Escape' && toggleSidebar()}
             aria-label="Close sidebar overlay"
-          ></button>
-          <!-- Mobile SideNav -->
-          <SideNav isOpen={true} />
+            role="button"
+            tabindex="0"
+          ></div>
+          
+          <!-- Mobile SideNav - positioned on top of overlay -->
+          <div class="relative flex-shrink-0 w-64 max-w-sm z-50">
+            <SideNav toggleSidebar={toggleSidebar} />
+          </div>
         </div>
       {/if}
-      <!-- Desktop sidebar -->
+      
+      <!-- Desktop sidebar - always visible on desktop -->
       <div class="hidden md:flex md:flex-shrink-0 print:hidden">
-        <SideNav isOpen={sidebarOpen} />
+        <SideNav toggleSidebar={toggleSidebar} />
       </div>
+      
       <!-- Main content -->
       <div class="flex flex-col w-0 flex-1 overflow-hidden h-screen print:h-auto print:overflow-visible print:relative print:z-0">
+        <!-- Mobile header with hamburger menu -->
         <div class="md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 print:hidden">
           <button
             on:click={toggleSidebar}
@@ -174,6 +183,7 @@
             </svg>
           </button>
         </div>
+        <!-- Main content area -->
         <main class="flex-1 relative z-0 overflow-y-auto focus:outline-none h-full bg-content print:h-auto print:overflow-visible print:relative print:z-0">
           <slot />
         </main>

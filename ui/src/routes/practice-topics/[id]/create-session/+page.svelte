@@ -10,6 +10,7 @@
     import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
     import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
+    import PracticeTopicCard from '../../../../components/practice-topics/PracticeTopicCard.svelte';
 
     // Define the breadcrumb item type
     type BreadcrumbItem = {
@@ -181,36 +182,8 @@
     {:else if error}
         <ErrorAlert message={error} />
     {:else if topic}
-        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-2">{topic.name}</h2>
-            
-            {#if topic.description}
-                <p class="text-gray-600 mb-4">{topic.description}</p>
-            {/if}
-            
-            <div class="flex flex-wrap gap-2 mb-4">
-                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                    {topic.subject}
-                </span>
-                
-                {#if topic.target_age_range}
-                    <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                        Age: {topic.target_age_range}
-                    </span>
-                {/if}
-                
-                {#if topic.target_grade_level}
-                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                        Grade: {topic.target_grade_level}
-                    </span>
-                {/if}
-
-                {#if topic.difficulty_level}
-                    <span class="bg-orange-100 text-orange-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                        Difficulty: {topic.difficulty_level}
-                    </span>
-                {/if}
-            </div>
+        <div class="mb-6">
+            <PracticeTopicCard {topic} />
         </div>
         
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Select a Learner</h2>
