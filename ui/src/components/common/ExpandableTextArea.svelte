@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onMount, afterUpdate } from 'svelte';
     import Prism from 'prismjs';
-    // Import default Prism CSS
-    import 'prismjs/themes/prism.css';
+    // Import default Prism CSS - removing the default theme import
+    // import 'prismjs/themes/prism.css';
     // Import common languages
     import 'prismjs/components/prism-markdown';
     import 'prismjs/components/prism-javascript';
@@ -284,8 +284,7 @@
         {#if expandable}
             <button 
                 type="button" 
-                class="absolute bottom-2 right-2 text-xs font-medium px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-200 z-20"
-                style="backdrop-filter: blur(2px); background-color: rgba(243, 244, 246, 0.85);"
+                class="absolute bottom-2 right-2 text-xs font-medium px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-200 z-20 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200"
                 on:click={toggleExpand}
                 tabindex="-1"
             >
@@ -305,6 +304,11 @@
         overflow: hidden;
     }
     
+    /* Dark mode border */
+    :global(.dark) .editor-container {
+        border-color: rgb(75, 85, 99); /* dark:border-gray-600 */
+    }
+    
     .syntax-highlight-pre {
         margin: 0;
         padding: 0.75rem 1rem;
@@ -318,6 +322,13 @@
         white-space: pre;
         overflow-x: auto;
         overflow-y: hidden;
+        color: #1f2937; /* Default text color for light mode */
+    }
+    
+    /* Add dark mode styles for the pre element */
+    :global(.dark) .syntax-highlight-pre {
+        background-color: rgb(55, 65, 81); /* dark:bg-gray-700 */
+        color: #f3f4f6; /* dark:text-gray-100 */
     }
     
     .syntax-highlight-pre code {
@@ -327,6 +338,99 @@
         tab-size: inherit;
         white-space: inherit;
         display: block;
+        color: inherit; /* Inherit color from parent */
+    }
+    
+    /* Basic light mode token styling (replacing Prism default theme) */
+    :global(.token.comment),
+    :global(.token.prolog),
+    :global(.token.doctype),
+    :global(.token.cdata) {
+        color: #6b7280; /* gray-500 */
+    }
+    
+    :global(.token.punctuation) {
+        color: #4b5563; /* gray-600 */
+    }
+    
+    :global(.token.property),
+    :global(.token.tag),
+    :global(.token.boolean),
+    :global(.token.number),
+    :global(.token.constant),
+    :global(.token.symbol) {
+        color: #0e7490; /* cyan-700 */
+    }
+    
+    :global(.token.selector),
+    :global(.token.attr-name),
+    :global(.token.string),
+    :global(.token.char),
+    :global(.token.builtin) {
+        color: #047857; /* green-700 */
+    }
+    
+    :global(.token.operator),
+    :global(.token.entity),
+    :global(.token.url),
+    :global(.token.variable) {
+        color: #4338ca; /* indigo-700 */
+    }
+    
+    :global(.token.atrule),
+    :global(.token.attr-value),
+    :global(.token.keyword) {
+        color: #7c3aed; /* violet-600 */
+    }
+    
+    :global(.token.function) {
+        color: #d97706; /* amber-600 */
+    }
+    
+    /* Dark mode token styling */
+    :global(.dark) :global(.token.comment),
+    :global(.dark) :global(.token.prolog),
+    :global(.dark) :global(.token.doctype),
+    :global(.dark) :global(.token.cdata) {
+        color: #9ca3af; /* gray-400 */
+    }
+    
+    :global(.dark) :global(.token.punctuation) {
+        color: #d1d5db; /* gray-300 */
+    }
+    
+    :global(.dark) :global(.token.property),
+    :global(.dark) :global(.token.tag),
+    :global(.dark) :global(.token.boolean),
+    :global(.dark) :global(.token.number),
+    :global(.dark) :global(.token.constant),
+    :global(.dark) :global(.token.symbol) {
+        color: #22d3ee; /* cyan-400 */
+    }
+    
+    :global(.dark) :global(.token.selector),
+    :global(.dark) :global(.token.attr-name),
+    :global(.dark) :global(.token.string),
+    :global(.dark) :global(.token.char),
+    :global(.dark) :global(.token.builtin) {
+        color: #34d399; /* green-400 */
+    }
+    
+    :global(.dark) :global(.token.operator),
+    :global(.dark) :global(.token.entity),
+    :global(.dark) :global(.token.url),
+    :global(.dark) :global(.token.variable) {
+        color: #818cf8; /* indigo-400 */
+    }
+    
+    :global(.dark) :global(.token.atrule),
+    :global(.dark) :global(.token.attr-value),
+    :global(.dark) :global(.token.keyword) {
+        color: #a78bfa; /* violet-400 */
+    }
+    
+    :global(.dark) :global(.token.function) {
+        color: #fbbf24; /* amber-400 */
     }
     
     .syntax-highlight-textarea {
@@ -352,8 +456,23 @@
         z-index: 10;
     }
     
+    /* Add dark mode styles for textarea caret */
+    :global(.dark) .syntax-highlight-textarea {
+        caret-color: #f3f4f6; /* dark:text-gray-100 */
+    }
+    
     .syntax-highlight-textarea:focus {
         outline: none;
         box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+    }
+    
+    /* Add styles for the expand/collapse button backdrop in dark mode */
+    .editor-container button[type="button"] {
+        backdrop-filter: blur(2px);
+        background-color: rgba(243, 244, 246, 0.85);
+    }
+    
+    :global(.dark) .editor-container button[type="button"] {
+        background-color: rgba(55, 65, 81, 0.85);
     }
 </style> 
