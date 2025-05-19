@@ -4,6 +4,7 @@
 
     export let topic: PracticeTopic;
     export let href: string = '';
+    export let isInstructor: boolean = false;
 
     function handleCardClick() {
         goto(href);
@@ -24,15 +25,17 @@
     aria-label={`View ${topic.name}`}
 >
     <!-- Edit button positioned in the top-right corner -->
-    <button 
-        class="absolute top-2 right-2 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full z-10" 
-        on:click={handleEditClick}
-        aria-label="Edit topic"
-    >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-        </svg>
-    </button>
+    {#if isInstructor}
+        <button 
+            class="absolute top-2 right-2 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full z-10" 
+            on:click={handleEditClick}
+            aria-label="Edit topic"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+        </button>
+    {/if}
 
     <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">{topic.name}</h2>
     

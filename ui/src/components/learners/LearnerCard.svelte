@@ -28,6 +28,9 @@
                 return 'bg-blue-100 hover:bg-blue-200 text-blue-800 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 dark:text-blue-300';
         }
     }
+
+    // Get the user's name safely
+    $: userName = learner?.expand?.user?.name || (learner?.user?.name) || 'Unknown learner';
 </script>
 
 {#if clickable}
@@ -39,14 +42,14 @@
         hover:shadow-lg transition-shadow cursor-pointer
     `}
     on:click={() => onClick(learner)}
-    aria-label={`Select ${learner.nickname}`}
+    aria-label={`Select ${userName}`}
 >
     <div class="flex items-center mb-4">
         <div class="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-full mr-4">
             {#if learner.avatar}
                 <img 
                     src={learner.avatar} 
-                    alt={learner.nickname} 
+                    alt={userName} 
                     class="h-8 w-8 rounded-full object-cover"
                 />
             {:else}
@@ -56,8 +59,7 @@
             {/if}
         </div>
         <div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{learner.nickname}</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">{learner.user?.name || 'Unknown user'}</p>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{userName}</h3>
         </div>
     </div>
     
@@ -123,7 +125,7 @@
             {#if learner.avatar}
                 <img 
                     src={learner.avatar} 
-                    alt={learner.nickname} 
+                    alt={userName} 
                     class="h-8 w-8 rounded-full object-cover"
                 />
             {:else}
@@ -133,8 +135,7 @@
             {/if}
         </div>
         <div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{learner.nickname}</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">{learner.user?.name || 'Unknown user'}</p>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{userName}</h3>
         </div>
     </div>
     

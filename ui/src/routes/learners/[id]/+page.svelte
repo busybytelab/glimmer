@@ -76,15 +76,14 @@
 		<div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
 			<div class="flex items-center space-x-4 mb-6">
 				{#if learner.avatar}
-					<img src={learner.avatar} alt={learner.nickname} class="w-16 h-16 rounded-full" />
+					<img src={learner.avatar} alt={learner.user?.name || 'Learner'} class="w-16 h-16 rounded-full" />
 				{:else}
 					<div class="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-						<span class="text-2xl text-gray-500 dark:text-gray-300">{learner.nickname[0].toUpperCase()}</span>
+						<span class="text-2xl text-gray-500 dark:text-gray-300">{learner.user?.name?.[0]?.toUpperCase() || 'L'}</span>
 					</div>
 				{/if}
 				<div>
-					<h2 class="text-xl font-semibold text-gray-900 dark:text-white">{learner.nickname}</h2>
-					<p class="text-gray-600 dark:text-gray-400">{learner.user.name}</p>
+					<h2 class="text-xl font-semibold text-gray-900 dark:text-white">{learner.user?.name || 'Unknown learner'}</h2>
 				</div>
 			</div>
 

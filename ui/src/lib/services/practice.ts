@@ -3,6 +3,8 @@ import pb from '$lib/pocketbase';
 export interface CreatePracticeSessionRequest {
     learnerId: string;
     practiceTopicId: string;
+    systemPrompt?: string;
+    basePrompt?: string;
 }
 
 export interface PracticeSession {

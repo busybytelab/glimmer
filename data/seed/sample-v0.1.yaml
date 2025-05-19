@@ -247,11 +247,10 @@ collections:
   # Learners
   - name: "learners"
     select: "SELECT COUNT(*) FROM learners WHERE id = {:id}"
-    insert: "INSERT INTO learners (id, nickname, age, grade_level, learning_preferences, avatar, account, user, created, updated) VALUES ({:id}, {:nickname}, {:age}, {:grade_level}, {:learning_preferences}, {:avatar}, {:account}, {:user}, {:created}, {:updated})"
+    insert: "INSERT INTO learners (id, age, grade_level, learning_preferences, avatar, account, user, created, updated) VALUES ({:id}, {:age}, {:grade_level}, {:learning_preferences}, {:avatar}, {:account}, {:user}, {:created}, {:updated})"
     items:
       # Account 1 Learner
       - id: "l1"
-        nickname: "Student1"
         age: 10
         grade_level: "5th"
         learning_preferences: "[\"Visual\"]"
@@ -263,7 +262,6 @@ collections:
 
       # Account 2 Learner
       - id: "l2"
-        nickname: "Student2"
         age: 13
         grade_level: "8th"
         learning_preferences: "[\"Auditory\", \"Visual\"]"

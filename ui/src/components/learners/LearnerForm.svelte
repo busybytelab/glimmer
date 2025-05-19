@@ -17,7 +17,6 @@
 	}>();
 
 	type FormData = {
-		nickname: string;
 		age: number;
 		grade_level: string;
 		learning_preferences: string[];
@@ -25,13 +24,11 @@
 	};
 
 	let formData: FormData = learner ? {
-		nickname: learner.nickname,
 		age: learner.age,
 		grade_level: learner.grade_level || '',
 		learning_preferences: Array.isArray(learner.learning_preferences) ? learner.learning_preferences : [],
 		avatar: learner.avatar || ''
 	} : {
-		nickname: '',
 		age: 0,
 		grade_level: '',
 		learning_preferences: [],
@@ -48,7 +45,6 @@
 
 	// Validate form data
 	function validateForm() {
-		if (!formData.nickname.trim()) return "Nickname is required";
 		if (formData.age < 0 || formData.age > 120) return "Age must be between 0 and 120";
 		return null;
 	}
@@ -130,16 +126,6 @@
 
 		<div class="px-4 py-4 bg-white dark:bg-gray-800 w-full">
 			<div class="grid grid-cols-6 gap-6">
-				<FormField
-					label="Nickname"
-					id="nickname"
-					type="text"
-					bind:value={formData.nickname}
-					required
-					cols="col-span-6"
-					placeholder="Enter learner's nickname"
-				/>
-
 				<FormField
 					label="Age"
 					id="age"
