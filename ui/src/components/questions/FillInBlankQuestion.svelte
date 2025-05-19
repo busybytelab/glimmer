@@ -22,6 +22,32 @@
     // Helper for immediate feedback
     $: isAnswered = !!item.user_answer;
     $: showFeedback = isAnswered && item.is_correct !== undefined && !showAnswer;
+
+    // Process question text to find where to place the input
+    $: {
+        const text = item.question_text;
+        if (text.includes('[BLANK]')) {
+            questionParts = text.split('[BLANK]');
+            isFullTextInput = false;
+        } else {
+            // Look for common blank indicators
+            const blankPattern = /_{3,}|\.{3,}|\s+\.{3,}\s+|\s+\.\.\.\s+/;
+            const match = text.match(blankPattern);
+            if (match) {
+                const parts = text.split(match[0]);
+                questionParts = [parts[0], parts[1]];
+                isFullTextInput = false;
+            } else {
+                // For questions without explicit blank indicators (like punctuation questions),
+                // use a full text input
+                questionParts = [text];
+                isFullTextInput = true;
+            }
+        }
+    }
+
+    let questionParts: string[] = [];
+    let isFullTextInput = false;
 </script>
 
 <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800
@@ -30,22 +56,34 @@
     
     <div class="text-gray-700 dark:text-gray-300 mb-4">
         {#if printMode}
-            <p>{item.question_text.replace('[BLANK]', '___________')}</p>
+            <p>{item.question_text.replace(/\[BLANK\]|_{3,}|\.{3,}|\s+\.{3,}\s+|\s+\.\.\.\s+/, '___________')}</p>
         {:else}
-            <p>
-                {#each item.question_text.split('[BLANK]') as part, i}
-                    {part}
-                    {#if i < item.question_text.split('[BLANK]').length - 1}
-                        <input
-                            type="text"
-                            class="inline-block w-32 mx-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-                            value={item.user_answer || ''}
-                            {disabled}
-                            on:input={handleAnswerChange}
-                        />
-                    {/if}
-                {/each}
-            </p>
+            {#if isFullTextInput}
+                <div class="mb-2">{item.question_text}</div>
+                <input
+                    type="text"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                    value={item.user_answer || ''}
+                    {disabled}
+                    on:input={handleAnswerChange}
+                    placeholder="Type your complete answer here..."
+                />
+            {:else}
+                <div>
+                    {#each questionParts as part, i}
+                        {part}
+                        {#if i < questionParts.length - 1}
+                            <input
+                                type="text"
+                                class="inline-block w-32 mx-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                                value={item.user_answer || ''}
+                                {disabled}
+                                on:input={handleAnswerChange}
+                            />
+                        {/if}
+                    {/each}
+                </div>
+            {/if}
         {/if}
     </div>
     

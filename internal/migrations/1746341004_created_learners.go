@@ -32,19 +32,6 @@ func init() {
 				{
 					"autogeneratePattern": "",
 					"hidden": false,
-					"id": "nickname_column",
-					"max": 2000,
-					"name": "nickname",
-					"pattern": "",
-					"presentable": false,
-					"primaryKey": false,
-					"required": true,
-					"system": false,
-					"type": "text"
-				},
-				{
-					"autogeneratePattern": "",
-					"hidden": false,
 					"id": "age_column",
 					"max": 120,
 					"min": 0,

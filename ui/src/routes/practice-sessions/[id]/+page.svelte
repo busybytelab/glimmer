@@ -165,7 +165,7 @@
 
     function editSession() {
         if (!session) return;
-        goto(`/practice-sessions/edit/${session.id}`);
+        goto(`/practice-sessions/${session.id}/edit`);
     }
 
     async function deleteSession() {
@@ -368,20 +368,22 @@
             variant: 'primary' as const,
             onClick: handlePrint
         },
-        {
-            id: 'edit',
-            label: 'Edit',
-            icon: 'edit',
-            variant: 'secondary' as const,
-            onClick: editSession
-        },
-        {
-            id: 'delete',
-            label: 'Delete',
-            icon: 'delete',
-            variant: 'danger' as const,
-            onClick: deleteSession
-        }
+        ...(isInstructor ? [
+            {
+                id: 'edit',
+                label: 'Edit',
+                icon: 'edit',
+                variant: 'secondary' as const,
+                onClick: editSession
+            },
+            {
+                id: 'delete',
+                label: 'Delete',
+                icon: 'delete',
+                variant: 'danger' as const,
+                onClick: deleteSession
+            }
+        ] : [])
     ];
 </script>
 
@@ -433,7 +435,7 @@
                 {/if}
 
                 {#if session.expand?.learner}
-                    <p class="text-gray-600 dark:text-gray-300 mb-4">Learner: {session.expand.learner.nickname}</p>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">Learner: {session.expand.learner.expand?.user?.name || 'Unknown Learner'}</p>
                 {/if}
                 
                 {#if isInstructor}
@@ -488,7 +490,7 @@
             {/if}
             
             {#if session.expand?.learner}
-                <p class="text-lg">Learner: {session.expand.learner.nickname}</p>
+                <p class="text-lg">Learner: {session.expand.learner.expand?.user?.name || 'Unknown Learner'}</p>
             {/if}
         </div>
 

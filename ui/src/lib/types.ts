@@ -36,44 +36,50 @@ interface PocketBaseRecord {
  * 
  * @description Determines how questions are displayed and interacted with based on user role and context
  */
-export enum QuestionViewType {
+export type QuestionViewType = 'learner' | 'answered' | 'instructor' | 'hint' | 'correction' | 'generated';
+
+// Constants for QuestionViewType values
+export const QuestionViewType = {
     /** Learner actively answering questions */
-    LEARNER = 'learner',
+    LEARNER: 'learner' as QuestionViewType,
     
     /** Learner viewing their answered questions (read-only) */
-    ANSWERED = 'answered',
+    ANSWERED: 'answered' as QuestionViewType,
     
     /** Instructor viewing full details including correct answers and explanations */
-    INSTRUCTOR = 'instructor',
+    INSTRUCTOR: 'instructor' as QuestionViewType,
     
     /** Learner viewing question with hint */
-    HINT = 'hint',
+    HINT: 'hint' as QuestionViewType,
     
     /** Learner correcting previously answered question */
-    CORRECTION = 'correction',
+    CORRECTION: 'correction' as QuestionViewType,
     
     /** Instructor viewing newly generated questions (for review/approval) */
-    GENERATED = 'generated'
-}
+    GENERATED: 'generated' as QuestionViewType
+};
 
 /**
  * Question types supported by the application
  * 
  * @description These values must match the backend's question type identifiers
  */
-export enum QuestionType {
+export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer' | 'fill_in_blank';
+
+// Constants for QuestionType values
+export const QuestionType = {
     /** Multiple choice questions with radio button options */
-    MULTIPLE_CHOICE = 'multiple_choice',
+    MULTIPLE_CHOICE: 'multiple_choice' as QuestionType,
     
     /** True/False questions */
-    TRUE_FALSE = 'true_false',
+    TRUE_FALSE: 'true_false' as QuestionType,
     
     /** Short answer questions with text input */
-    SHORT_ANSWER = 'short_answer',
+    SHORT_ANSWER: 'short_answer' as QuestionType,
     
     /** Fill-in-the-blank questions */
-    FILL_IN_BLANK = 'fill_in_blank'
-}
+    FILL_IN_BLANK: 'fill_in_blank' as QuestionType
+};
 
 /**
  * Review status values for practice items
@@ -195,7 +201,9 @@ export interface PracticeSession extends PocketBaseRecord {
     expand?: {
         learner?: {
             id: string;
-            nickname: string;
+            expand?: {
+                user?: User;
+            };
         };
         practice_topic?: {
             id: string;
@@ -225,7 +233,6 @@ export interface Instructor extends PocketBaseRecord {
 }
 
 export interface Learner extends PocketBaseRecord {
-    nickname: string;
     age: number;
     grade_level?: string;
     learning_preferences?: string[];

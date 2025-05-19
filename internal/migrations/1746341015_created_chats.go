@@ -114,8 +114,7 @@ func init() {
 					"presentable": false,
 					"required": false,
 					"system": false,
-					"type": "bool",
-					"default": false
+					"type": "bool"
 				},
 				{
 					"hidden": false,

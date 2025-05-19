@@ -13,7 +13,7 @@ func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
 			"createRule": "@request.auth.id = account.owner.id",
-			"deleteRule": "@request.auth.id = account.owner.id",
+			"deleteRule": "@request.auth.id = account.owner",
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -187,7 +187,7 @@ func init() {
 			"name": "%s",
 			"system": false,
 			"type": "base",
-			"updateRule": "@request.auth.id = account.owner.id",
+			"updateRule": "@request.auth.id = account.owner",
 			"viewRule": "@request.auth.id != \"\" && ((@collection.learners.id ?= learner && @collection.learners.user ?= @request.auth.id) || (@collection.instructors.account ?= account && @collection.instructors.user ?= @request.auth.id))"
 		}`, domain.CollectionLearners, domain.CollectionPracticeTopics, domain.CollectionAccounts, domain.CollectionPracticeItems, domain.CollectionPracticeSessions, domain.CollectionPracticeSessions)
 
