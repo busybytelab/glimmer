@@ -3,7 +3,7 @@ module github.com/busybytelab.com/glimmer
 go 1.24.2
 
 require (
-	github.com/ollama/ollama v0.6.8
+	github.com/ollama/ollama v0.7.0
 	github.com/openai/openai-go v0.1.0-beta.10
 	github.com/pocketbase/dbx v1.11.0
 	github.com/pocketbase/pocketbase v0.28.0
@@ -46,6 +46,7 @@ require (
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	modernc.org/libc v1.62.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.10.0 // indirect
