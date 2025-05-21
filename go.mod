@@ -6,7 +6,7 @@ require (
 	github.com/ollama/ollama v0.6.8
 	github.com/openai/openai-go v0.1.0-beta.10
 	github.com/pocketbase/dbx v1.11.0
-	github.com/pocketbase/pocketbase v0.28.0
+	github.com/pocketbase/pocketbase v0.28.1
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
