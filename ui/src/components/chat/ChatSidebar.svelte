@@ -1,3 +1,5 @@
+<!-- DEPRECATED: This component is deprecated and should be removed. Make sure no usage/import -->
+
 <!-- ChatSidebar.svelte -->
 <script lang="ts">
     import { onMount } from 'svelte';

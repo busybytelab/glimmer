@@ -1,3 +1,5 @@
+<!-- DEPRECATED: This component is deprecated and should be removed. Make sure no usage/import -->
+
 <script lang="ts">
     import type { Chat } from '$lib/services/chat';
     import { updateChatTitle } from '$lib/stores/chatStore';
