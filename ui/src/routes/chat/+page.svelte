@@ -6,13 +6,15 @@
 	import type { ChatMessage } from '$lib/services/chat';
 	import SelectField from '../../components/common/SelectField.svelte';
 	import ChatInput from '../../components/chat/ChatInput.svelte';
+	import MarkdownRenderer from '../../components/common/MarkdownRenderer.svelte';
 	import { onMount } from 'svelte';
 	import { 
 		activeChatStore, 
 		loadChat, 
 		createNewChat,
 		deleteChat,
-		archiveChat
+		archiveChat,
+		updateChatTitle
 	} from '$lib/stores/chatStore';
 	import { goto } from '$app/navigation';
 	import { chatService } from '$lib/services/chat';
@@ -47,6 +49,11 @@
 	
 	// Available models - will be populated from backend
 	let availableModels: { id: string; name: string; isDefault?: boolean }[] = [];
+	
+	// Chat title editing state
+	let isEditingTitle = false;
+	let editedTitle = '';
+	let titleInputEl: HTMLInputElement;
 	
 	// Load chat when ID changes
 	$: {
@@ -230,14 +237,9 @@
 	}
 	
 	// Handle keydown events from ChatInput
-	function handleInputKeyDown(event: CustomEvent<KeyboardEvent>) {
-		const keyEvent = event.detail;
-		
-		// Global keyboard shortcuts
-		if (keyEvent.key === 'n' && !keyEvent.ctrlKey && !keyEvent.metaKey) {
-			keyEvent.preventDefault();
-			handleCreateNewChat();
-		}
+	function handleInputKeyDown(_event: CustomEvent<KeyboardEvent>) {
+		// This function intentionally left empty for now
+		// Previously contained shortcuts that were interfering with typing
 	}
 	
 	// Update sendMessage to not rely on messageInputRef
@@ -336,17 +338,110 @@
 			errorStore.set(error instanceof Error ? error.message : 'Failed to archive chat');
 		}
 	}
+
+	// Function to start editing the chat title
+	function startEditingTitle() {
+		if (!$activeChatStore.chat) return;
+		editedTitle = $activeChatStore.chat.title || 'New Chat';
+		isEditingTitle = true;
+		
+		// Focus the input after DOM update
+		setTimeout(() => {
+			if (titleInputEl) {
+				titleInputEl.focus();
+				titleInputEl.select();
+			}
+		}, 10);
+	}
+
+	// Function to save edited title
+	async function saveChatTitle() {
+		if (!chatId || !$activeChatStore.chat) return;
+		
+		if (editedTitle.trim() === '') {
+			editedTitle = 'New Chat';
+		}
+		
+		try {
+			if (editedTitle !== $activeChatStore.chat.title) {
+				await updateChatTitle(chatId, editedTitle);
+			}
+		} catch (error) {
+			console.error('Failed to update chat title:', error);
+			errorStore.set(error instanceof Error ? error.message : 'Failed to update chat title');
+		} finally {
+			isEditingTitle = false;
+		}
+	}
+
+	// Function to cancel editing
+	function cancelEditingTitle() {
+		isEditingTitle = false;
+		if ($activeChatStore.chat) {
+			editedTitle = $activeChatStore.chat.title || 'New Chat';
+		}
+	}
+
+	// Handle key events in the title input
+	function handleTitleKeyDown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			saveChatTitle();
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			cancelEditingTitle();
+		}
+	}
+
+	// Handle double click on chat title
+	function handleTitleDoubleClick() {
+		if (chatId) {
+			startEditingTitle();
+		}
+	}
 </script>
 
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1">
 	<div class="flex justify-between items-center mb-6">
 		<div>
-			<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
-				{$activeChatStore.chat ? $activeChatStore.chat.title : 'Chat'}
-			</h1>
-			<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-				Using {selectedModel ? availableModels.find(m => m.id === selectedModel)?.name : 'Default Model'}
-			</p>
+			{#if isEditingTitle && $activeChatStore.chat}
+				<!-- Edit mode for title -->
+				<div class="flex items-center">
+					<input 
+						bind:this={titleInputEl}
+						bind:value={editedTitle}
+						on:keydown={handleTitleKeyDown}
+						on:blur={saveChatTitle}
+						class="text-2xl font-semibold text-gray-900 dark:text-white bg-transparent border-b border-indigo-300 dark:border-indigo-600 focus:outline-none focus:border-indigo-500 px-1 py-0.5 mr-2"
+					/>
+				</div>
+			{:else}
+				<!-- Display mode -->
+				<div class="group flex items-center">
+					<h1 
+						class="text-2xl font-semibold text-gray-900 dark:text-white cursor-pointer"
+						on:dblclick={handleTitleDoubleClick}
+						title={chatId ? "Double-click to edit title" : undefined}
+					>
+						{$activeChatStore.chat ? $activeChatStore.chat.title : 'Chat'}
+					</h1>
+					{#if chatId && $activeChatStore.chat}
+						<button 
+							on:click={startEditingTitle}
+							class="ml-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+							title="Edit title"
+							aria-label="Edit title"
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+								<path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+							</svg>
+						</button>
+					{/if}
+				</div>
+				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+					Using {selectedModel ? availableModels.find(m => m.id === selectedModel)?.name : 'Default Model'}
+				</p>
+			{/if}
 		</div>
 		
 		<div class="flex items-center space-x-4">
@@ -497,103 +592,103 @@
 		</div>
 	{/if}
 	
-	<div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-		{#if !hasInitialized}
-			<div class="flex justify-center items-center py-12">
-				<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500"></div>
-			</div>
-		{:else if !chatId}
-			<div class="w-full flex flex-col items-center px-4 py-12 text-center space-y-6">
-				<div class="w-full">
-					<svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-indigo-400 dark:text-indigo-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-					</svg>
-												<!-- New chat input using the ChatInput component -->
-					<div class="w-full mx-auto">
-						<div class="relative">
-							<ChatInput 
-								bind:value={message}
-								placeholder="Type here to start a new chat..."
-								disabled={isLoading}
-								buttonText="Send"
-								isLoading={isLoading}
-								on:submit={handleMessageSubmit}
-								on:keydown={handleInputKeyDown}
-								showKeyboardShortcuts={true}
-								totalTokensInfo={null}
-							/>
-						</div>
+	{#if !hasInitialized}
+		<div class="flex justify-center items-center py-12">
+			<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500"></div>
+		</div>
+	{:else if !chatId}
+		<div class="w-full flex flex-col items-center px-4 py-12 text-center space-y-6">
+			<div class="w-full">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-indigo-400 dark:text-indigo-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+				</svg>
+				<!-- New chat input using the ChatInput component -->
+				<div class="w-full mx-auto">
+					<div class="relative">
+						<ChatInput 
+							bind:value={message}
+							placeholder="Type here to start a new chat..."
+							disabled={isLoading}
+							buttonText="Send"
+							isLoading={isLoading}
+							on:submit={handleMessageSubmit}
+							on:keydown={handleInputKeyDown}
+							showKeyboardShortcuts={true}
+							totalTokensInfo={null}
+						/>
 					</div>
 				</div>
 			</div>
-		{:else if $activeChatStore.loading}
-			<div class="flex justify-center items-center py-12">
-				<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500"></div>
-			</div>
-		{:else if $activeChatStore.error}
-			<div class="p-6 text-center text-red-500 dark:text-red-400">
-				<p>{$activeChatStore.error}</p>
-				<button
-					on:click={() => chatId && loadChatData(chatId)}
-					class="mt-2 text-indigo-600 dark:text-indigo-400 underline text-sm"
-				>
-					Retry
-				</button>
-			</div>
-		{:else}
-			<!-- Chat messages container - IMPORTANT: Do not add fixed height or overflow scroll here. 
-				 Let container expand naturally as messages are added, using the page's main scroll instead. -->
-			<div class="px-4 py-5 sm:p-6 chat-container">
-				{#if messages.length === 0}
-					<div class="text-center py-12 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
-						<p class="text-gray-500 dark:text-gray-400">
-							No messages yet. Start a conversation below.
-						</p>
-					</div>
-				{:else}
-					<div class="space-y-6">
-						{#each messages as msg}
-							<div class="flex flex-col">
-								<div class="flex items-center mb-2">
-									<span class="font-medium text-sm text-gray-700 dark:text-gray-300 mr-2">
-										{msg.role === 'user' ? 'You' : msg.role === 'assistant' ? 'Assistant' : 'System'}
+		</div>
+	{:else if $activeChatStore.loading}
+		<div class="flex justify-center items-center py-12">
+			<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500"></div>
+		</div>
+	{:else if $activeChatStore.error}
+		<div class="p-6 text-center text-red-500 dark:text-red-400">
+			<p>{$activeChatStore.error}</p>
+			<button
+				on:click={() => chatId && loadChatData(chatId)}
+				class="mt-2 text-indigo-600 dark:text-indigo-400 underline text-sm"
+			>
+				Retry
+			</button>
+		</div>
+	{:else}
+		<div class="p-4">
+			{#if messages.length === 0}
+				<div class="text-center py-12 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+					<p class="text-gray-500 dark:text-gray-400">
+						No messages yet. Start a conversation below.
+					</p>
+				</div>
+			{:else}
+				<div class="space-y-6">
+					{#each messages as msg}
+						<div class="flex flex-col">
+							<div class="flex items-center mb-2">
+								<span class="font-medium text-sm text-gray-700 dark:text-gray-300 mr-2">
+									{msg.role === 'user' ? 'You' : msg.role === 'assistant' ? 'Assistant' : 'System'}
+								</span>
+								<span class="text-xs text-gray-500 dark:text-gray-400">
+									{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+								</span>
+								{#if msg.role === 'assistant' && msg.usage}
+									<span class="text-xs text-gray-400 dark:text-gray-500 ml-2 tooltip" 
+										title="Model: {msg.usage.LlmModelName || 'Default'}&#10;Cache hit: {msg.usage.CacheHit ? 'Yes' : 'No'}&#10;Prompt: {msg.usage.PromptTokens} tokens&#10;Completion: {msg.usage.CompletionTokens} tokens&#10;Cost: ${(msg.usage.Cost || 0).toFixed(6)}">
+										({msg.usage.TotalTokens} tokens)
 									</span>
-									<span class="text-xs text-gray-500 dark:text-gray-400">
-										{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-									</span>
-									{#if msg.role === 'assistant' && msg.usage}
-										<span class="text-xs text-gray-400 dark:text-gray-500 ml-2 tooltip" 
-											title="Model: {msg.usage.LlmModelName || 'Default'}&#10;Cache hit: {msg.usage.CacheHit ? 'Yes' : 'No'}&#10;Prompt: {msg.usage.PromptTokens} tokens&#10;Completion: {msg.usage.CompletionTokens} tokens&#10;Cost: ${(msg.usage.Cost || 0).toFixed(6)}">
-											({msg.usage.TotalTokens} tokens)
-										</span>
-									{/if}
-								</div>
-								<div class="{msg.role === 'user' ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-100 dark:border-blue-800' : msg.role === 'system' ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-100 dark:border-purple-800' : 'bg-gray-50 dark:bg-gray-700 border-gray-100 dark:border-gray-600'} border rounded-lg p-4">
+								{/if}
+							</div>
+							<div class="{msg.role === 'user' ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-100 dark:border-blue-800' : msg.role === 'system' ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-100 dark:border-purple-800' : 'bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-700'} border rounded-lg p-4">
+								{#if msg.role === 'assistant'}
+									<MarkdownRenderer content={msg.content} />
+								{:else}
 									<p class="whitespace-pre-wrap break-words text-left text-gray-800 dark:text-gray-200">{msg.content}</p>
+								{/if}
+							</div>
+						</div>
+					{/each}
+					{#if isLoading}
+						<div class="flex flex-col">
+							<div class="flex items-center mb-2">
+								<span class="font-medium text-sm text-gray-700 dark:text-gray-300">Assistant</span>
+							</div>
+							<div class="bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded-lg p-4">
+								<div class="flex space-x-2">
+									<div class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce bounce-delay-1"></div>
+									<div class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce bounce-delay-2"></div>
 								</div>
 							</div>
-						{/each}
-						{#if isLoading}
-							<div class="flex flex-col">
-								<div class="flex items-center mb-2">
-									<span class="font-medium text-sm text-gray-700 dark:text-gray-300">Assistant</span>
-								</div>
-								<div class="bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded-lg p-4">
-									<div class="flex space-x-2">
-										<div class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce bounce-delay-1"></div>
-										<div class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce bounce-delay-2"></div>
-									</div>
-								</div>
-							</div>
-						{/if}
-					</div>
-				{/if}
-			</div>
-		{/if}
+						</div>
+					{/if}
+				</div>
+			{/if}
+		</div>
 		
 		<!-- Input area (only show when a chat is selected) -->
 		{#if chatId}
-			<div class="px-4 py-4 sm:px-6 border-t border-gray-200 dark:border-gray-700">
+			<div class="border-t border-gray-200 dark:border-gray-700 p-4">
 				<ChatInput 
 					bind:value={message}
 					placeholder="Type your message... (Press / to focus)"
@@ -607,7 +702,7 @@
 				/>
 			</div>
 		{/if}
-	</div>
+	{/if}
 </div>
 
 <style>

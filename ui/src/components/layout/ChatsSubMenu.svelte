@@ -18,6 +18,55 @@
     let isSearching = false;
     let searchTimeout: ReturnType<typeof setTimeout> | null = null;
     
+    // Tooltip state
+    let tooltipText = '';
+    let tooltipVisible = false;
+    let tooltipX = 0;
+    let tooltipY = 0;
+    
+    // Format relative time (like "5m", "2h", "3d")
+    function formatRelativeTime(date: Date): string {
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        
+        if (diffMins < 60) {
+            return `${diffMins}m`;
+        }
+        
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) {
+            return `${diffHours}h`;
+        }
+        
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays}d`;
+    }
+
+    // Format full date for tooltip
+    function formatFullDate(date: Date): string {
+        return date.toLocaleString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Show tooltip
+    function showTooltip(event: MouseEvent, date: Date) {
+        tooltipText = formatFullDate(date);
+        tooltipVisible = true;
+        tooltipX = event.clientX;
+        tooltipY = event.clientY + 20; // Offset below cursor
+    }
+
+    // Hide tooltip
+    function hideTooltip() {
+        tooltipVisible = false;
+    }
+    
     // Watch for changes to searchFilter from parent
     $: {
         if (searchFilter && searchFilter.trim()) {
@@ -107,7 +156,7 @@
             <div class="space-y-1">
                 {#each $chatListStore.chats as chat}
                     <div 
-                        class="flex items-center p-1.5 rounded cursor-pointer text-sm truncate
+                        class="flex items-center justify-between p-1.5 rounded cursor-pointer text-sm truncate
                             {activeChatId === chat.id ? 
                             'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 
                             'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}"
@@ -118,13 +167,35 @@
                         aria-label="Open chat: {chat.title || 'Untitled Chat'}"
                     >
                         <!-- Chat icon and title -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
-                        </svg>
-                        <span class="truncate text-xs">{chat.title || 'Untitled Chat'}</span>
+                        <div class="flex items-center min-w-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="truncate text-xs">{chat.title || 'Untitled Chat'}</span>
+                        </div>
+                        <!-- Relative time with custom tooltip -->
+                        <span 
+                            class="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0 cursor-help"
+                            on:mouseenter={(e) => showTooltip(e, chat.updatedAt)}
+                            on:mouseleave={hideTooltip}
+                            role="tooltip"
+                            aria-label="Last updated: {formatFullDate(chat.updatedAt)}"
+                        >
+                            {formatRelativeTime(chat.updatedAt)}
+                        </span>
                     </div>
                 {/each}
             </div>
         {/if}
     </div>
-</div> 
+</div>
+
+<!-- Custom tooltip -->
+{#if tooltipVisible}
+    <div 
+        class="fixed z-50 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg pointer-events-none"
+        style="left: {tooltipX}px; top: {tooltipY}px; transform: translateX(-50%);"
+    >
+        {tooltipText}
+    </div>
+{/if} 
