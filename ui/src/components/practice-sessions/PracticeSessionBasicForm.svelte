@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import { goto } from '$app/navigation';
 	import pb from '$lib/pocketbase';
 	import type { PracticeSession } from '$lib/types';
 	import FormField from '../common/FormField.svelte';
@@ -96,6 +97,9 @@
 						
 			// Dispatch the update event with the result
 			dispatch('update', result as unknown as PracticeSession);
+			
+			// Navigate to the instructor view
+			goto(`/practice-sessions/${session.id}/instructor`);
 		} catch (err) {
 			console.error('Failed to save session:', err);
 			error = 'Failed to save practice session';
@@ -116,12 +120,25 @@
 			error = null;
 			await pb.collection('practice_sessions').delete(session.id);
 			dispatch('delete', session.id);
+			
+			// Navigate back to practice topics or dashboard
+			if (session.expand?.practice_topic) {
+				goto(`/practice-topics/${session.expand.practice_topic.id}`);
+			} else {
+				goto('/dashboard');
+			}
 		} catch (err) {
 			console.error('Failed to delete session:', err);
 			error = 'Failed to delete practice session';
 		} finally {
 			loading = false;
 		}
+	}
+
+	function handleCancel() {
+		if (!session) return;
+		dispatch('cancel');
+		goto(`/practice-sessions/${session.id}/instructor`);
 	}
 
 	function handleLearnerSelect(learner: any) {
@@ -240,7 +257,7 @@
 				type="button" 
 				variant="secondary"
 				disabled={loading}
-				on:click={() => dispatch('cancel')}
+				on:click={handleCancel}
 			>
 				Cancel
 			</FormButton>
@@ -258,10 +275,10 @@
 
 			<FormButton 
 				type="submit" 
-				isLoading={loading}
-				loadingText="Saving..."
+				variant="primary"
+				disabled={loading}
 			>
-				Save
+				Save Changes
 			</FormButton>
 		</div>
 	</form>
