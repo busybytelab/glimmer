@@ -3,6 +3,7 @@ package llm
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -54,7 +55,7 @@ type (
 const (
 	openAIBaseURL      = "https://api.openai.com/v1"
 	openAITimeout      = 60 * time.Second
-	defaultOpenAIModel = "gpt-4o-mini"
+	defaultOpenAIModel = "gpt-4.1-nano"
 )
 
 // newOpenAIPlatform creates a new OpenAI platform
@@ -108,9 +109,23 @@ func (o *openAIPlatform) Models() ([]*ModelInfo, error) {
 			IsDefault: model.ID == o.cfg.Model,
 		})
 	}
+	// Filter models to only include allowed models
+	models = filterModels(models, o.cfg.AllowedModels)
+
 	sortModels(models)
 
 	return models, nil
+}
+
+// filterModels filters the models to only include allowed models
+func filterModels(models []*ModelInfo, allowedModels []string) []*ModelInfo {
+	filteredModels := make([]*ModelInfo, 0, len(models))
+	for _, model := range models {
+		if slices.Contains(allowedModels, model.Name) {
+			filteredModels = append(filteredModels, model)
+		}
+	}
+	return filteredModels
 }
 
 // Chat sends a chat request to OpenAI
