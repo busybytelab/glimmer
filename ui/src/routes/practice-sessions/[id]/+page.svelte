@@ -12,7 +12,6 @@
     import Breadcrumbs from '../../../components/common/Breadcrumbs.svelte';
     import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
-    import { debounce } from '$lib/utils/debounce';
 
     let session: SessionWithExpandedData | null = null;
     let practiceItems: PracticeItem[] = [];
@@ -201,16 +200,15 @@
         return normalizedUserAnswer === normalizedCorrectAnswer;
     }
 
-    // Create a debounced version of handleAnswerChange
-    const debouncedSaveAnswer = debounce(async (index: number, answer: string) => {
+    async function handleAnswerChange(index: number, answer: string) {
         if (!session || !practiceItems[index]) return;
 
         try {
             // Add this index to the set of saving items
             savingItems.add(index);
             
-            // We've already updated the answer in the handleAnswerChange function,
-            // so we don't need to update it again here
+            // Update the answer in the UI
+            practiceItems[index].user_answer = answer;
             
             // Create or update practice result
             const practiceItem = practiceItems[index];
@@ -265,8 +263,6 @@
             
             // Force a Svelte update
             practiceItems = [...practiceItems];
-
-            // No need to update the DOM here as we've already done it in handleAnswerChange
         } catch (err) {
             console.error('Failed to save answer:', err);
             error = 'Failed to save answer: ' + (err instanceof Error ? err.message : String(err));
@@ -274,14 +270,6 @@
             // Remove this index from the set of saving items
             savingItems.delete(index);
         }
-    }, 1000); // Wait 1 second after the last change before saving
-
-    async function handleAnswerChange(index: number, answer: string) {
-        // Update the answer immediately for a responsive UI
-        practiceItems[index].user_answer = answer;
-        
-        // Pass to the debounced save function
-        debouncedSaveAnswer(index, answer);
     }
     
     // Handle hint request for a specific practice item

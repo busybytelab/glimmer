@@ -3,6 +3,7 @@
     import QuestionHeader from './QuestionHeader.svelte';
     import QuestionAnswerInfo from './QuestionAnswerInfo.svelte';
     import QuestionInstructorInfo from './QuestionInstructorInfo.svelte';
+    import SaveButton from './SaveButton.svelte';
 
     export let item: PracticeItem;
     export let index: number;
@@ -12,10 +13,16 @@
     export let onAnswerChange: ((answer: string) => void) | undefined = undefined;
     export let printMode = false;
 
+    let currentAnswer: string = '';
+
     function handleAnswerChange(event: Event) {
         const target = event.target as HTMLInputElement;
-        if (onAnswerChange) {
-            onAnswerChange(target.value);
+        currentAnswer = target.value;
+    }
+
+    function handleSave() {
+        if (currentAnswer && onAnswerChange) {
+            onAnswerChange(currentAnswer);
         }
     }
     
@@ -63,7 +70,7 @@
                 <input
                     type="text"
                     class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-                    value={item.user_answer || ''}
+                    value={currentAnswer || item.user_answer || ''}
                     {disabled}
                     on:input={handleAnswerChange}
                     placeholder="Type your complete answer here..."
@@ -76,7 +83,7 @@
                             <input
                                 type="text"
                                 class="inline-block w-32 mx-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-                                value={item.user_answer || ''}
+                                value={currentAnswer || item.user_answer || ''}
                                 {disabled}
                                 on:input={handleAnswerChange}
                             />
@@ -105,6 +112,13 @@
                 </p>
             {/if}
         </div>
+    {/if}
+
+    {#if !disabled && !showAnswer && !printMode}
+        <SaveButton
+            disabled={!currentAnswer || currentAnswer === item.user_answer}
+            onClick={handleSave}
+        />
     {/if}
 
     <QuestionAnswerInfo {item} {showAnswer} {showInstructorInfo} />
