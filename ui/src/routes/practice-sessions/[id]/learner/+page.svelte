@@ -11,6 +11,7 @@
     import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
     import SessionHeader from '../../../../components/practice-sessions/SessionHeader.svelte';
+    import PracticeWizard from '../../../../components/practice-sessions/PracticeWizard.svelte';
     import { updateBreadcrumbs, handlePrint } from '$lib/utils/practice-session';
 
     let session: SessionWithExpandedData | null = null;
@@ -25,6 +26,18 @@
     // Smart hint system
     let consecutiveIncorrectAttempts = new Map<string, number>();
     const HINT_THRESHOLD = 2;
+
+    // View mode state
+    let viewMode: 'all' | 'wizard' = 'all';
+    let currentStep = 0;
+    let stepResults: ('correct' | 'incorrect' | 'pending')[] = [];
+
+    // Reactive declarations for practice items
+    $: practiceItemsWithHints = practiceItems.map(item => ({
+        item,
+        attemptsCount: item.id ? (consecutiveIncorrectAttempts.get(item.id) || 0) : 0,
+        showHints: Boolean((item.id ? (consecutiveIncorrectAttempts.get(item.id) || 0) : 0) >= HINT_THRESHOLD)
+    }));
 
     onMount(async () => {
         try {
@@ -127,6 +140,21 @@
         return normalizedUserAnswer === normalizedCorrectAnswer;
     }
 
+    // Update step results when practice items change
+    $: if (practiceItems.length > 0) {
+        stepResults = practiceItems.map(item => {
+            if (item.is_correct === undefined) return 'pending';
+            return item.is_correct ? 'correct' : 'incorrect';
+        });
+    }
+
+    function handleStepClick(index: number) {
+        // Allow navigation to any completed step or the next available step
+        if (index <= currentStep || (index === currentStep + 1 && stepResults[currentStep] === 'correct')) {
+            currentStep = index;
+        }
+    }
+
     async function handleAnswerChange(index: number, answer: string) {
         if (!session || !practiceItems[index]) return;
 
@@ -176,6 +204,11 @@
             };
             
             practiceItems = [...practiceItems];
+
+            // In wizard mode, move to next step if answer is correct
+            if (viewMode === 'wizard' && isCorrect && currentStep < practiceItems.length - 1) {
+                currentStep++;
+            }
         } catch (err) {
             console.error('Failed to save answer:', err);
             error = 'Failed to save answer: ' + (err instanceof Error ? err.message : String(err));
@@ -223,6 +256,10 @@
             onClick: handlePrint
         }
     ];
+
+    function toggleViewMode() {
+        viewMode = viewMode === 'all' ? 'wizard' : 'all';
+    }
 </script>
 
 <style lang="postcss">
@@ -252,7 +289,28 @@
         <div>
             <Breadcrumbs items={breadcrumbItems} />
         </div>
-        <ActionToolbar actions={sessionActions} />
+        <div class="flex items-center space-x-4">
+            <button
+                class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                class:text-primary-500={viewMode === 'wizard'}
+                class:text-gray-500={viewMode === 'all'}
+                on:click={toggleViewMode}
+                title={viewMode === 'all' ? 'Switch to Step by Step view' : 'Switch to All Questions view'}
+            >
+                {#if viewMode === 'all'}
+                    <!-- List view icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                {:else}
+                    <!-- Step by step view icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 4.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V4.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.616a1 1 0 01.894-1.79l1.599.8L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                {/if}
+            </button>
+            <ActionToolbar actions={sessionActions} />
+        </div>
     </div>
 
     {#if loading}
@@ -269,24 +327,39 @@
                 {#if practiceItems.length > 0}
                     <div class="mt-6">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Practice Items</h3>
-                        <div class="space-y-6">
-                            {#each practiceItems as item, index}
-                                {@const attemptsCount = item.id ? (consecutiveIncorrectAttempts.get(item.id) || 0) : 0}
-                                {@const showHintsForItem = Boolean(attemptsCount >= HINT_THRESHOLD)}
-                                <div class="question-container">
-                                    <QuestionFactory
-                                        {item}
-                                        {index}
-                                        viewType={selectedViewType}
-                                        disabled={selectedViewType !== QuestionViewType.LEARNER || session.status === 'Completed' || savingItems.has(index)}
-                                        onAnswerChange={(answer) => handleAnswerChange(index, answer)}
-                                        isInstructor={false}
-                                        showHints={showHintsForItem}
-                                        onHintRequested={(level) => handleHintRequest(index, level)}
-                                    />
-                                </div>
-                            {/each}
-                        </div>
+                        
+                        {#if viewMode === 'wizard'}
+                            <PracticeWizard
+                                {practiceItems}
+                                {currentStep}
+                                {stepResults}
+                                {selectedViewType}
+                                sessionStatus={session?.status || ''}
+                                {savingItems}
+                                {consecutiveIncorrectAttempts}
+                                {HINT_THRESHOLD}
+                                onStepClick={handleStepClick}
+                                onAnswerChange={handleAnswerChange}
+                                onHintRequest={handleHintRequest}
+                            />
+                        {:else}
+                            <div class="space-y-6">
+                                {#each practiceItemsWithHints as { item, showHints }, index}
+                                    <div class="question-container">
+                                        <QuestionFactory
+                                            {item}
+                                            {index}
+                                            viewType={selectedViewType}
+                                            disabled={selectedViewType !== QuestionViewType.LEARNER || session.status === 'Completed' || savingItems.has(index)}
+                                            onAnswerChange={(answer) => handleAnswerChange(index, answer)}
+                                            isInstructor={false}
+                                            {showHints}
+                                            onHintRequested={(level) => handleHintRequest(index, level)}
+                                        />
+                                    </div>
+                                {/each}
+                            </div>
+                        {/if}
                     </div>
                 {:else}
                     <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-4 rounded-md">
@@ -314,10 +387,8 @@
             {/if}
         </div>
 
-        {#if practiceItems.length > 0}
-            {#each practiceItems as item, index}
-                {@const attemptsCount = item.id ? (consecutiveIncorrectAttempts.get(item.id) || 0) : 0}
-                {@const showHintsForItem = Boolean(attemptsCount >= HINT_THRESHOLD)}
+        {#if practiceItemsWithHints.length > 0}
+            {#each practiceItemsWithHints as { item, showHints }, index}
                 <div class="print-item question-container">
                     <QuestionFactory
                         {item}
@@ -327,7 +398,7 @@
                         disabled={true}
                         onAnswerChange={(answer) => handleAnswerChange(index, answer)}
                         isInstructor={false}
-                        showHints={showHintsForItem}
+                        {showHints}
                         onHintRequested={(level) => handleHintRequest(index, level)}
                     />
                 </div>
