@@ -11,10 +11,10 @@ type (
 
 	// OpenAIConfig holds configuration for OpenAI services
 	OpenAIConfig struct {
-		APIKey              string  `json:"apiKey"`
-		CostPerMillionToken float64 `json:"costPerMillionToken"`
-		Model               string  `json:"model"`
-		BaseURL             string  `json:"baseUrl"`
+		APIKey              string   `json:"apiKey"`
+		CostPerMillionToken float64  `json:"costPerMillionToken"`
+		Model               string   `json:"model"`
+		BaseURL             string   `json:"baseUrl"`
 		AllowedModels       []string `json:"allowedModels"` // List of models that are allowed to be used
 	}
 

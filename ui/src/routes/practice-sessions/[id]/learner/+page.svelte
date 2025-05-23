@@ -133,13 +133,6 @@
         }
     }
 
-    function evaluateAnswer(item: PracticeItem, userAnswer: string): boolean {
-        if (!userAnswer || !item.correct_answer) return false;
-        const normalizedUserAnswer = String(userAnswer).trim().toLowerCase();
-        const normalizedCorrectAnswer = String(item.correct_answer).trim().toLowerCase();
-        return normalizedUserAnswer === normalizedCorrectAnswer;
-    }
-
     // Update step results when practice items change
     $: if (practiceItems.length > 0) {
         stepResults = practiceItems.map(item => {
@@ -164,7 +157,17 @@
             
             const practiceItem = practiceItems[index];
             const now = new Date().toISOString();
-            const isCorrect = evaluateAnswer(practiceItem, answer);
+
+            // Call the evaluate answer endpoint
+            const response = await pb.send('/api/glimmer/v1/practice/evaluate-answer', {
+                method: 'POST',
+                body: {
+                    practiceItemId: practiceItem.id,
+                    userAnswer: answer
+                }
+            });
+
+            const isCorrect = response.isCorrect;
             
             if (isCorrect) {
                 consecutiveIncorrectAttempts.set(practiceItem.id, 0);
