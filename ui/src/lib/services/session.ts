@@ -68,15 +68,10 @@ class SessionService {
     parsePracticeItems(session: SessionWithExpandedData): PracticeItem[] {
         if (session.expand?.practice_items) {
             return session.expand.practice_items;
-        } else if (session.practice_items) {
-            try {
-                return JSON.parse(session.practice_items as string) as PracticeItem[];
-            } catch (e) {
-                console.error('Error parsing practice items:', e);
-                return [];
-            }
         }
-        return [];
+        // If practice_items is not expanded, it's an array of IDs
+        // We should never reach here because we always expand practice_items in loadSession
+        throw new Error('Practice items not expanded. This is a data integrity error.');
     }
 }
 

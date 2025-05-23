@@ -52,15 +52,15 @@
   }
 
   :global(.prose pre) {
-    @apply bg-gray-50 dark:bg-gray-900 rounded-lg p-4 overflow-x-auto;
+    @apply bg-gray-50 dark:bg-gray-800 rounded-lg p-4 overflow-x-auto;
   }
 
   :global(.prose code) {
-    @apply bg-gray-50 dark:bg-gray-900 px-1 py-0.5 rounded text-sm;
+    @apply bg-gray-50 dark:bg-gray-800 px-1 py-0.5 rounded text-sm;
   }
 
   :global(.prose pre code) {
-    @apply bg-transparent p-0;
+    @apply bg-transparent p-0 text-gray-800 dark:text-gray-200;
   }
 
   :global(.prose a) {
@@ -76,7 +76,7 @@
   }
 
   :global(.prose th) {
-    @apply border border-gray-200 dark:border-gray-700 px-4 py-2 bg-gray-50 dark:bg-gray-900;
+    @apply border border-gray-200 dark:border-gray-700 px-4 py-2 bg-gray-50 dark:bg-gray-800;
   }
 
   :global(.prose td) {

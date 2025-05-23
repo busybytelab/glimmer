@@ -60,6 +60,49 @@ func TestNewOpenAIPlatform(t *testing.T) {
 	}
 }
 
+func TestOpenAIPlatform_FilterModels(t *testing.T) {
+	skipIfNoOpenAI(t)
+
+	tests := []struct {
+		name     string
+		models   []*ModelInfo
+		cfg      OpenAIConfig
+		wantType PlatformType
+	}{
+		{
+			name: "default config",
+			models: []*ModelInfo{
+				{
+					Name:      "gpt-3.5-turbo",
+					SizeHuman: "100MB",
+				},
+			},
+			cfg: OpenAIConfig{
+				APIKey:        os.Getenv("OPENAI_API_KEY"),
+				AllowedModels: []string{"gpt-3.5-turbo", "gpt-4"},
+			},
+			wantType: OpenAIPlatform,
+		},
+		{
+			name: "custom allowed models",
+			cfg: OpenAIConfig{
+				APIKey:        os.Getenv("OPENAI_API_KEY"),
+				AllowedModels: []string{"gpt-3.5-turbo", "gpt-4"},
+			},
+			wantType: OpenAIPlatform,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			platform := newOpenAIPlatform(tt.cfg)
+			models, err := platform.Models()
+			require.NoError(t, err)
+			assert.NotEmpty(t, models)
+		})
+	}
+}
+
 func TestOpenAIPlatform_Chat(t *testing.T) {
 	// Skip if OpenAI tests are disabled or API key is not set
 	skipIfNoOpenAI(t)

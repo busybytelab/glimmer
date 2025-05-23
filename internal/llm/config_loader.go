@@ -24,7 +24,7 @@ func LoadConfig() *Config {
 	config := &Config{
 		Platform: OllamaPlatform,
 		OpenAI: OpenAIConfig{
-			Model:               "gpt-4o-mini",
+			Model:               "gpt-4.1-nano",
 			CostPerMillionToken: 0.15, // Approximate cost for GPT-4o mini
 			BaseURL:             "https://api.openai.com/v1",
 		},
@@ -59,6 +59,10 @@ func LoadConfig() *Config {
 
 	if model := os.Getenv("OPENAI_MODEL"); model != "" {
 		config.OpenAI.Model = model
+	}
+
+	if allowedModels := os.Getenv("OPENAI_ALLOWED_MODELS"); allowedModels != "" {
+		config.OpenAI.AllowedModels = strings.Split(allowedModels, ",")
 	}
 
 	if baseURL := os.Getenv("OPENAI_BASE_URL"); baseURL != "" {

@@ -15,6 +15,7 @@ type (
 		CostPerMillionToken float64 `json:"costPerMillionToken"`
 		Model               string  `json:"model"`
 		BaseURL             string  `json:"baseUrl"`
+		AllowedModels       []string `json:"allowedModels"` // List of models that are allowed to be used
 	}
 
 	// OllamaConfig holds configuration for Ollama services

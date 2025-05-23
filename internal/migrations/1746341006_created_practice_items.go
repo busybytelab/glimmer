@@ -260,9 +260,9 @@ func init() {
 			"type": "base",
 			"createRule": "@request.auth.id = account.owner",
 			"deleteRule": "@request.auth.id = account.owner",
-			"listRule": "@request.auth.id = account.owner || (@collection.learners.account ?= account && @collection.learners.user = @request.auth.id)",
+			"listRule": "@request.auth.id = account.owner || ((@collection.instructors.account ?= account && @collection.instructors.user ?= @request.auth.id) || (@collection.learners.account ?= account && @collection.learners.user ?= @request.auth.id))",
 			"updateRule": "@request.auth.id = account.owner",
-			"viewRule": "@request.auth.id = account.owner || (@collection.learners.account ?= account && @collection.learners.user = @request.auth.id)"
+			"viewRule": "@request.auth.id = account.owner || ((@collection.instructors.account ?= account && @collection.instructors.user ?= @request.auth.id) || (@collection.learners.account ?= account && @collection.learners.user ?= @request.auth.id))"
 		}`, domain.CollectionPracticeTopics, domain.CollectionAccounts, domain.CollectionPracticeItems, domain.CollectionPracticeItems)
 
 		collection := &core.Collection{}

@@ -3,6 +3,7 @@
     import QuestionHeader from './QuestionHeader.svelte';
     import QuestionAnswerInfo from './QuestionAnswerInfo.svelte';
     import QuestionInstructorInfo from './QuestionInstructorInfo.svelte';
+    import SaveButton from './SaveButton.svelte';
 
     export let item: PracticeItem;
     export let index: number;
@@ -12,10 +13,16 @@
     export let onAnswerChange: ((answer: string) => void) | undefined = undefined;
     export let printMode = false;
 
+    let selectedAnswer: string | null = null;
+
     function handleAnswerChange(event: Event) {
         const target = event.target as HTMLInputElement;
-        if (onAnswerChange) {
-            onAnswerChange(target.value);
+        selectedAnswer = target.value;
+    }
+
+    function handleSave() {
+        if (selectedAnswer && onAnswerChange) {
+            onAnswerChange(selectedAnswer);
         }
     }
     
@@ -45,7 +52,7 @@
                         value={option}
                         class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
                         {disabled}
-                        checked={item.user_answer === option}
+                        checked={selectedAnswer === option || item.user_answer === option}
                         on:change={handleAnswerChange}
                     />
                 {/if}
@@ -81,6 +88,13 @@
                 </p>
             {/if}
         </div>
+    {/if}
+
+    {#if !disabled && !showAnswer && !printMode}
+        <SaveButton
+            disabled={!selectedAnswer || selectedAnswer === item.user_answer}
+            onClick={handleSave}
+        />
     {/if}
 
     <QuestionAnswerInfo {item} {showAnswer} {showInstructorInfo} />
