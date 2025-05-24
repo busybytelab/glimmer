@@ -1,10 +1,12 @@
 package practice
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
 	"github.com/busybytelab.com/glimmer/internal/domain"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/rs/zerolog/log"
 )
@@ -33,6 +35,11 @@ func NewAnswerRoute() AnswerRoute {
 }
 
 func (r *answerRoute) HandleEvaluateAnswer(e *core.RequestEvent) error {
+	// Auth check
+	if e.Auth == nil {
+		return apis.NewUnauthorizedError("You must be logged in", nil)
+	}
+
 	// 1. Parse request JSON body
 	var req AnswerEvaluationRequest
 	if err := e.BindBody(&req); err != nil {
@@ -53,15 +60,22 @@ func (r *answerRoute) HandleEvaluateAnswer(e *core.RequestEvent) error {
 
 	// 3. Get correct answer from practice item
 	correctAnswer := practiceItem.GetString("correct_answer")
-	if correctAnswer == "" {
+	if correctAnswer == "" || correctAnswer == "null" {
 		return e.BadRequestError("Practice item has no correct answer", nil)
 	}
 
 	// 4. Evaluate answer
 	isCorrect := false
 	if req.UserAnswer != "" {
+		// Unmarshal the correct answer from JSON string
+		var correctAnswerStr string
+		if err := json.Unmarshal([]byte(correctAnswer), &correctAnswerStr); err != nil {
+			log.Error().Err(err).Str("correctAnswer", correctAnswer).Msg("Failed to unmarshal correct answer")
+			return e.InternalServerError("Invalid correct answer format", err)
+		}
+
 		normalizedUserAnswer := strings.TrimSpace(strings.ToLower(req.UserAnswer))
-		normalizedCorrectAnswer := strings.TrimSpace(strings.ToLower(correctAnswer))
+		normalizedCorrectAnswer := strings.TrimSpace(strings.ToLower(correctAnswerStr))
 		isCorrect = normalizedUserAnswer == normalizedCorrectAnswer
 	}
 
