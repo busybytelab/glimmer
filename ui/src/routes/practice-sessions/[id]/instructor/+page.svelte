@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import type { PracticeItem, PracticeResult, BreadcrumbItem } from '$lib/types';
+    import type { PracticeItem, PracticeResult, BreadcrumbItem, ReviewStatus } from '$lib/types';
     import { QuestionViewType } from '$lib/types';
     import QuestionFactory from '../../../../components/questions/QuestionFactory.svelte';
     import ViewSelector from '../../../../components/questions/ViewSelector.svelte';
@@ -142,6 +142,20 @@
         }
     }
 
+    async function handleReviewStatusChange(itemId: string, status: ReviewStatus) {
+        // Update the practice item in the local state
+        practiceItems = practiceItems.map(item => {
+            if (item.id === itemId) {
+                return {
+                    ...item,
+                    review_status: status,
+                    review_date: new Date().toISOString()
+                };
+            }
+            return item;
+        });
+    }
+
     // Actions for the toolbar
     $: sessionActions = [
         {
@@ -227,6 +241,7 @@
                                         viewType={selectedViewType}
                                         disabled={true}
                                         isInstructor={true}
+                                        onReviewStatusChange={handleReviewStatusChange}
                                     />
                                 </div>
                             {/each}

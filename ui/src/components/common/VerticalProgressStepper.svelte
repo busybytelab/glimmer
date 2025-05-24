@@ -1,7 +1,7 @@
 <script lang="ts">
     export let steps: number;
     export let currentStep: number = 0;
-    export let results: ('correct' | 'incorrect' | 'pending')[] = [];
+    export const results: ('correct' | 'incorrect' | 'pending')[] = [];
     export let onStepClick: (index: number) => void = () => {};
 </script>
 

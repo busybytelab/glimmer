@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/busybytelab.com/glimmer/internal/llm"
-	chatRoute "github.com/busybytelab.com/glimmer/internal/route/chat"
-	llmRoute "github.com/busybytelab.com/glimmer/internal/route/llm"
-	practiceRoute "github.com/busybytelab.com/glimmer/internal/route/practice"
+	chatRoutePkg "github.com/busybytelab.com/glimmer/internal/route/chat"
+	llmRoutePkg "github.com/busybytelab.com/glimmer/internal/route/llm"
+	practiceRoutePkg "github.com/busybytelab.com/glimmer/internal/route/practice"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -75,9 +75,10 @@ func (app *Application) setupCommands() {
 
 // configures the HTTP routes for the application
 func (app *Application) setupRoutes() {
-	llmRoutes := llmRoute.New(app.llmService)
-	practiceRoute := practiceRoute.NewPracticeSessionRoute(app.llmService)
-	chatRoutes := chatRoute.New(app.chatService)
+	llmRoutes := llmRoutePkg.New(app.llmService)
+	practiceRoute := practiceRoutePkg.NewPracticeSessionRoute(app.llmService)
+	answerRoute := practiceRoutePkg.NewAnswerRoute()
+	chatRoutes := chatRoutePkg.New(app.chatService)
 
 	app.pb.OnServe().BindFunc(func(e *core.ServeEvent) error {
 		// API routes - register these first for priority
@@ -86,6 +87,7 @@ func (app *Application) setupRoutes() {
 		e.Router.POST("/api/glimmer/v1/llm/chat", llmRoutes.HandleChatRequest).Bind(apis.RequireAuth())
 		e.Router.GET("/api/glimmer/v1/llm/info", llmRoutes.HandleInfoRequest).Bind(apis.RequireAuth())
 		e.Router.POST("/api/glimmer/v1/practice/session", practiceRoute.HandleCreatePracticeSession).Bind(apis.RequireAuth())
+		e.Router.POST("/api/glimmer/v1/practice/evaluate-answer", answerRoute.HandleEvaluateAnswer).Bind(apis.RequireAuth())
 
 		// Chat API endpoints
 		e.Router.POST("/api/glimmer/v1/chat", chatRoutes.HandleChatRequest).Bind(apis.RequireAuth())

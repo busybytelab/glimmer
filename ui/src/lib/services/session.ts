@@ -44,6 +44,36 @@ class SessionService {
         }
     }
 
+    async loadSessionForLearner(id: string): Promise<SessionWithExpandedData> {
+        try {
+            await this.ensureAuth();
+
+            const result = await pb.collection('practice_sessions').getOne(id, {
+                expand: 'learner,learner.user,practice_topic,practice_items',
+                fields: 'id,name,status,assigned_at,completed_at,generation_prompt,learner,practice_topic,practice_items,expand'
+            });
+
+            if (!result) {
+                throw new Error('Session not found');
+            }
+
+            // Filter practice items to only show approved or unreviewed items
+            if (result.expand?.practice_items) {
+                result.expand.practice_items = result.expand.practice_items.filter(
+                    item => !item.review_status || item.review_status === 'APPROVED'
+                );
+            }
+
+            return result as unknown as SessionWithExpandedData;
+        } catch (err) {
+            console.error('Failed to load session for learner:', err);
+            if (err instanceof Error) {
+                throw err;
+            }
+            throw new Error('Failed to load practice session');
+        }
+    }
+
     async checkUserRole(): Promise<boolean> {
         await this.ensureAuth();
 

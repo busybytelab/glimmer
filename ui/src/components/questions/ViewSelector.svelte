@@ -19,7 +19,8 @@
     const viewOptions = [
         { value: QuestionViewType.LEARNER, label: 'Learner View', icon: 'person' },
         { value: QuestionViewType.INSTRUCTOR, label: 'Instructor View', icon: 'school' },
-        { value: QuestionViewType.ANSWERED, label: 'Answered View', icon: 'check_circle' }
+        { value: QuestionViewType.ANSWERED, label: 'Answered View', icon: 'check_circle' },
+        { value: QuestionViewType.GENERATED, label: 'Review View', icon: 'rate_review' }
     ];
     
     // Filter options based on user role
