@@ -71,7 +71,7 @@
                 throw new Error('Session ID is required');
             }
 
-            session = await sessionService.loadSession(id);
+            session = await sessionService.loadSessionForLearner(id);
             
             if (!session) {
                 throw new Error('Session not found');

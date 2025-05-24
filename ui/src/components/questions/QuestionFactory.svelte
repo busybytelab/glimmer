@@ -1,11 +1,12 @@
 <script lang="ts">
-    import type { PracticeItem } from '$lib/types';
+    import type { PracticeItem, ReviewStatus } from '$lib/types';
     import { QuestionViewType, QuestionType } from '$lib/types';
     import MultipleChoiceQuestion from './MultipleChoiceQuestion.svelte';
     import TrueFalseQuestion from './TrueFalseQuestion.svelte';
     import ShortAnswerQuestion from './ShortAnswerQuestion.svelte';
     import FillInBlankQuestion from './FillInBlankQuestion.svelte';
     import HintSystem from './HintSystem.svelte';
+    import QuestionReviewControls from './QuestionReviewControls.svelte';
 
     export let item: PracticeItem;
     export let index: number;
@@ -16,10 +17,12 @@
     export let isInstructor: boolean = false;
     export let showHints: boolean = false;
     export let onHintRequested: ((level: number) => void) | undefined = undefined;
+    export let onReviewStatusChange: ((itemId: string, status: ReviewStatus) => void) | undefined = undefined;
 
     // Derived values based on view type
-    $: showAnswer = viewType === QuestionViewType.ANSWERED || viewType === QuestionViewType.INSTRUCTOR;
-    $: showInstructorInfo = viewType === QuestionViewType.INSTRUCTOR;
+    $: showAnswer = viewType === QuestionViewType.ANSWERED || viewType === QuestionViewType.INSTRUCTOR || viewType === QuestionViewType.GENERATED;
+    $: showInstructorInfo = viewType === QuestionViewType.INSTRUCTOR || viewType === QuestionViewType.GENERATED;
+    $: showReviewControls = viewType === QuestionViewType.GENERATED && isInstructor;
     
     // Controls whether the question can be interacted with
     // Disable in these cases:
@@ -93,4 +96,11 @@
             on:hintRequested={handleHintRequested} 
         />
     </div>
+{/if}
+
+{#if showReviewControls && onReviewStatusChange}
+    <QuestionReviewControls
+        {item}
+        onReviewStatusChange={onReviewStatusChange}
+    />
 {/if}
