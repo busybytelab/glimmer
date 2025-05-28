@@ -3,7 +3,7 @@ module github.com/busybytelab.com/glimmer
 go 1.24.2
 
 require (
-	github.com/ollama/ollama v0.7.0
+	github.com/ollama/ollama v0.7.1
 	github.com/openai/openai-go v0.1.0-beta.10
 	github.com/pocketbase/dbx v1.11.0
 	github.com/pocketbase/pocketbase v0.28.1
