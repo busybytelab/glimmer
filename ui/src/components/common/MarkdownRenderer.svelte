@@ -56,7 +56,7 @@
   }
 
   :global(.prose code) {
-    @apply bg-gray-50 dark:bg-gray-800 px-1 py-0.5 rounded text-sm;
+    @apply bg-gray-50 dark:bg-gray-800 px-1 py-0.5 rounded text-sm text-gray-800 dark:text-gray-200;
   }
 
   :global(.prose pre code) {

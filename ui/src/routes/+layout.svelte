@@ -7,6 +7,7 @@
   import SideNav from '../components/layout/SideNav.svelte';
   import LoadingSpinner from '../components/common/LoadingSpinner.svelte';
   import ErrorAlert from '../components/common/ErrorAlert.svelte';
+  import Toast from '../components/common/Toast.svelte';
   import { isPublicRoute } from '$lib/auth';
   import '../app.css';
 
@@ -195,4 +196,6 @@
       <slot />
     </div>
   {/if}
-{/if} 
+{/if}
+
+<Toast /> 

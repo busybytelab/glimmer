@@ -32,8 +32,7 @@ func setupTestApp(t *testing.T) *tests.TestApp {
 	require.NoError(t, err)
 
 	// Run migrations in the temporary directory
-	cmd := exec.Command("go", "run", "cmd/glimmer/main.go", "migrate", "--dir", pbDataDir)
-	cmd.Dir = filepath.Join(os.Getenv("GOPATH"), "src/github.com/busybytelab.com/glimmer")
+	cmd := exec.Command("go", "run", "../../../cmd/glimmer/main.go", "migrate", "--dir", pbDataDir)
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("Failed to run migrations: %v", err)
 	}
