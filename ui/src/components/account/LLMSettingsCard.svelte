@@ -4,6 +4,7 @@
     import FormField from '../common/FormField.svelte';
     import FormButton from '../common/FormButton.svelte';
     import ErrorAlert from '../common/ErrorAlert.svelte';
+    import { toast } from '$lib/stores/toast';
     
     // This would typically come from an API or store
     let apiSettings = {
@@ -13,7 +14,6 @@
     };
     
     export let isLoading = false;
-    let savedSuccessfully = false;
     
     const dispatch = createEventDispatcher();
     
@@ -33,13 +33,8 @@
             // Here you would actually save the settings to your backend
             console.log('Saving LLM settings:', apiSettings);
             
-            savedSuccessfully = true;
+            toast.success('Your LLM settings have been updated successfully!');
             isLoading = false;
-            
-            // Reset success message after 3 seconds
-            setTimeout(() => {
-                savedSuccessfully = false;
-            }, 3000);
             
             // Dispatch event for parent components
             dispatch('save', apiSettings);
@@ -55,85 +50,58 @@
         </p>
     </div>
     
-    {#if savedSuccessfully}
-        <div class="px-6 py-4 bg-green-50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-900/30">
-            <div class="flex items-center">
-                <svg class="h-5 w-5 text-green-500 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
-                <p class="ml-3 text-sm font-medium text-green-700 dark:text-green-400">
-                    Your LLM settings have been updated successfully!
-                </p>
-            </div>
-        </div>
-    {/if}
-    
     {#if $error}
         <div class="px-6 py-4">
             <ErrorAlert message={$error} />
         </div>
     {/if}
     
-    <div class="px-6 pb-6">
-        <form on:submit|preventDefault={handleSubmit}>
-            <div class="py-4">
-                <div class="grid grid-cols-6 gap-6">
-                    <!-- OpenAI API Key -->
-                    <FormField 
-                        id="openaiApiKey"
-                        label="OpenAI API Key"
-                        bind:value={apiSettings.openaiApiKey}
-                        type="password"
-                        placeholder="sk-..."
-                        disabled={isLoading}
-                        cols="col-span-6"
-                    />
-                    <p class="col-span-6 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Your OpenAI API key for GPT models. Leave empty to use system defaults.
-                    </p>
-                    
-                    <!-- Ollama Endpoint -->
-                    <FormField 
-                        id="ollamaEndpoint"
-                        label="Ollama Endpoint"
-                        bind:value={apiSettings.ollamaEndpoint}
-                        placeholder="http://localhost:11434"
-                        disabled={isLoading}
-                        cols="col-span-6 sm:col-span-4"
-                    />
-                    <p class="col-span-6 sm:col-span-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        The URL of your Ollama instance (leave default for local installation)
-                    </p>
-                    
-                    <!-- Default Model Dropdown -->
-                    <div class="col-span-6 sm:col-span-3">
-                        <label for="defaultModel" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Default Model
-                        </label>
-                        <select
-                            id="defaultModel"
-                            bind:value={apiSettings.defaultModel}
-                            disabled={isLoading}
-                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                        >
-                            {#each modelOptions as option}
-                                <option value={option.value}>{option.label}</option>
-                            {/each}
-                        </select>
-                        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                            The model that will be used by default for generating content
-                        </p>
-                    </div>
-                </div>
+    <div class="px-6 py-4">
+        <form on:submit|preventDefault={handleSubmit} class="space-y-4">
+            <FormField
+                id="openaiApiKey"
+                label="OpenAI API Key"
+                type="password"
+                bind:value={apiSettings.openaiApiKey}
+                placeholder="Enter your OpenAI API key"
+                disabled={isLoading}
+            />
+            
+            <FormField
+                id="ollamaEndpoint"
+                label="Ollama Endpoint"
+                type="text"
+                bind:value={apiSettings.ollamaEndpoint}
+                placeholder="Enter Ollama server URL"
+                disabled={isLoading}
+            />
+            
+            <div class="mb-4">
+                <label for="defaultModel" class="block text-sm font-medium text-gray-700 mb-1 text-left">
+                    Default Model
+                </label>
+                <select
+                    id="defaultModel"
+                    bind:value={apiSettings.defaultModel}
+                    disabled={isLoading}
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm
+                    focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+                    dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600
+                    disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 disabled:shadow-none"
+                >
+                    {#each modelOptions as option}
+                        <option value={option.value}>{option.label}</option>
+                    {/each}
+                </select>
             </div>
             
-            <div class="flex justify-end mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <FormButton 
-                    type="submit" 
-                    {isLoading}
+            <div class="flex justify-end">
+                <FormButton
+                    type="submit"
+                    isLoading={isLoading}
                     loadingText="Saving..."
                 >
-                    Save
+                    Save Settings
                 </FormButton>
             </div>
         </form>
