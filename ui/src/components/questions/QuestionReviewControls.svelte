@@ -3,7 +3,6 @@
     import { practiceItemService } from '$lib/services/practiceItem';
     import PracticeItemEditForm from './PracticeItemEditForm.svelte';
     import { toast } from '$lib/stores/toast';
-
     /**
      * The practice item to be reviewed
      */

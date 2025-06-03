@@ -3,10 +3,10 @@ module github.com/busybytelab.com/glimmer
 go 1.24.2
 
 require (
-	github.com/ollama/ollama v0.7.0
-	github.com/openai/openai-go v0.1.0-beta.10
+	github.com/ollama/ollama v0.9.0
+	github.com/openai/openai-go v1.3.0
 	github.com/pocketbase/dbx v1.11.0
-	github.com/pocketbase/pocketbase v0.28.1
+	github.com/pocketbase/pocketbase v0.28.2
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
@@ -47,10 +47,10 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	modernc.org/libc v1.62.1 // indirect
+	modernc.org/libc v1.65.7 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.10.0 // indirect
-	modernc.org/sqlite v1.37.0 // indirect
+	modernc.org/memory v1.11.0 // indirect
+	modernc.org/sqlite v1.37.1 // indirect
 )
 
 replace modernc.org/libc => modernc.org/libc v1.62.1
