@@ -4,6 +4,81 @@ description: "Glimmer Test Seed Data - v1"
 db: "pb_data/data.db"
 default_password_hash: "$2a$10$UiEpp7dQEwBOXiF.0fbiDe9bxJunArer9B7VhEJk7WvG9g3iaifQe|mX1BMz3d4Bi40w9s7tImE1zvQ314591c3f53bdQR0KwoM888u8"
 
+# Define the practice session default prompt extension as an anchor
+practice_session_default_prompt_extension: &practice_session_default_prompt_extension |-
+  
+  INSTRUCTIONS:
+  The practice items should be returned ONLY in valid JSON format, starting with '{' and ending with '}'. Do not include any text before or after the JSON object.
+
+  TARGET AUDIENCE:
+  - Age Range: Grades 7-9 (approximately 12-15 years old)
+  - Language: Age-appropriate, engaging, and encouraging
+  - Style: Fun, creative, and educational
+
+  JSON STRUCTURE:
+  {
+    "items": [
+      {
+        // Each item object follows the structure below
+      }
+    ]
+  }
+
+  ITEM FIELDS:
+
+  REQUIRED FIELDS (Must be included for every item):
+  - question_text: string
+    • The question text itself
+    • Must be clear and age-appropriate
+    • Should be engaging and relevant to the topic
+
+  - question_type: string
+    • Must be exactly one of: "multiple_choice", "true_false", "short_answer", "fill_in_blank"
+    • Determines the format of the answer and available fields
+
+  - correct_answer: string
+    • The correct answer as a string
+    • Format depends on question_type:
+      - multiple_choice: One of the options
+      - true_false: "True" or "False"
+      - short_answer: The expected answer
+      - fill_in_blank: The word or phrase to fill in
+
+  - explanation: string
+    • A detailed, teacher-like explanation
+    • Must be fun and engaging
+    • Should include:
+      - Clear reasoning
+      - Relevant examples or analogies
+      - Simple formulas or rules when applicable
+      - Connection to real-world applications
+      - Positive and encouraging tone
+
+  CONDITIONAL FIELDS (Required based on question_type):
+  - options: string[]
+    • Required for: multiple_choice
+    • Array of possible answer strings
+    • Must include the correct_answer
+    • Should include common misconceptions as distractors
+
+  RECOMMENDED FIELDS (Highly encouraged):
+  - difficulty_level: string
+    • Must be exactly one of: "easy", "medium", "hard"
+    • Should match the target age group's capabilities
+
+  - hints: string[]
+    • Array of progressive hints
+    • Should guide without giving away the answer
+    • Start general, become more specific
+
+  - explanation_for_incorrect: object
+    • Map of incorrect answers to explanations in the format { "incorrect_answer": "explanation" }
+    • The incorrect_answer and explanation should be a string. The incorrect_answer value must be the same value used for multiple_choice or true_false question types.
+    • All the incorrect_answers should be unique.
+    • Required for multiple_choice or true_false question types.
+    • If the question type is NOT multiple_choice or true_false, this field should be an null object.
+    • Should be encouraging and educational
+
 collections:
   # Users
   - name: "users"
@@ -68,77 +143,7 @@ collections:
         ollama_server_url: "http://localhost:11434"
         default_llm_model: "gemma3:4b"
         default_language: "en"
-        practice_session_default_prompt_extension: |-
-          
-          INSTRUCTIONS:
-          The practice items should be returned ONLY in valid JSON format, starting with '{' and ending with '}'. Do not include any text before or after the JSON object.
-
-          TARGET AUDIENCE:
-          - Age Range: Grades 3-6 (approximately 8-12 years old)
-          - Language: Age-appropriate, engaging, and encouraging
-          - Style: Fun, creative, and educational
-
-          JSON STRUCTURE:
-          {
-            "items": [
-              {
-                // Each item object follows the structure below
-              }
-            ]
-          }
-
-          ITEM FIELDS:
-
-          REQUIRED FIELDS (Must be included for every item):
-          - question_text: string
-            • The question text itself
-            • Must be clear and age-appropriate
-            • Should be engaging and relevant to the topic
-
-          - question_type: string
-            • Must be exactly one of: "multiple_choice", "true_false", "short_answer", "fill_in_blank"
-            • Determines the format of the answer and available fields
-
-          - correct_answer: string
-            • The correct answer as a string
-            • Format depends on question_type:
-              - multiple_choice: One of the options
-              - true_false: "True" or "False"
-              - short_answer: The expected answer
-              - fill_in_blank: The word or phrase to fill in
-
-          - explanation: string
-            • A detailed, teacher-like explanation
-            • Must be fun and engaging
-            • Should include:
-              - Clear reasoning
-              - Relevant examples or analogies
-              - Simple formulas or rules when applicable
-              - Connection to real-world applications
-              - Positive and encouraging tone
-
-          CONDITIONAL FIELDS (Required based on question_type):
-          - options: string[]
-            • Required for: multiple_choice
-            • Array of possible answer strings
-            • Must include the correct_answer
-            • Should include common misconceptions as distractors
-
-          RECOMMENDED FIELDS (Highly encouraged):
-          - difficulty_level: string
-            • Must be exactly one of: "easy", "medium", "hard"
-            • Should match the target age group's capabilities
-
-          - hints: string[]
-            • Array of progressive hints
-            • Should guide without giving away the answer
-            • Start general, become more specific
-
-          - explanation_for_incorrect: object
-            • Map of incorrect answers to explanations
-            • Required for multiple_choice
-            • Should be encouraging and educational
-            • Format: { "incorrect_answer": "explanation" }
+        practice_session_default_prompt_extension: *practice_session_default_prompt_extension
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
@@ -149,77 +154,7 @@ collections:
         ollama_server_url: "http://localhost:11434"
         default_llm_model: "gemma3:4b"
         default_language: "en"
-        practice_session_default_prompt_extension: |-
-          
-          INSTRUCTIONS:
-          The practice items should be returned ONLY in valid JSON format, starting with '{' and ending with '}'. Do not include any text before or after the JSON object.
-
-          TARGET AUDIENCE:
-          - Age Range: Grades 7-9 (approximately 12-15 years old)
-          - Language: Age-appropriate, engaging, and encouraging
-          - Style: Fun, creative, and educational
-
-          JSON STRUCTURE:
-          {
-            "items": [
-              {
-                // Each item object follows the structure below
-              }
-            ]
-          }
-
-          ITEM FIELDS:
-
-          REQUIRED FIELDS (Must be included for every item):
-          - question_text: string
-            • The question text itself
-            • Must be clear and age-appropriate
-            • Should be engaging and relevant to the topic
-
-          - question_type: string
-            • Must be exactly one of: "multiple_choice", "true_false", "short_answer", "fill_in_blank"
-            • Determines the format of the answer and available fields
-
-          - correct_answer: string
-            • The correct answer as a string
-            • Format depends on question_type:
-              - multiple_choice: One of the options
-              - true_false: "True" or "False"
-              - short_answer: The expected answer
-              - fill_in_blank: The word or phrase to fill in
-
-          - explanation: string
-            • A detailed, teacher-like explanation
-            • Must be fun and engaging
-            • Should include:
-              - Clear reasoning
-              - Relevant examples or analogies
-              - Simple formulas or rules when applicable
-              - Connection to real-world applications
-              - Positive and encouraging tone
-
-          CONDITIONAL FIELDS (Required based on question_type):
-          - options: string[]
-            • Required for: multiple_choice
-            • Array of possible answer strings
-            • Must include the correct_answer
-            • Should include common misconceptions as distractors
-
-          RECOMMENDED FIELDS (Highly encouraged):
-          - difficulty_level: string
-            • Must be exactly one of: "easy", "medium", "hard"
-            • Should match the target age group's capabilities
-
-          - hints: string[]
-            • Array of progressive hints
-            • Should guide without giving away the answer
-            • Start general, become more specific
-
-          - explanation_for_incorrect: object
-            • Map of incorrect answers to explanations
-            • Required for multiple_choice
-            • Should be encouraging and educational
-            • Format: { "incorrect_answer": "explanation" }
+        practice_session_default_prompt_extension: *practice_session_default_prompt_extension
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 

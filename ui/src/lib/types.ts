@@ -103,16 +103,16 @@ export interface PracticeItem extends PocketBaseRecord {
     options?: Record<string, any>;
     
     /** The correct answer(s) for the question */
-    correct_answer: Record<string, any>;
+    correct_answer: string;
     
     /** Explanation of why the answer is correct */
     explanation: string;
     
     /** Specific explanations for incorrect answer choices */
-    explanation_for_incorrect?: Record<string, any>;
+    explanation_for_incorrect?: Record<string, string>;
     
     /** Optional hints to help learners */
-    hints?: Record<string, any>;
+    hints?: string[];
     
     /** The difficulty level of the question */
     difficulty_level?: string;

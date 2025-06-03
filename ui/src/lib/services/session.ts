@@ -26,7 +26,7 @@ class SessionService {
             await this.ensureAuth();
 
             const result = await pb.collection('practice_sessions').getOne(id, {
-                expand: 'learner,learner.user,practice_topic,practice_items',
+                expand: 'learner,learner.user,practice_topic,practice_items,practice_items.reviewer,practice_items.reviewer.user',
                 fields: 'id,name,status,assigned_at,completed_at,generation_prompt,learner,practice_topic,practice_items,expand'
             });
 
