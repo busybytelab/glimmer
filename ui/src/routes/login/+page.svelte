@@ -169,6 +169,14 @@
 					{/if}
 				</button>
 			</div>
+			<div class="text-center text-sm">
+				<p class="text-gray-600 dark:text-gray-400">
+					Don't have an account?
+					<a href="/register" class="font-medium text-secondary hover:text-blue-600 focus:outline-none focus:underline dark:text-blue-400">
+						Create one
+					</a>
+				</p>
+			</div>
 		</form>
 	</div>
 </div>

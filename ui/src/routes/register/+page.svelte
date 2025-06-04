@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { error } from '$lib/stores';
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
 	import ErrorAlert from '../../components/common/ErrorAlert.svelte';
 	import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
 	import { userService } from '$lib/services/user';
@@ -23,7 +22,6 @@
 
 	let isSubmitting = false;
 	let formErrors: Partial<Record<keyof RegistrationForm, string>> = {};
-	let returnUrl: string | null = null;
 
 	function validateForm(): boolean {
 		formErrors = {};
@@ -64,8 +62,8 @@
 
 		try {
 			await userService.register(form);
-			// Redirect to login page with success message
-			window.location.href = '/login?registered=true';
+			// Redirect to verify-email page with email parameter
+			window.location.href = `/verify-email?email=${encodeURIComponent(form.email)}`;
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : 'Registration failed. Please try again.';
 			error.set(errorMessage);
@@ -76,8 +74,6 @@
 	}
 
 	onMount(() => {
-		// Get returnUrl from query parameters
-		returnUrl = $page.url.searchParams.get('returnUrl');
 		// Clear any existing errors when component mounts
 		error.set(null);
 	});

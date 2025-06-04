@@ -131,6 +131,7 @@ func (app *Application) setupRoutes() {
 
 // register PocketBase collections and hooks
 func (app *Application) setupCollectionsAndHooks() {
+	app.setupUserHooks()
 }
 
 // initialize the LLM service
