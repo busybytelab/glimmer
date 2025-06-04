@@ -55,6 +55,7 @@ func (app *Application) Initialize() error {
 	app.setupCollectionsAndHooks()
 	app.setupCommands()
 	app.setupGracefulShutdown()
+	app.configureAppSettings()
 	return nil
 }
 

@@ -253,4 +253,10 @@ export interface BreadcrumbItem {
     label: string;
     href?: string;
     icon?: string;
+}
+
+export interface RegistrationForm {
+	email: string;
+	password: string;
+	passwordConfirm: string;
 } 

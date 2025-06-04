@@ -53,7 +53,7 @@ export function clearAuthToken(): void {
 }
 
 // Public routes that don't require authentication
-export const PUBLIC_ROUTES = ['/login', '/forgot-password', '/reset-password'] as const;
+export const PUBLIC_ROUTES = ['/login', '/forgot-password', '/reset-password', '/register'] as const;
 
 // Type for public routes
 export type PublicRoute = typeof PUBLIC_ROUTES[number];
