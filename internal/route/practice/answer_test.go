@@ -3,6 +3,7 @@ package practice
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -31,9 +32,33 @@ func setupTestApp(t *testing.T) *tests.TestApp {
 	err = os.MkdirAll(pbDataDir, 0755)
 	require.NoError(t, err)
 
+	// Get the project root directory by looking for go.mod
+	projectRoot, err := findProjectRoot()
+	require.NoError(t, err)
+
+	// Set environment variables for the test
+	os.Setenv("DB_DISABLE_AUTO_MIGRATE", "false")
+	os.Setenv("POCKETBASE_DATA_DIR", pbDataDir)
+	os.Setenv("APP_NAME", "TestApp")
+	os.Setenv("APP_URL", "http://localhost")
+	os.Setenv("SENDER_ADDRESS", "test@example.com")
+	os.Setenv("SENDER_NAME", "Test Sender")
+	defer os.Unsetenv("DB_DISABLE_AUTO_MIGRATE")
+	defer os.Unsetenv("POCKETBASE_DATA_DIR")
+	defer os.Unsetenv("APP_NAME")
+	defer os.Unsetenv("APP_URL")
+	defer os.Unsetenv("SENDER_ADDRESS")
+	defer os.Unsetenv("SENDER_NAME")
+
 	// Run migrations in the temporary directory
-	cmd := exec.Command("go", "run", "../../../cmd/glimmer/main.go", "migrate", "--dir", pbDataDir)
+	cmd := exec.Command("go", "run", filepath.Join(projectRoot, "cmd/glimmer/main.go"), "migrate", "--dir", pbDataDir)
+	cmd.Env = append(os.Environ(), "DB_DISABLE_AUTO_MIGRATE=false")
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
+		t.Logf("Migration stdout: %s", stdout.String())
+		t.Logf("Migration stderr: %s", stderr.String())
 		t.Fatalf("Failed to run migrations: %v", err)
 	}
 
@@ -45,6 +70,30 @@ func setupTestApp(t *testing.T) *tests.TestApp {
 	})
 
 	return app
+}
+
+// findProjectRoot finds the project root directory by looking for go.mod
+func findProjectRoot() (string, error) {
+	// Start from the current directory
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	// Keep going up until we find go.mod
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir, nil
+		}
+
+		// Go up one directory
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			// We've reached the root of the filesystem
+			return "", fmt.Errorf("could not find project root (go.mod)")
+		}
+		dir = parent
+	}
 }
 
 func TestHandleEvaluateAnswer(t *testing.T) {
