@@ -1,29 +1,27 @@
 <script lang="ts">
-	import { isAuthenticated, error } from '$lib/stores';
-	import pb from '$lib/pocketbase';
+	import { error } from '$lib/stores';
 	import { onMount } from 'svelte';
-	import { saveAuthToken } from '$lib/auth';
-	import { page } from '$app/stores';
 	import ErrorAlert from '../../components/common/ErrorAlert.svelte';
 	import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
+	import { userService } from '$lib/services/user';
+
 	// Use the public URL instead of importing the asset
 	const glimmerLogoUrl = '/glimmer.svg';
 
-	interface LoginForm {
+	interface RegistrationForm {
 		email: string;
 		password: string;
-		rememberMe: boolean;
+		passwordConfirm: string;
 	}
 
-	let form: LoginForm = {
+	let form: RegistrationForm = {
 		email: '',
 		password: '',
-		rememberMe: false
+		passwordConfirm: ''
 	};
 
 	let isSubmitting = false;
-	let formErrors: Partial<Record<keyof LoginForm, string>> = {};
-	let returnUrl: string | null = null;
+	let formErrors: Partial<Record<keyof RegistrationForm, string>> = {};
 
 	function validateForm(): boolean {
 		formErrors = {};
@@ -45,6 +43,14 @@
 			isValid = false;
 		}
 
+		if (!form.passwordConfirm) {
+			formErrors.passwordConfirm = 'Please confirm your password';
+			isValid = false;
+		} else if (form.password !== form.passwordConfirm) {
+			formErrors.passwordConfirm = 'Passwords do not match';
+			isValid = false;
+		}
+
 		return isValid;
 	}
 
@@ -55,16 +61,11 @@
 		error.set(null);
 
 		try {
-			await pb.collection('users').authWithPassword(form.email, form.password);
-			// Use the centralized auth utility to save the token if rememberMe is checked
-			saveAuthToken(form.rememberMe);
-			isAuthenticated.set(true);
-			
-			// Redirect to returnUrl if it exists, otherwise to dashboard
-			const redirectPath = returnUrl ? decodeURIComponent(returnUrl) : '/dashboard';
-			window.location.href = redirectPath;
+			await userService.register(form);
+			// Redirect to verify-email page with email parameter
+			window.location.href = `/verify-email?email=${encodeURIComponent(form.email)}`;
 		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
+			const errorMessage = err instanceof Error ? err.message : 'Registration failed. Please try again.';
 			error.set(errorMessage);
 			formErrors.email = errorMessage;
 		} finally {
@@ -73,8 +74,6 @@
 	}
 
 	onMount(() => {
-		// Get returnUrl from query parameters
-		returnUrl = $page.url.searchParams.get('returnUrl');
 		// Clear any existing errors when component mounts
 		error.set(null);
 	});
@@ -87,7 +86,7 @@
 				<img src={glimmerLogoUrl} alt="Glimmer Logo" class="h-10 w-10 mr-3" />
 				<h1 class="text-2xl font-bold text-primary dark:text-white">Glimmer</h1>
 			</div>
-			<p class="mt-1 text-gray-600 dark:text-gray-300 text-base">Learning Helper for Kids</p>
+			<p class="mt-1 text-gray-600 dark:text-gray-300 text-base">Create your account</p>
 		</div>
 		<form on:submit|preventDefault={handleSubmit} class="space-y-4">
 			{#if $error}
@@ -119,10 +118,10 @@
 						id="password"
 						name="password"
 						type="password"
-						autocomplete="current-password"
+						autocomplete="new-password"
 						required
 						bind:value={form.password}
-						class="block w-full px-3 py-2 rounded-b-md border {formErrors.password ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm"
+						class="block w-full px-3 py-2 border {formErrors.password ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm"
 						placeholder="Password"
 						disabled={isSubmitting}
 						aria-invalid={!!formErrors.password}
@@ -132,25 +131,24 @@
 						<p id="password-error" class="mt-1 text-xs text-red-600 dark:text-red-300">{formErrors.password}</p>
 					{/if}
 				</div>
-			</div>
-			<div class="flex items-center justify-between">
-				<div class="flex items-center">
+				<div>
+					<label for="passwordConfirm" class="sr-only">Confirm Password</label>
 					<input
-						id="remember-me"
-						name="remember-me"
-						type="checkbox"
-						bind:checked={form.rememberMe}
-						class="h-4 w-4 text-secondary focus:ring-secondary border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+						id="passwordConfirm"
+						name="passwordConfirm"
+						type="password"
+						autocomplete="new-password"
+						required
+						bind:value={form.passwordConfirm}
+						class="block w-full px-3 py-2 rounded-b-md border {formErrors.passwordConfirm ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm"
+						placeholder="Confirm Password"
 						disabled={isSubmitting}
+						aria-invalid={!!formErrors.passwordConfirm}
+						aria-describedby={formErrors.passwordConfirm ? 'password-confirm-error' : undefined}
 					/>
-					<label for="remember-me" class="ml-2 block text-xs text-gray-900 dark:text-gray-200">
-						Remember me
-					</label>
-				</div>
-				<div class="text-xs">
-					<a href="/forgot-password" class="font-medium text-secondary hover:text-secondary focus:outline-none focus:underline dark:text-blue-400">
-						Forgot your password?
-					</a>
+					{#if formErrors.passwordConfirm}
+						<p id="password-confirm-error" class="mt-1 text-xs text-red-600 dark:text-red-300">{formErrors.passwordConfirm}</p>
+					{/if}
 				</div>
 			</div>
 			<div>
@@ -163,17 +161,17 @@
 						<div class="w-5 h-5 mr-3">
 							<LoadingSpinner size="sm" color="white" />
 						</div>
-						Signing in...
+						Creating account...
 					{:else}
-						Sign in
+						Create account
 					{/if}
 				</button>
 			</div>
 			<div class="text-center text-sm">
 				<p class="text-gray-600 dark:text-gray-400">
-					Don't have an account?
-					<a href="/register" class="font-medium text-secondary hover:text-blue-600 focus:outline-none focus:underline dark:text-blue-400">
-						Create one
+					Already have an account?
+					<a href="/login" class="font-medium text-secondary hover:text-blue-600 focus:outline-none focus:underline dark:text-blue-400">
+						Sign in
 					</a>
 				</p>
 			</div>

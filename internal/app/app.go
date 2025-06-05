@@ -55,6 +55,7 @@ func (app *Application) Initialize() error {
 	app.setupCollectionsAndHooks()
 	app.setupCommands()
 	app.setupGracefulShutdown()
+	app.configureAppSettings()
 	return nil
 }
 
@@ -130,6 +131,7 @@ func (app *Application) setupRoutes() {
 
 // register PocketBase collections and hooks
 func (app *Application) setupCollectionsAndHooks() {
+	app.setupUserHooks()
 }
 
 // initialize the LLM service
