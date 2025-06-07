@@ -4,7 +4,6 @@ package domain
 const (
 	CollectionLLMResponses           = "llm_responses"
 	CollectionAccounts               = "accounts"
-	CollectionInstructors            = "instructors"
 	CollectionLearners               = "learners"
 	CollectionPracticeTopics         = "practice_topics"
 	CollectionPracticeItems          = "practice_items"

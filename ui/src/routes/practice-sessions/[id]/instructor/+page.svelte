@@ -21,7 +21,7 @@
     let error: string | null = null;
     let printMode = false;
     let breadcrumbItems: BreadcrumbItem[] = [];
-    let selectedViewType: QuestionViewType = QuestionViewType.INSTRUCTOR;
+    let selectedViewType: QuestionViewType = QuestionViewType.PARENT;
 
     onMount(async () => {
         try {
@@ -261,11 +261,11 @@
             <h1 class="text-3xl font-bold mb-2">{session.name || 'Practice Session'}</h1>
             
             {#if session.expand?.practice_topic}
-                <h2 class="text-xl mb-1">Topic: {session.expand.practice_topic.name}</h2>
+                <h2 class="text-xl mb-1">Topic: {session.expand?.practice_topic.name}</h2>
             {/if}
             
             {#if session.expand?.learner}
-                <p class="text-lg">Learner: {session.expand.learner.expand?.user?.name || 'Unknown Learner'}</p>
+                <p class="text-lg">Learner: {session.expand?.learner?.nickname || 'Unknown Learner'}</p>
             {/if}
         </div>
 

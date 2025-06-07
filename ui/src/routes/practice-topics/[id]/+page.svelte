@@ -8,7 +8,6 @@
     import Breadcrumbs from '../../../components/common/Breadcrumbs.svelte';
     import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
-    import { rolesService } from '$lib/services/roles';
 
     // Define the breadcrumb item type
     type BreadcrumbItem = {
@@ -23,7 +22,6 @@
     let error: string | null = null;
     let topicId: string | null = null;
     let breadcrumbItems: BreadcrumbItem[] = [];
-    let isInstructor = false;
 
     onMount(async () => {
         try {
@@ -34,7 +32,6 @@
             if (topicId) {
                 await loadTopic(topicId);
                 await loadPastPractices(topicId);
-                isInstructor = await rolesService.isInstructor();
                 updateBreadcrumbs();
             } else {
                 error = 'Invalid topic ID';
@@ -119,10 +116,7 @@
                 return;
             }
 
-            if (!isInstructor) {
-                error = 'Only instructors can create practice sessions';
-                return;
-            }
+           //TODO: protect this page with extra pin check to prevent learner creating practices.
 
             goto(`/practice-topics/${topic.id}/create-session`);
         } catch (err) {
@@ -156,13 +150,13 @@
             variant: 'secondary' as const,
             onClick: goBack
         },
-        ...(isInstructor ? [{
+        {
             id: 'edit',
             label: 'Edit',
             icon: 'edit',
             variant: 'primary' as const,
             onClick: editTopic
-        }] : [])
+        }
     ];
 </script>
 
@@ -233,20 +227,18 @@
                 </div>
             </div>
             
-            {#if isInstructor}
-                <div class="mt-8 flex justify-center">
-                    <button
-                        type="button"
-                        class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-all duration-200"
-                        on:click={startPractice}
-                    >
-                        <svg class="h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                        </svg>
-                        Create Practice Session
-                    </button>
-                </div>
-            {/if}
+            <div class="mt-8 flex justify-center">
+                <button
+                    type="button"
+                    class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-all duration-200"
+                    on:click={startPractice}
+                >
+                    <svg class="h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                    </svg>
+                    Create Practice Session
+                </button>
+            </div>
         </div>
             
         <!-- Past Practice Sessions Section -->

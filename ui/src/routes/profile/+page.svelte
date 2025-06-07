@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { user, error } from '$lib/stores';
+	import { error } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import EditProfile from '../../components/settings/EditProfile.svelte';
-	import pb from '$lib/pocketbase';
-
+	import { userService } from '$lib/services/user';
 	let isLoading = false;
 	let userProfile: { name: string; email: string } | null = null;
 	let savedSuccessfully = false;
@@ -17,15 +16,15 @@
 		error.set(null);
 
 		try {
-			const currentUser = $user;
+			const currentUser = await userService.getCurrentUser();
 			if (!currentUser) {
 				throw new Error('User not found');
 			}
 
 			// Here we would fetch additional profile data if needed
 			userProfile = {
-				name: currentUser.user?.name || '',
-				email: currentUser.user?.email || '',
+				name: currentUser.name || '',
+				email: currentUser.email || '',
 			};
 		} catch (err) {
 			console.error('Error fetching user profile:', err);
@@ -42,20 +41,19 @@
 
 		try {
 			const { name } = event.detail;
-			const currentUser = $user;
+			const currentUser = await userService.getCurrentUser();
 			
-			if (!currentUser || !currentUser.user) {
+			if (!currentUser) {
 				throw new Error('User not found');
 			}
 			
 			// Update user in PocketBase
-			const userId = currentUser.user.id;
-			await pb.collection('users').update(userId, { name });
+			await userService.updateUser(currentUser);
 			
 			// Update local user data
-			if (currentUser.user) {
-				currentUser.user.name = name;
-				user.set(currentUser);
+			if (currentUser) {
+				currentUser.name = name;
+				await userService.updateUser(currentUser);
 			}
 			
 			// Update local profile

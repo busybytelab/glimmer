@@ -4,7 +4,7 @@
 
     export let topic: PracticeTopic;
     export let href: string = '';
-    export let isInstructor: boolean = false;
+    export let showEditButton: boolean = true; // TODO: need to check usage
 
     function handleCardClick() {
         goto(href);
@@ -25,7 +25,7 @@
     aria-label={`View ${topic.name}`}
 >
     <!-- Edit button positioned in the top-right corner -->
-    {#if isInstructor}
+    {#if showEditButton}
         <button 
             class="absolute top-2 right-2 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full z-10" 
             on:click={handleEditClick}

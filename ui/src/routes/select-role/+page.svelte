@@ -23,7 +23,7 @@
     });
 
     function handleLearnerSelect(learnerId: string) {
-        goto(`/learner/${learnerId}/home`);
+        goto(`/learners/${learnerId}/home`);
     }
 
     function handleAccountSettings() {

@@ -198,12 +198,7 @@ export interface PracticeSession extends PocketBaseRecord {
     practice_items: string;
     score?: number;
     expand?: {
-        learner?: {
-            id: string;
-            expand?: {
-                user?: User;
-            };
-        };
+        learner?: Learner;
         practice_topic?: {
             id: string;
             name: string;

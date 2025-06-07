@@ -1,14 +1,9 @@
 import pb from '$lib/pocketbase';
-import type { PracticeSession, PracticeItem, User } from '$lib/types';
+import type { PracticeSession, PracticeItem, Learner } from '$lib/types';
 
 export interface SessionWithExpandedData extends PracticeSession {
     expand?: {
-        learner?: { 
-            id: string; 
-            expand?: {
-                user?: User;
-            }
-        };
+        learner?: Learner;
         practice_topic?: { id: string; name: string };
         practice_items?: PracticeItem[];
     };
@@ -26,7 +21,7 @@ class SessionService {
             await this.ensureAuth();
 
             const result = await pb.collection('practice_sessions').getOne(id, {
-                expand: 'learner,learner.user,practice_topic,practice_items,practice_items.reviewer,practice_items.reviewer.user',
+                expand: 'learner,practice_topic,practice_items',
                 fields: 'id,name,status,assigned_at,completed_at,generation_prompt,learner,practice_topic,practice_items,expand'
             });
 
@@ -71,27 +66,6 @@ class SessionService {
                 throw err;
             }
             throw new Error('Failed to load practice session');
-        }
-    }
-
-    async checkUserRole(): Promise<boolean> {
-        await this.ensureAuth();
-
-        try {
-            const authData = pb.authStore.model;
-            if (!authData) {
-                throw new Error('User not authenticated');
-            }
-
-            try {
-                const instructorRecord = await pb.collection('instructors').getFirstListItem(`user="${authData.id}"`);
-                return !!instructorRecord;
-            } catch (err) {
-                return false;
-            }
-        } catch (err) {
-            console.error('Failed to check user role:', err);
-            return false;
         }
     }
 

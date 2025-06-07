@@ -20,7 +20,7 @@
 
     {#if session.expand?.learner}
         <p class="text-gray-600 dark:text-gray-300 mb-4">
-            Learner: {session.expand.learner.expand?.user?.name || 'Unknown Learner'}
+            Learner: {session.expand?.learner?.nickname || 'Unknown Learner'}
         </p>
     {/if}
 </div> 

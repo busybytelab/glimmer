@@ -2,12 +2,11 @@
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import type { PracticeTopic } from '$lib/types';
-    import pb from '$lib/pocketbase';
-    import PracticeTopicCard from '$components/practice-topics/PracticeTopicCard.svelte';
-    import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
-    import ErrorAlert from '$components/common/ErrorAlert.svelte';
-    import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
-
+    import PracticeTopicCard from '../../../../components/practice-topics/PracticeTopicCard.svelte';
+    import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
+    import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
+    import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
+    import { topicsService } from '$lib/services/topics';
     // Define the breadcrumb item type
     type BreadcrumbItem = {
         label: string;
@@ -18,7 +17,7 @@
     let topics: PracticeTopic[] = [];
     let loading = true;
     let error: string | null = null;
-    let learnerId: string | null = null;
+    let learnerId: string = '';
     let breadcrumbItems: BreadcrumbItem[] = [];
 
     onMount(async () => {
@@ -44,30 +43,7 @@
         try {
             loading = true;
             error = null;
-            const result = await pb.collection('practice_topics').getFullList({
-                sort: '-created',
-                expand: 'account'
-            });
-            
-            // Make sure tags are properly formatted as arrays
-            topics = result.map((topic: any) => {
-                if (topic.tags && !Array.isArray(topic.tags)) {
-                    try {
-                        if (typeof topic.tags === 'string' && topic.tags.trim().startsWith('[')) {
-                            topic.tags = JSON.parse(topic.tags);
-                        } else if (typeof topic.tags === 'string') {
-                            topic.tags = topic.tags.split(',').map((tag: string) => tag.trim()).filter(Boolean);
-                        }
-                    } catch (e) {
-                        console.error('Error parsing tags:', e);
-                        topic.tags = [];
-                    }
-                } else if (!topic.tags) {
-                    topic.tags = [];
-                }
-                
-                return topic;
-            }) as unknown as PracticeTopic[];
+            return await topicsService.getTopics();
         } catch (err) {
             console.error('Failed to load topics:', err);
             error = 'Failed to load practice topics';
@@ -125,7 +101,7 @@
                 <PracticeTopicCard 
                     {topic} 
                     href={`/practice-topics/${topic.id}`}
-                    isInstructor={false}
+                    showEditButton={false}
                 />
             {/each}
         </div>

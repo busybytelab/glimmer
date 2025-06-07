@@ -3,11 +3,10 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import type { Learner } from '$lib/types';
-	import pb from '$lib/pocketbase';
 	import FormButton from '../../../components/common/FormButton.svelte';
 	import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
 	import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
-
+	import { userService } from '$lib/services/user';
 	let learner: Learner | null = null;
 	let loading = true;
 	let error: string | null = null;
@@ -22,31 +21,10 @@
 			return;
 		}
 		
-		await loadLearner(learnerId);
+		learner = await userService.getLearner(learnerId);
 	});
 
-	async function loadLearner(id: string) {
-		try {
-			loading = true;
-			error = null;
-			
-			const result = await pb.collection('learners').getOne<Learner>(id, {
-				expand: 'user'
-			});
-			
-			// Map expanded user data to the learner object
-			const expandedData = result.expand;
-			learner = {
-				...result,
-				user: expandedData?.user || { name: 'Unknown user' }
-			} as unknown as Learner;
-		} catch (err) {
-			console.error('Failed to load learner:', err);
-			error = 'Failed to load learner';
-		} finally {
-			loading = false;
-		}
-	}
+	
 
 	function editLearner() {
 		if (!learner) return;
@@ -76,14 +54,14 @@
 		<div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
 			<div class="flex items-center space-x-4 mb-6">
 				{#if learner.avatar}
-					<img src={learner.avatar} alt={learner.user?.name || 'Learner'} class="w-16 h-16 rounded-full" />
+					<img src={learner.avatar} alt={learner.nickname || 'Learner'} class="w-16 h-16 rounded-full" />
 				{:else}
 					<div class="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-						<span class="text-2xl text-gray-500 dark:text-gray-300">{learner.user?.name?.[0]?.toUpperCase() || 'L'}</span>
+						<span class="text-2xl text-gray-500 dark:text-gray-300">{learner.nickname?.[0]?.toUpperCase() || 'L'}</span>
 					</div>
 				{/if}
 				<div>
-					<h2 class="text-xl font-semibold text-gray-900 dark:text-white">{learner.user?.name || 'Unknown learner'}</h2>
+					<h2 class="text-xl font-semibold text-gray-900 dark:text-white">{learner.nickname || 'Unknown learner'}</h2>
 				</div>
 			</div>
 

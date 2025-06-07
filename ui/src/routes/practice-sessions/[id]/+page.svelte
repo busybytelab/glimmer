@@ -3,7 +3,6 @@
 	import { goto } from '$app/navigation';
     import { page } from '$app/stores';
 	import { isAuthenticated } from '$lib/auth';
-	import { rolesService } from '$lib/services/roles';
 	import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
 	import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
 
@@ -25,15 +24,10 @@
             return;
         }
         
-			// Get user role
-			const isInstructor = await rolesService.isInstructor();
+		goto(`/practice-sessions/${sessionId}/instructor`);
+		// TODO: for learner view, we need to move this under leaner route
+		//goto(`/practice-sessions/${sessionId}/learner`);
 			
-			// Redirect based on role
-			if (isInstructor) {
-				goto(`/practice-sessions/${sessionId}/instructor`);
-            } else {
-				goto(`/practice-sessions/${sessionId}/learner`);
-            }
         } catch (err) {
 			console.error('Error in practice session route:', err);
 			error = 'Failed to load practice session';
