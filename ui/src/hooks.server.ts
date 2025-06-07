@@ -28,9 +28,9 @@ export const handle: Handle = async ({ event, resolve }) => {
     // Check if we have a valid auth cookie
     const isAuthenticated = !!authCookie;
 
-    // If authenticated and trying to access login page, redirect to dashboard
+    // If authenticated and trying to access login page, redirect to role selection
     if (isAuthenticated && isPublic) {
-        throw redirect(303, '/dashboard');
+        throw redirect(303, '/select-role');
     }
 
     // Redirect to login if not authenticated and trying to access protected route

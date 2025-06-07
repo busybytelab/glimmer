@@ -1,16 +1,15 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { user } from '$lib/stores';
     import EditProfile from './EditProfile.svelte';
-    import pb from '$lib/pocketbase';
     import { toast } from '$lib/stores/toast';
     import type { User } from '$lib/types';
+    import { userService } from '$lib/services/user';
 
     let isLoading = false;
     let userProfile: User | null = null;
 
     onMount(async () => {
-        userProfile = $user?.user || null;
+        userProfile = await userService.getCurrentUser();
     });
 
     async function handleSaveProfile(event: CustomEvent) {
@@ -27,22 +26,19 @@
         isLoading = true;
 
         try {
-            const { name } = data;
-            const currentUser = $user;
+            const currentUser = await userService.getCurrentUser();
             
-            if (!currentUser?.user) {
+            if (!currentUser) {
                 throw new Error('No user found');
             }
 
+            currentUser.name = data.name;
+
             // Update the user's profile
-            const updatedUser = await pb.collection('users').update(currentUser.user.id, {
-                name
-            });
+            const updatedUser = await userService.updateUser(currentUser);
 
             // Update the local user store
             if (currentUser) {
-                currentUser.user = updatedUser;
-                user.set(currentUser);
                 userProfile = updatedUser;
             }
         } catch (err) {

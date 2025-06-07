@@ -60,8 +60,8 @@
 			saveAuthToken(form.rememberMe);
 			isAuthenticated.set(true);
 			
-			// Redirect to returnUrl if it exists, otherwise to dashboard
-			const redirectPath = returnUrl ? decodeURIComponent(returnUrl) : '/dashboard';
+			// Redirect to returnUrl if it exists, otherwise to role selection
+			const redirectPath = returnUrl ? decodeURIComponent(returnUrl) : '/select-role';
 			window.location.href = redirectPath;
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';

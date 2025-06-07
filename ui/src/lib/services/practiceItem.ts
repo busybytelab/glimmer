@@ -18,17 +18,9 @@ class PracticeItemService {
         try {
             await this.ensureAuth();
 
-            // First, get the instructor record for the current user
-            const instructor = await pb.collection('instructors').getFirstListItem(`user = "${pb.authStore.model?.id}"`);
-            
-            if (!instructor) {
-                throw new Error('Instructor record not found');
-            }
-
             // Update the practice item
             const updatedItem = await pb.collection('practice_items').update(id, {
                 ...data,
-                reviewer: instructor.id,
                 review_date: new Date().toISOString()
             });
 

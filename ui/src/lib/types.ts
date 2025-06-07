@@ -36,7 +36,7 @@ interface PocketBaseRecord {
  * 
  * @description Determines how questions are displayed and interacted with based on user role and context
  */
-export type QuestionViewType = 'learner' | 'answered' | 'instructor' | 'hint' | 'correction' | 'generated';
+export type QuestionViewType = 'learner' | 'answered' | 'parent' | 'hint' | 'correction' | 'generated';
 
 // Constants for QuestionViewType values
 export const QuestionViewType = {
@@ -46,8 +46,8 @@ export const QuestionViewType = {
     /** Learner viewing their answered questions (read-only) */
     ANSWERED: 'answered' as QuestionViewType,
     
-    /** Instructor viewing full details including correct answers and explanations */
-    INSTRUCTOR: 'instructor' as QuestionViewType,
+    /** Parent viewing full details including correct answers and explanations */
+    PARENT: 'parent' as QuestionViewType,
     
     /** Learner viewing question with hint */
     HINT: 'hint' as QuestionViewType,
@@ -55,7 +55,7 @@ export const QuestionViewType = {
     /** Learner correcting previously answered question */
     CORRECTION: 'correction' as QuestionViewType,
     
-    /** Instructor viewing newly generated questions (for review/approval) */
+    /** Parent viewing newly generated questions (for review/approval) */
     GENERATED: 'generated' as QuestionViewType
 };
 
@@ -150,7 +150,6 @@ export interface PracticeItem extends PocketBaseRecord {
     expand?: {
         practice_topic?: PracticeTopic;
         account?: Account;
-        reviewer?: Instructor;
     };
 }
 
@@ -226,21 +225,14 @@ export interface User extends PocketBaseRecord {
     name: string;
 }
 
-export interface Instructor extends PocketBaseRecord {
-    nickname: string;
-    account: string;
-    user: User;
-}
-
 export interface Learner extends PocketBaseRecord {
     age: number;
     grade_level?: string;
     learning_preferences?: string[];
     avatar?: string;
     account: string;
-    user: User;
+    nickname: string;
     expand?: {
-        user?: User;
         account?: Account;
     };
 }
@@ -259,4 +251,19 @@ export interface RegistrationForm {
 	email: string;
 	password: string;
 	passwordConfirm: string;
-} 
+}
+
+export type TopicFormData = {
+    name: string;
+    subject: string;
+    description: string;
+    target_age_range: string;
+    target_grade_level: string;
+    learning_goals: string[];
+    base_prompt: string;
+    system_prompt: string;
+    tags: string[];
+    instructor?: string;
+    account?: string;
+    llm_model?: string;
+}; 

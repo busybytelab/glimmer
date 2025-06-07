@@ -121,12 +121,8 @@
 			await pb.collection('practice_sessions').delete(session.id);
 			dispatch('delete', session.id);
 			
-			// Navigate back to practice topics or dashboard
-			if (session.expand?.practice_topic) {
-				goto(`/practice-topics/${session.expand.practice_topic.id}`);
-			} else {
-				goto('/dashboard');
-			}
+			// Navigate back to practice topics or home
+			goto('/home');
 		} catch (err) {
 			console.error('Failed to delete session:', err);
 			error = 'Failed to delete practice session';

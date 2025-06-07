@@ -49,7 +49,6 @@ declare module 'pocketbase' {
         collection(idOrName: 'practice_results'): RecordService<import('./types').PracticeResult>;
         collection(idOrName: 'accounts'): RecordService<import('./types').Account>;
         collection(idOrName: 'users'): RecordService<import('./types').User>;
-        collection(idOrName: 'instructors'): RecordService<import('./types').Instructor>;
         collection(idOrName: 'learners'): RecordService<import('./types').Learner>;
     }
 } 

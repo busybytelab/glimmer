@@ -18,7 +18,7 @@
     
     const viewOptions = [
         { value: QuestionViewType.LEARNER, label: 'Learner View', icon: 'person' },
-        { value: QuestionViewType.INSTRUCTOR, label: 'Instructor View', icon: 'school' },
+        { value: QuestionViewType.INSTRUCTOR, label: 'Parent View', icon: 'school' },
         { value: QuestionViewType.ANSWERED, label: 'Answered View', icon: 'check_circle' },
         { value: QuestionViewType.GENERATED, label: 'Review View', icon: 'rate_review' }
     ];

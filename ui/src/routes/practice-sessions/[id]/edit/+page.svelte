@@ -61,11 +61,11 @@
     
     function handleSessionDelete() {
         if (!session) return;
-        // If we know the practice topic, go back to it, otherwise go to dashboard
+        // If we know the practice topic, go back to it, otherwise go to home
         if (session.expand?.practice_topic) {
             goto(`/practice-topics/${session.practice_topic}`);
         } else {
-            goto('/dashboard');
+            goto('/home');
         }
     }
     

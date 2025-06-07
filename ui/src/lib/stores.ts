@@ -1,8 +1,6 @@
 import { writable } from 'svelte/store';
-import type { Instructor, Learner } from './types';
 import { browser } from '$app/environment';
 
-export const user = writable<Instructor | Learner | null>(null);
 export const isAuthenticated = writable(false);
 export const isLoading = writable(false);
 export const error = writable<string | null>(null);

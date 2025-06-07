@@ -30,7 +30,7 @@
     }
 
     // Get the user's name safely
-    $: userName = learner?.expand?.user?.name || (learner?.user?.name) || 'Unknown learner';
+    $: userName = learner?.nickname || 'Unknown learner';
 </script>
 
 {#if clickable}
