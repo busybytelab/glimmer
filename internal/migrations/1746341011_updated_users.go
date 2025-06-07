@@ -14,14 +14,15 @@ func init() {
 			return err
 		}
 
-		// update collection data
+		// update users rules, allow users to view or update their own user record
 		if err := json.Unmarshal([]byte(`{
-			"viewRule": "id = @request.auth.id || (@collection.learners.user ?= id && @collection.learners.account ?= @collection.instructors.account && @collection.instructors.user ?= @request.auth.id)",
-			"listRule": "id = @request.auth.id || (@collection.learners.user ?= id && @collection.learners.account ?= @collection.instructors.account && @collection.instructors.user ?= @request.auth.id)",
-			"updateRule": "id = @request.auth.id || (@collection.learners.user ?= id && @collection.learners.account ?= @collection.instructors.account && @collection.instructors.user ?= @request.auth.id)",
-			"createRule": "id = @request.auth.id || @collection.accounts.owner = @request.auth.id",
+			"createRule": null,
+			"deleteRule": null,
+			"listRule": null,
+			"viewRule": "id = @request.auth.id",
+			"updateRule": "id = @request.auth.id",
 			"authAlert": {
-				"enabled": false
+				"enabled": true
 			}
 		}`), &collection); err != nil {
 			return err

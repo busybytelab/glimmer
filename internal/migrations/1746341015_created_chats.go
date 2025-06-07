@@ -12,8 +12,6 @@ import (
 func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
-			"createRule": "@request.auth.id != \"\"",
-			"deleteRule": "@request.auth.id = user",
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -139,10 +137,12 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [],
-			"listRule": "@request.auth.id = user",
 			"name": "%s",
 			"system": false,
 			"type": "base",
+			"createRule": "@request.auth.id != \"\"",
+			"deleteRule": "@request.auth.id = user",
+			"listRule": "@request.auth.id = user",
 			"updateRule": "@request.auth.id = user",
 			"viewRule": "@request.auth.id = user"
 		}`, domain.CollectionChats, domain.CollectionChats)

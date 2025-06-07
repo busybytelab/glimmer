@@ -56,7 +56,9 @@ func setupTestApp(t *testing.T) *tests.TestApp {
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil {
+	err = cmd.Run()
+	
+	if err != nil {
 		t.Logf("Migration stdout: %s", stdout.String())
 		t.Logf("Migration stderr: %s", stderr.String())
 		t.Fatalf("Failed to run migrations: %v", err)
