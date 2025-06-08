@@ -7,7 +7,7 @@
     import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
     import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
     import { topicsService } from '$lib/services/topics';
-    import { learnerService } from '$lib/services/learner';
+    import { learnersService } from '$lib/services/learners';
     // Define the breadcrumb item type
     type BreadcrumbItem = {
         label: string;
@@ -29,7 +29,7 @@
             
             if (learnerId) {
                 // First load the learner
-                learner = await learnerService.getLearner(learnerId);
+                learner = await learnersService.getLearner(learnerId);
                 if (!learner) {
                     throw new Error('Learner not found');
                 }

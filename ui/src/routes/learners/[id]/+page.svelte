@@ -6,7 +6,7 @@
 	import FormButton from '../../../components/common/FormButton.svelte';
 	import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
 	import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
-	import { learnerService } from '$lib/services/learner';
+	import { learnersService } from '$lib/services/learners';
 	let learner: Learner | null = null;
 	let loading = true;
 	let error: string | null = null;
@@ -21,7 +21,7 @@
 			return;
 		}
 		
-		learner = await learnerService.getLearner(learnerId);
+		learner = await learnersService.getLearner(learnerId);
 	});
 
 	

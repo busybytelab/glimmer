@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import { learnerService } from '$lib/services/learner';
+    import { learnersService } from '$lib/services/learners';
     import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../components/common/ErrorAlert.svelte';
     import type { Learner } from '$lib/types';
@@ -13,7 +13,7 @@
     onMount(async () => {
         try {
             // Fetch learners associated with the current user
-            learners = await learnerService.getLearners();
+            learners = await learnersService.getLearners();
         } catch (err) {
             console.error('Error fetching learners:', err);
             error = 'Failed to load learners. Please try again.';
