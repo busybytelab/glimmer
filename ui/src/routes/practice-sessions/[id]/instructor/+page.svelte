@@ -1,13 +1,13 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import type { PracticeItem, PracticeResult, BreadcrumbItem, ReviewStatus } from '$lib/types';
+    import type { PracticeItem, BreadcrumbItem, ReviewStatus } from '$lib/types';
     import { QuestionViewType } from '$lib/types';
     import QuestionFactory from '../../../../components/questions/QuestionFactory.svelte';
     import ViewSelector from '../../../../components/questions/ViewSelector.svelte';
     import { sessionService, type SessionWithExpandedData } from '$lib/services/session';
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
-    import pb from '$lib/pocketbase';
+    import { resultsService } from '$lib/services/results';
     import ActionToolbar from '../../../../components/common/ActionToolbar.svelte';
     import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
     import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
@@ -21,7 +21,7 @@
     let error: string | null = null;
     let printMode = false;
     let breadcrumbItems: BreadcrumbItem[] = [];
-    let selectedViewType: QuestionViewType = QuestionViewType.INSTRUCTOR;
+    let selectedViewType: QuestionViewType = QuestionViewType.PARENT;
 
     onMount(async () => {
         try {
@@ -70,37 +70,16 @@
             }
 
             // Fetch existing practice results
-            const results = await pb.collection('practice_results').getList(1, 100, {
-                filter: `practice_session = "${session.id}" && learner = "${session.learner}"`,
-                expand: 'practice_item,learner',
-                sort: '-created'
-            });
+            const results = await resultsService.getResults(session.id, session.learner);
 
             // Map results to practice items
-            if (results.items.length > 0) {
-                const learnerData = session && session.expand?.learner;
-                practiceItems = practiceItems.map(item => {
-                    const result = results.items.find((r: any): r is PracticeResult => 
-                        'practice_item' in r && r.practice_item === item.id
-                    );
-                    if (result) {
-                        return {
-                            ...item,
-                            user_answer: result.answer,
-                            is_correct: result.is_correct,
-                            score: result.score,
-                            feedback: result.feedback,
-                            hint_level_reached: result.hint_level_reached,
-                            attempt_number: result.attempt_number,
-                            expand: {
-                                ...item.expand,
-                                learner: learnerData
-                            }
-                        };
-                    }
-                    return item;
-                });
-            }
+            practiceItems = practiceItems.map(item => {
+                const result = results.find(r => r.practice_item === item.id);
+                return {
+                    ...item,
+                    result: result || null
+                };
+            });
         } catch (err) {
             console.error('Failed to load session:', err);
             error = err instanceof Error ? err.message : 'Failed to load practice session';
@@ -128,14 +107,10 @@
         }
         
         try {
-            await pb.collection('practice_sessions').delete(session.id);
+            await sessionService.deleteSession(session.id);
             
-            // Navigate back to practice topics or dashboard
-            if (session.expand?.practice_topic) {
-                goto(`/practice-topics/${session.expand.practice_topic.id}`);
-            } else {
-                goto('/dashboard');
-            }
+            // Navigate back to practice topics or home
+            goto('/home');
         } catch (err) {
             console.error('Failed to delete practice session:', err);
             error = 'Failed to delete practice session: ' + (err instanceof Error ? err.message : String(err));
@@ -265,11 +240,11 @@
             <h1 class="text-3xl font-bold mb-2">{session.name || 'Practice Session'}</h1>
             
             {#if session.expand?.practice_topic}
-                <h2 class="text-xl mb-1">Topic: {session.expand.practice_topic.name}</h2>
+                <h2 class="text-xl mb-1">Topic: {session.expand?.practice_topic.name}</h2>
             {/if}
             
             {#if session.expand?.learner}
-                <p class="text-lg">Learner: {session.expand.learner.expand?.user?.name || 'Unknown Learner'}</p>
+                <p class="text-lg">Learner: {session.expand?.learner?.nickname || 'Unknown Learner'}</p>
             {/if}
         </div>
 

@@ -61,7 +61,7 @@
                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}"
                 on:click={() => handleReviewStatusChange('APPROVED')}
                 title={item.review_status === 'APPROVED' && item.review_date 
-                    ? `Approved by ${item.expand?.reviewer?.expand?.user?.name || 'Unknown'} on ${new Date(item.review_date).toLocaleString()}`
+                    ? `Approved on ${new Date(item.review_date).toLocaleString()}`
                     : 'Approve this item'}
             >
                 {item.review_status === 'APPROVED' ? 'Approved' : 'Approve'}
@@ -72,7 +72,7 @@
                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}"
                 on:click={() => handleReviewStatusChange('NEED_EDIT')}
                 title={item.review_status === 'NEED_EDIT' && item.review_date 
-                    ? `Marked for editing by ${item.expand?.reviewer?.expand?.user?.name || 'Unknown'} on ${new Date(item.review_date).toLocaleString()}`
+                    ? `Marked for editing on ${new Date(item.review_date).toLocaleString()}`
                     : 'Mark this item for editing'}
             >
                 Needs Edit
@@ -83,7 +83,7 @@
                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}"
                 on:click={() => handleReviewStatusChange('IGNORE')}
                 title={item.review_status === 'IGNORE' && item.review_date 
-                    ? `Ignored by ${item.expand?.reviewer?.expand?.user?.name || 'Unknown'} on ${new Date(item.review_date).toLocaleString()}`
+                    ? `Ignored on ${new Date(item.review_date).toLocaleString()}`
                     : 'Ignore this item'}
             >
                 {item.review_status === 'IGNORE' ? 'Ignored' : 'Ignore'}

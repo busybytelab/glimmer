@@ -1,4 +1,3 @@
-import { rolesService } from '$lib/services/roles';
 import { redirect } from '@sveltejs/kit';
 import pb from '$lib/pocketbase';
 
@@ -19,15 +18,10 @@ export const load = async ({ params }: { params: { id: string } }) => {
             throw redirect(302, `/login?returnUrl=${returnUrl}`);
         }
 
-        // Get user role
-        const isInstructor = await rolesService.isInstructor();
+        throw redirect(302, `/practice-sessions/${sessionId}/instructor`);
+        // TODO: for learner view, we need to refactor, move this under leaner route
+        //throw redirect(302, `/practice-sessions/${sessionId}/learner`);
         
-        // Redirect based on role
-        if (isInstructor) {
-            throw redirect(302, `/practice-sessions/${sessionId}/instructor`);
-        } else {
-            throw redirect(302, `/practice-sessions/${sessionId}/learner`);
-        }
     } catch (err) {
         if (err instanceof Error && err.message.includes('redirect')) {
             throw err; // Re-throw redirect errors

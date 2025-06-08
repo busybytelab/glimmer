@@ -12,8 +12,6 @@ import (
 func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
-			"createRule": "@request.auth.id = account.owner",
-			"deleteRule": "@request.auth.id = account.owner",
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -27,6 +25,20 @@ func init() {
 					"primaryKey": true,
 					"required": true,
 					"system": true,
+					"type": "text"
+				},
+				{
+					"autogeneratePattern": "",
+					"hidden": false,
+					"id": "nickname_column",
+					"max": 2000,
+					"min": 0,
+					"name": "nickname",
+					"pattern": "",
+					"presentable": false,
+					"primaryKey": false,
+					"required": true,
+					"system": false,
 					"type": "text"
 				},
 				{
@@ -100,23 +112,6 @@ func init() {
 					"minSelect": 1
 				},
 				{
-					"autogeneratePattern": "",
-					"hidden": false,
-					"id": "user_column",
-					"max": 2000,
-					"name": "user",
-					"pattern": "",
-					"presentable": false,
-					"primaryKey": false,
-					"required": true,
-					"system": false,
-					"type": "relation",
-					"collectionId": "_pb_users_auth_",
-					"cascadeDelete": true,
-					"maxSelect": 1,
-					"minSelect": 1
-				},
-				{
 					"hidden": false,
 					"id": "created_column",
 					"name": "created",
@@ -139,12 +134,14 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [],
-			"listRule": "@request.auth.id = user || @request.auth.id = account.owner",
 			"name": "%s",
 			"system": false,
 			"type": "base",
-			"updateRule": "@request.auth.id = user || @request.auth.id = account.owner",
-			"viewRule": "@request.auth.id = user || @request.auth.id = account.owner"
+			"createRule": "@request.auth.id = account.owner",
+			"deleteRule": "@request.auth.id = account.owner",
+			"listRule": "@request.auth.id = account.owner",
+			"updateRule": "@request.auth.id = account.owner",
+			"viewRule": "@request.auth.id = account.owner"
 		}`, domain.CollectionAccounts, domain.CollectionLearners, domain.CollectionLearners)
 
 		collection := &core.Collection{}

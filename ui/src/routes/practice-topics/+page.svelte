@@ -1,27 +1,22 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import pb from '$lib/pocketbase';
+	import { topicsService } from '$lib/services/topics';
 	import { goto } from '$app/navigation';
 	import type { PracticeTopic } from '$lib/types';
 	import PracticeTopicCard from '../../components/practice-topics/PracticeTopicCard.svelte';
 	import FormButton from '../../components/common/FormButton.svelte';
 	import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
 	import ErrorAlert from '../../components/common/ErrorAlert.svelte';
-	import { rolesService } from '$lib/services/roles';
 
 	let topics: PracticeTopic[] = [];
 	let loading = true;
 	let error: string | null = null;
-	let isInstructor = false;
 
 	async function loadTopics() {
 		try {
 			loading = true;
 			error = null;
-			const result = await pb.collection('practice_topics').getFullList({
-				sort: '-created',
-				expand: 'account'
-			});
+			const result = await topicsService.getTopics();
 			
 			// Make sure tags are properly formatted as arrays
 			topics = result.map((topic: any) => {
@@ -55,7 +50,6 @@
 
 	onMount(async () => {
 		console.log('PracticeTopics mounted, loading topics');
-		isInstructor = await rolesService.isInstructor();
 		await loadTopics();
 	});
 
@@ -67,14 +61,12 @@
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
 	<div class="flex justify-between items-center mb-6">
 		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Practice Topics</h1>
-		{#if isInstructor}
-			<FormButton
-				type="button"
-				on:click={handleCreateNew}
-			>
-				Create New Topic
-			</FormButton>
-		{/if}
+		<FormButton
+			type="button"
+			on:click={handleCreateNew}
+		>
+			Create New Topic
+		</FormButton>
 	</div>
 
 	{#if loading}
@@ -104,7 +96,6 @@
 				<PracticeTopicCard 
 					{topic} 
 					href={`/practice-topics/${topic.id}`}
-					{isInstructor}
 				/>
 			{/each}
 		</div>

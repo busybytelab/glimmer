@@ -85,10 +85,10 @@ collections:
     select: "SELECT COUNT(*) FROM users WHERE id = {:id}"
     insert: "INSERT INTO users (id, email, name, password, verified, emailVisibility, avatar, tokenKey, created, updated) VALUES ({:id}, {:email}, {:name}, {:password}, {:verified}, {:emailVisibility}, {:avatar}, {:tokenKey}, {:created}, {:updated})"
     items:
-      # Account 1 Users
+      # Account 1 Owner
       - id: "u1"
         email: "u1@home.local"
-        name: "User 1"
+        name: "John Doe"
         password: "__::env::TEST_USER_PASSWORD_HASH::default_password_hash::__"
         verified: true
         emailVisibility: false
@@ -97,37 +97,15 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
+      # Account 2 Owner
       - id: "u2"
         email: "u2@home.local"
-        name: "User 2"
+        name: "Alice Smith"
         password: "__::env::TEST_USER_PASSWORD_HASH::default_password_hash::__"
         verified: true
         emailVisibility: false
         avatar: ""
         tokenKey: "u2TokenKey12345678901234567890123456789"
-        created: __::currentTimestamp::__
-        updated: __::currentTimestamp::__
-
-      # Account 2 Users
-      - id: "u3"
-        email: "u3@home.local"
-        name: "User 3"
-        password: "__::env::TEST_USER_PASSWORD_HASH::default_password_hash::__"
-        verified: true
-        emailVisibility: false
-        avatar: ""
-        tokenKey: "u3TokenKey12345678901234567890123456789"
-        created: __::currentTimestamp::__
-        updated: __::currentTimestamp::__
-
-      - id: "u4"
-        email: "u4@home.local"
-        name: "User 4"
-        password: "__::env::TEST_USER_PASSWORD_HASH::default_password_hash::__"
-        verified: true
-        emailVisibility: false
-        avatar: ""
-        tokenKey: "u4TokenKey12345678901234567890123456789"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
@@ -138,7 +116,7 @@ collections:
     items:
       # Account 1
       - id: "a1"
-        name: "Account 1"
+        name: "John Doe's Account"
         owner: "__ref::users::u1"
         ollama_server_url: "http://localhost:11434"
         default_llm_model: "gemma3:4b"
@@ -149,8 +127,8 @@ collections:
 
       # Account 2
       - id: "a2"
-        name: "Account 2"
-        owner: "__ref::users::u3"
+        name: "Alice Smith's Account"
+        owner: "__ref::users::u2"
         ollama_server_url: "http://localhost:11434"
         default_llm_model: "gemma3:4b"
         default_language: "en"
@@ -158,51 +136,40 @@ collections:
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
-  # Instructors
-  - name: "instructors"
-    select: "SELECT COUNT(*) FROM instructors WHERE id = {:id}"
-    insert: "INSERT INTO instructors (id, nickname, account, user, created, updated) VALUES ({:id}, {:nickname}, {:account}, {:user}, {:created}, {:updated})"
-    items:
-      # Account 1 Instructor
-      - id: "i1"
-        nickname: "Teacher"
-        account: "__ref::accounts::a1"
-        user: "__ref::users::u1"
-        created: __::currentTimestamp::__
-        updated: __::currentTimestamp::__
-
-      # Account 2 Instructor
-      - id: "i2"
-        nickname: "Professor"
-        account: "__ref::accounts::a2"
-        user: "__ref::users::u3"
-        created: __::currentTimestamp::__
-        updated: __::currentTimestamp::__
-
   # Learners
   - name: "learners"
     select: "SELECT COUNT(*) FROM learners WHERE id = {:id}"
-    insert: "INSERT INTO learners (id, age, grade_level, learning_preferences, avatar, account, user, created, updated) VALUES ({:id}, {:age}, {:grade_level}, {:learning_preferences}, {:avatar}, {:account}, {:user}, {:created}, {:updated})"
+    insert: "INSERT INTO learners (id, nickname, age, grade_level, learning_preferences, avatar, account, created, updated) VALUES ({:id}, {:nickname}, {:age}, {:grade_level}, {:learning_preferences}, {:avatar}, {:account}, {:created}, {:updated})"
     items:
-      # Account 1 Learner
+      # Account 1 Learners
       - id: "l1"
+        nickname: "Tim"
         age: 10
         grade_level: "5th"
         learning_preferences: "[\"Visual\"]"
         avatar: "default_avatar.png"
         account: "__ref::accounts::a1"
-        user: "__ref::users::u2"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
-      # Account 2 Learner
       - id: "l2"
+        nickname: "Sara"
         age: 13
         grade_level: "8th"
         learning_preferences: "[\"Auditory\", \"Visual\"]"
         avatar: "default_avatar.png"
+        account: "__ref::accounts::a1"
+        created: __::currentTimestamp::__
+        updated: __::currentTimestamp::__
+      
+      # Account 2 Learner
+      - id: "l3"
+        nickname: "John"
+        age: 12
+        grade_level: "6th"
+        learning_preferences: "[\"Visual\"]"
+        avatar: "default_avatar.png"
         account: "__ref::accounts::a2"
-        user: "__ref::users::u4"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
@@ -368,7 +335,6 @@ collections:
         tags: "[]"
         status: "Generated"
         practice_topic: "__ref::practice_topics::pt1"
-        instructor: "__ref::instructors::i1"
         account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
@@ -496,7 +462,7 @@ collections:
         generation_prompt: "Explain this math problem in simple terms"
         practice_topic: "__ref::practice_topics::pt1"
         practice_items: "[\"pi3\", \"pi4\", \"pi5\", \"pi6\"]"
-        learner: "__ref::learners::l1"
+        learner: "__ref::learners::l2"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
@@ -509,7 +475,7 @@ collections:
         generation_prompt: "Generate advanced math problems"
         practice_topic: "__ref::practice_topics::pt3"
         practice_items: "[\"pi7\", \"pi8\"]"
-        learner: "__ref::learners::l2"
+        learner: "__ref::learners::l3"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 

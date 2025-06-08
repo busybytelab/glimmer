@@ -8,7 +8,7 @@
     import ActionToolbar from '../../../../components/common/ActionToolbar.svelte';
     import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
-    import pb from '$lib/pocketbase';
+    import { sessionService } from '$lib/services/session';
     
     let session: PracticeSession | null = null;
     let loading = true;
@@ -41,11 +41,8 @@
                 throw new Error('Session ID is required');
             }
             
-            const result = await pb.collection('practice_sessions').getOne<PracticeSession>(id, {
-                expand: 'learner,practice_topic'
-            });
+            session = await sessionService.loadSession(id);
             
-            session = result;
         } catch (err) {
             console.error('Failed to load session:', err);
             error = 'Failed to load practice session';
@@ -61,11 +58,11 @@
     
     function handleSessionDelete() {
         if (!session) return;
-        // If we know the practice topic, go back to it, otherwise go to dashboard
+        // If we know the practice topic, go back to it, otherwise go to home
         if (session.expand?.practice_topic) {
             goto(`/practice-topics/${session.practice_topic}`);
         } else {
-            goto('/dashboard');
+            goto('/home');
         }
     }
     

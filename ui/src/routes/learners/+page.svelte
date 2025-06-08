@@ -7,7 +7,8 @@
 	import FormButton from '../../components/common/FormButton.svelte';
 	import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
 	import ErrorAlert from '../../components/common/ErrorAlert.svelte';
-
+	import { learnerService } from '$lib/services/learner';
+	
 	let learners: Learner[] = [];
 	let loading = true;
 	let error: string | null = null;
@@ -24,15 +25,9 @@
 				return;
 			}
 
-			// Get instructor record to get the account
-			const instructorRecord = await pb.collection('instructors').getFirstListItem(`user="${authData.id}"`);
 			
 			// Get learners from the same account
-			const result = await pb.collection('learners').getFullList({
-				filter: `account="${instructorRecord.account}"`,
-				sort: '-created',
-				expand: 'user,account'
-			});
+			const result = await learnerService.getLearners();
 			
 			// Map expanded data to the learner objects
 			learners = result.map(item => {
@@ -40,7 +35,6 @@
 				const expandedData = item.expand;
 				return {
 					...item,
-					user: expandedData?.user || { name: 'Unknown user' },
 					account: expandedData?.account || null
 				};
 			}) as unknown as Learner[];

@@ -56,8 +56,4 @@
 	.focus\:ring-secondary:focus {
 		--tw-ring-color: var(--secondary);
 	}
-
-	.focus\:border-secondary:focus {
-		border-color: var(--secondary);
-	}
 </style> 

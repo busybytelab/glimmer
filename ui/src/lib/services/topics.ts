@@ -1,7 +1,9 @@
 import pb from '$lib/pocketbase';
-import type { PracticeTopic, PracticeSession } from '$lib/types';
+import type { PracticeTopic, PracticeSession, TopicFormData } from '$lib/types';
+import { accountService } from './accounts';
 
 class TopicsService {
+    // TODO: remove these auth methods, replace usage with auth
     private async ensureAuth(): Promise<void> {
         if (!pb.authStore.isValid) {
             throw new Error('You must be logged in to access practice topics');
@@ -35,18 +37,25 @@ class TopicsService {
         return [];
     }
 
-    async getTopic(id: string): Promise<PracticeTopic> {
+    async getTopics(): Promise<PracticeTopic[]> {
+        return await pb.collection('practice_topics').getFullList({
+            sort: '-created',
+            expand: 'account'
+        });
+    }
+
+    async getTopic(topicId: string): Promise<PracticeTopic> {
         await this.ensureAuth();
 
         try {
-            const result = await pb.collection('practice_topics').getOne(id);
+            const result = await pb.collection('practice_topics').getOne(topicId);
             result.tags = this.formatTags(result.tags);
             return result as unknown as PracticeTopic;
         } catch (error: any) {
             if (error.status === 401) {
                 await this.refreshAuth();
                 try {
-                    const result = await pb.collection('practice_topics').getOne(id);
+                    const result = await pb.collection('practice_topics').getOne(topicId);
                     result.tags = this.formatTags(result.tags);
                     return result as unknown as PracticeTopic;
                 } catch (retryError: any) {
@@ -79,6 +88,79 @@ class TopicsService {
                     });
                     
                     return result.items as unknown as PracticeSession[];
+                } catch (retryError: any) {
+                    throw new Error(retryError.message);
+                }
+            }
+            throw new Error(error.message);
+        }
+    }
+
+    async createTopic(formData: TopicFormData): Promise<PracticeTopic> {
+        await this.ensureAuth();
+
+        try {
+            const account = await accountService.getAccount();
+            const dataToSend = {
+                ...formData,
+                account: account.id
+            };
+
+            const result = await pb.collection('practice_topics').create(dataToSend);
+            result.tags = this.formatTags(result.tags);
+            return result as unknown as PracticeTopic;
+        } catch (error: any) {
+            if (error.status === 401) {
+                await this.refreshAuth();
+                try {
+                    const account = await accountService.getAccount();
+                    const dataToSend = {
+                        ...formData,
+                        account: account.id
+                    };
+                    const result = await pb.collection('practice_topics').create(dataToSend);
+                    result.tags = this.formatTags(result.tags);
+                    return result as unknown as PracticeTopic;
+                } catch (retryError: any) {
+                    throw new Error(retryError.message);
+                }
+            }
+            throw new Error(error.message);
+        }
+    }
+
+    async updateTopic(id: string, formData: TopicFormData): Promise<PracticeTopic> {
+        await this.ensureAuth();
+
+        try {
+            const result = await pb.collection('practice_topics').update(id, formData);
+            result.tags = this.formatTags(result.tags);
+            return result as unknown as PracticeTopic;
+        } catch (error: any) {
+            if (error.status === 401) {
+                await this.refreshAuth();
+                try {
+                    const result = await pb.collection('practice_topics').update(id, formData);
+                    result.tags = this.formatTags(result.tags);
+                    return result as unknown as PracticeTopic;
+                } catch (retryError: any) {
+                    throw new Error(retryError.message);
+                }
+            }
+            throw new Error(error.message);
+        }
+    }
+
+    async deleteTopic(id: string): Promise<void> {
+        await this.ensureAuth();
+
+        try {
+            await pb.collection('practice_topics').delete(id);
+        } catch (error: any) {
+            if (error.status === 401) {
+                await this.refreshAuth();
+                try {
+                    await pb.collection('practice_topics').delete(id);
                 } catch (retryError: any) {
                     throw new Error(retryError.message);
                 }

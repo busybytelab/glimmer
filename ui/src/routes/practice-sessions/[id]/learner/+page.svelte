@@ -5,7 +5,6 @@
     import QuestionFactory from '../../../../components/questions/QuestionFactory.svelte';
     import { sessionService, type SessionWithExpandedData } from '$lib/services/session';
     import { page } from '$app/stores';
-    import pb from '$lib/pocketbase';
     import ActionToolbar from '../../../../components/common/ActionToolbar.svelte';
     import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
     import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
@@ -13,6 +12,8 @@
     import SessionHeader from '../../../../components/practice-sessions/SessionHeader.svelte';
     import PracticeWizard from '../../../../components/practice-sessions/PracticeWizard.svelte';
     import { updateBreadcrumbs, handlePrint } from '$lib/utils/practice-session';
+    import { answersService } from '$lib/services/answers';
+    import { resultsService } from '$lib/services/results';
 
     let session: SessionWithExpandedData | null = null;
     let practiceItems: PracticeItem[] = [];
@@ -92,17 +93,13 @@
             }
 
             // Fetch existing practice results
-            const results = await pb.collection('practice_results').getList(1, 100, {
-                filter: `practice_session = "${session.id}" && learner = "${session.learner}"`,
-                expand: 'practice_item,learner',
-                sort: '-created'
-            });
+            const results = await resultsService.getResults(session.id, session.learner);
 
             // Map results to practice items
-            if (results.items.length > 0) {
+            if (results.length > 0) {
                 const learnerData = session && session.expand?.learner;
                 practiceItems = practiceItems.map(item => {
-                    const result = results.items.find((r: any): r is PracticeResult => 
+                    const result = results.find((r: PracticeResult) => 
                         'practice_item' in r && r.practice_item === item.id
                     );
                     if (result) {
@@ -159,15 +156,7 @@
             const now = new Date().toISOString();
 
             // Call the evaluate answer endpoint
-            const response = await pb.send('/api/glimmer/v1/practice/evaluate-answer', {
-                method: 'POST',
-                body: {
-                    practiceItemId: practiceItem.id,
-                    userAnswer: answer
-                }
-            });
-
-            const isCorrect = response.isCorrect;
+            const { isCorrect } = await answersService.evaluateAnswer(practiceItem.id, answer);
             
             if (isCorrect) {
                 consecutiveIncorrectAttempts.set(practiceItem.id, 0);
@@ -176,20 +165,17 @@
                 consecutiveIncorrectAttempts.set(practiceItem.id, currentAttempts + 1);
             }
 
-            const existingResults = await pb.collection('practice_results').getList(1, 1, {
-                filter: `practice_item = "${practiceItem.id}" && practice_session = "${session.id}"`,
-                sort: '-created'
-            });
+            const existingResult = await resultsService.getLatestResult(practiceItem.id, session.id);
 
-            if (existingResults.items.length > 0) {
-                await pb.collection('practice_results').update(existingResults.items[0].id, {
+            if (existingResult) {
+                await resultsService.updateResult(existingResult.id, {
                     answer: answer,
                     is_correct: isCorrect,
                     submitted_at: now,
-                    attempt_number: (existingResults.items[0].attempt_number || 0) + 1
+                    attempt_number: (existingResult.attempt_number || 0) + 1
                 });
             } else {
-                await pb.collection('practice_results').create({
+                await resultsService.createResult({
                     practice_item: practiceItem.id,
                     practice_session: session.id,
                     learner: session.learner,
@@ -233,13 +219,10 @@
             
             practiceItems = [...practiceItems];
             
-            const existingResults = await pb.collection('practice_results').getList(1, 1, {
-                filter: `practice_item = "${practiceItem.id}" && practice_session = "${session.id}"`,
-                sort: '-created'
-            });
+            const existingResult = await resultsService.getLatestResult(practiceItem.id, session.id);
             
-            if (existingResults.items.length > 0) {
-                await pb.collection('practice_results').update(existingResults.items[0].id, {
+            if (existingResult) {
+                await resultsService.updateResult(existingResult.id, {
                     hint_level_reached: level
                 });
             }
@@ -386,7 +369,7 @@
             {/if}
             
             {#if session.expand?.learner}
-                <p class="text-lg">Learner: {session.expand.learner.expand?.user?.name || 'Unknown Learner'}</p>
+                <p class="text-lg">Learner: {session.expand.learner?.nickname || 'Unknown Learner'}</p>
             {/if}
         </div>
 

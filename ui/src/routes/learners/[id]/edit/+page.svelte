@@ -3,12 +3,11 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import type { Learner } from '$lib/types';
-	import pb from '$lib/pocketbase';
 	import LearnerForm from '../../../../components/learners/LearnerForm.svelte';
 	import FormButton from '../../../../components/common/FormButton.svelte';
 	import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
 	import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
-
+	import { learnerService } from '$lib/services/learner';
 	let learner: Learner | null = null;
 	let loading = true;
 	let error: string | null = null;
@@ -23,31 +22,10 @@
 			return;
 		}
 		
-		await loadLearner(learnerId);
+		learner = await learnerService.getLearner(learnerId);
 	});
 
-	async function loadLearner(id: string) {
-		try {
-			loading = true;
-			error = null;
-			
-			const result = await pb.collection('learners').getOne<Learner>(id, {
-				expand: 'user'
-			});
-			
-			// Map expanded user data to the learner object
-			const expandedData = result.expand;
-			learner = {
-				...result,
-				user: expandedData?.user || { name: 'Unknown user' }
-			} as unknown as Learner;
-		} catch (err) {
-			console.error('Failed to load learner:', err);
-			error = 'Failed to load learner';
-		} finally {
-			loading = false;
-		}
-	}
+
 
 	function handleLearnerUpdate() {
 		goto('/learners');

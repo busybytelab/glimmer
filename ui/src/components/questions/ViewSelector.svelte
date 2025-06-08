@@ -18,7 +18,7 @@
     
     const viewOptions = [
         { value: QuestionViewType.LEARNER, label: 'Learner View', icon: 'person' },
-        { value: QuestionViewType.INSTRUCTOR, label: 'Instructor View', icon: 'school' },
+        { value: QuestionViewType.PARENT, label: 'Parent View', icon: 'school' },
         { value: QuestionViewType.ANSWERED, label: 'Answered View', icon: 'check_circle' },
         { value: QuestionViewType.GENERATED, label: 'Review View', icon: 'rate_review' }
     ];
@@ -26,7 +26,7 @@
     // Filter options based on user role
     $: availableOptions = isInstructor 
         ? viewOptions 
-        : viewOptions.filter(opt => opt.value !== QuestionViewType.INSTRUCTOR);
+        : viewOptions.filter(opt => opt.value !== QuestionViewType.PARENT);
 </script>
 
 <div class="flex items-center bg-gray-100 dark:bg-gray-700 p-2 rounded-lg mb-4">

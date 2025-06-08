@@ -12,8 +12,6 @@ import (
 func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
-			"createRule": "@request.auth.id != \"\" && (@collection.learners.user ?= @request.auth.id && @collection.learners.account ?= practice_session.account || @collection.instructors.user ?= @request.auth.id && @collection.instructors.account ?= practice_session.account)",
-			"deleteRule": "@request.auth.id != \"\" && (@collection.learners.user ?= @request.auth.id && @collection.learners.account ?= practice_session.account || @collection.instructors.user ?= @request.auth.id && @collection.instructors.account ?= practice_session.account)",
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -220,12 +218,14 @@ func init() {
 			],
 			"id": "pbc_%s",
 			"indexes": [],
-			"listRule": "@request.auth.id != \"\" && (@collection.learners.user ?= @request.auth.id && @collection.learners.account ?= practice_session.account || @collection.instructors.user ?= @request.auth.id && @collection.instructors.account ?= practice_session.account)",
 			"name": "%s",
 			"system": false,
 			"type": "base",
-			"updateRule": "@request.auth.id != \"\" && (@collection.learners.user ?= @request.auth.id && @collection.learners.account ?= practice_session.account || @collection.instructors.user ?= @request.auth.id && @collection.instructors.account ?= practice_session.account)",
-			"viewRule": "@request.auth.id != \"\" && (@collection.learners.user ?= @request.auth.id && @collection.learners.account ?= practice_session.account || @collection.instructors.user ?= @request.auth.id && @collection.instructors.account ?= practice_session.account)"
+			"createRule": "@request.auth.id = learner.account.owner",
+			"deleteRule": "@request.auth.id = learner.account.owner",
+			"listRule": "@request.auth.id = learner.account.owner",
+			"updateRule": "@request.auth.id = learner.account.owner",
+			"viewRule": "@request.auth.id = learner.account.owner"
 		}`, domain.CollectionPracticeItems, domain.CollectionLearners, domain.CollectionPracticeSessions, domain.CollectionPracticeResults, domain.CollectionPracticeResults)
 
 		collection := &core.Collection{}

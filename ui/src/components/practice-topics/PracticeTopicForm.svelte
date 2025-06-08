@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import pb from '$lib/pocketbase';
-	import type { PracticeTopic } from '$lib/types';
+	import type { PracticeTopic, TopicFormData } from '$lib/types';
 	import FormField from '../common/FormField.svelte';
 	import TextArea from '../common/TextArea.svelte';
 	import ExpandableTextArea from '../common/ExpandableTextArea.svelte';
@@ -10,6 +9,7 @@
 	import ErrorAlert from '../common/ErrorAlert.svelte';
 	import SelectField from '../common/SelectField.svelte';
 	import { llmService } from '$lib/services/llm';
+	import { topicsService } from '$lib/services/topics';
 
 	export let topic: PracticeTopic | null = null;
 
@@ -19,22 +19,7 @@
 		cancel: void;
 	}>();
 
-	type FormData = {
-		name: string;
-		subject: string;
-		description: string;
-		target_age_range: string;
-		target_grade_level: string;
-		learning_goals: string[];
-		base_prompt: string;
-		system_prompt: string;
-		tags: string[];
-		instructor?: string;
-		account?: string;
-		llm_model?: string;
-	};
-
-	let formData: FormData = topic ? {
+	let formData: TopicFormData = topic ? {
 		name: topic.name,
 		subject: topic.subject,
 		description: topic.description || '',
@@ -132,77 +117,17 @@
 			loading = true;
 			error = null;
 
-			// Get the current user
-			const currentUser = pb.authStore.model;
-			if (!currentUser && !topic) {
-				error = 'You must be logged in to create a topic';
-				loading = false;
-				return;
-			}
-
-			// Prepare data to send
-			const dataToSend = { ...formData };
-			
-			// Make sure tags are properly formatted as an array
-			if (typeof dataToSend.tags === 'string') {
-				dataToSend.tags = (dataToSend.tags as string).split(',').map(tag => tag.trim()).filter(Boolean);
-			}
-			
-			
-			if (!topic) {
-				// For new topics, get the user's account and instructor info
-				try {
-					// Make sure currentUser exists
-					if (!currentUser) {
-						error = 'You must be logged in to create a topic';
-						loading = false;
-						return;
-					}
-					
-					// First try to get instructor record for current user
-					const instructors = await pb.collection('instructors').getList(1, 1, {
-						filter: `user.id = "${currentUser.id}"`
-					});
-					
-					if (instructors && instructors.items.length > 0) {
-						dataToSend.instructor = instructors.items[0].id;
-						dataToSend.account = instructors.items[0].account;
-					} else {
-						// If not an instructor, try to get account directly
-						const accounts = await pb.collection('accounts').getList(1, 1, {
-							filter: `owner.id = "${currentUser.id}"`
-						});
-						
-						if (accounts && accounts.items.length > 0) {
-							dataToSend.account = accounts.items[0].id;
-						} else {
-							error = 'Could not determine account for user';
-							loading = false;
-							return;
-						}
-					}
-				} catch (err) {
-					console.error('Failed to get user account info:', err);
-					error = 'Failed to get account information';
-					loading = false;
-					return;
-				}
-			}
-
 			let result;
 			if (topic) {
-				// Update existing topic
-				result = await pb.collection('practice_topics').update(topic.id, dataToSend);
+				result = await topicsService.updateTopic(topic.id, formData);
 			} else {
-				// Create new topic
-				result = await pb.collection('practice_topics').create(dataToSend);
+				result = await topicsService.createTopic(formData);
 			}
 						
-			// Dispatch the update event with the result
-			dispatch('update', result as unknown as PracticeTopic);
+			dispatch('update', result);
 		} catch (err) {
 			console.error('Failed to save topic:', err);
-			error = 'Failed to save practice topic';
+			error = err instanceof Error ? err.message : 'Failed to save practice topic';
 		} finally {
 			loading = false;
 		}
@@ -224,11 +149,11 @@
 		try {
 			loading = true;
 			error = null;
-			await pb.collection('practice_topics').delete(topic.id);
+			await topicsService.deleteTopic(topic.id);
 			dispatch('delete', topic.id);
 		} catch (err) {
 			console.error('Failed to delete topic:', err);
-			error = 'Failed to delete practice topic';
+			error = err instanceof Error ? err.message : 'Failed to delete practice topic';
 		} finally {
 			loading = false;
 		}

@@ -194,19 +194,6 @@ func init() {
 					
 				},
 				{
-					"cascadeDelete": false,
-					"collectionId": "pbc_instructors",
-					"hidden": false,
-					"id": "reviewer_column",
-					"maxSelect": 1,
-					"minSelect": 0,
-					"name": "reviewer",
-					"presentable": false,
-					"required": false,
-					"system": false,
-					"type": "relation"
-				},
-				{
 					"hidden": false,
 					"id": "review_date_column",
 					"max": "",
@@ -260,9 +247,9 @@ func init() {
 			"type": "base",
 			"createRule": "@request.auth.id = account.owner",
 			"deleteRule": "@request.auth.id = account.owner",
-			"listRule": "@request.auth.id = account.owner || ((@collection.instructors.account ?= account && @collection.instructors.user ?= @request.auth.id) || (@collection.learners.account ?= account && @collection.learners.user ?= @request.auth.id))",
+			"listRule": "@request.auth.id = account.owner",
 			"updateRule": "@request.auth.id = account.owner",
-			"viewRule": "@request.auth.id = account.owner || ((@collection.instructors.account ?= account && @collection.instructors.user ?= @request.auth.id) || (@collection.learners.account ?= account && @collection.learners.user ?= @request.auth.id))"
+			"viewRule": "@request.auth.id = account.owner"
 		}`, domain.CollectionPracticeTopics, domain.CollectionAccounts, domain.CollectionPracticeItems, domain.CollectionPracticeItems)
 
 		collection := &core.Collection{}

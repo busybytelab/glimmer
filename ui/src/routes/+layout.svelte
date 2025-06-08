@@ -1,14 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { isAuthenticated, user, isAuthLoading, error, theme } from '$lib/stores';
+  import { isAuthenticated, isAuthLoading, error, theme } from '$lib/stores';
   import pb from '$lib/pocketbase';
-  import { getAuthToken, clearAuthToken } from '$lib/auth';
-  import type { Instructor, Learner } from '$lib/types';
+  import { authService } from '$lib/services/auth';
   import SideNav from '../components/layout/SideNav.svelte';
   import LoadingSpinner from '../components/common/LoadingSpinner.svelte';
   import ErrorAlert from '../components/common/ErrorAlert.svelte';
   import Toast from '../components/common/Toast.svelte';
-  import { isPublicRoute } from '$lib/auth';
   import '../app.css';
 
   // Sidebar state for layout
@@ -20,7 +18,7 @@
   }
 
   // Check if current route is public
-  $: isPublic = isPublicRoute(window.location.pathname);
+  $: isPublic = authService.isPublicRoute(window.location.pathname);
 
   // Function to handle the auth flow
   async function initializeAuth() {
@@ -28,7 +26,7 @@
     error.set(null);
     try {
       // Get token using our utility function
-      const token = getAuthToken();
+      const token = authService.getAuthToken();
       // Only proceed with auth verification if we have a token
       if (token) {
         // Set token in PocketBase if it's not already set
@@ -48,44 +46,35 @@
           await pb.collection('users').authRefresh();
           // Token is valid, get user data
           if (pb.authStore.isValid) {
-            const userData = await pb.collection('users').getOne(pb.authStore.record?.id ?? '');
-            // First check if user is an instructor
-            try {
-              const instructor = await pb.collection('instructors').getFirstListItem(`user="${pb.authStore.record?.id}"`);
-              if (instructor) {
-                instructor.user = userData;
-                user.set(instructor as unknown as Instructor);
-                isAuthenticated.set(true);
-                return;
-              }
-            } catch (err) {
-              // No instructor found, continue to check for learner
-            }
+            //const userData = await pb.collection('users').getOne(pb.authStore.record?.id ?? '');
+            
 
             // Then check if user is a learner
-            try {
-              const learner = await pb.collection('learners').getFirstListItem(`user.id="${pb.authStore.record?.id}"`, { requestKey: null });
-              if (learner) {
-                learner.user = userData;
-                user.set(learner as unknown as Learner);
-                isAuthenticated.set(true);
-                return;
-              }
-            } catch (err) {
-              // No learner found
-            }
+            // FIXME: need to fix this logic
+            // try {
+            //   const learner = await pb.collection('learners').getFirstListItem(`user.id="${pb.authStore.record?.id}"`, { requestKey: null });
+            //   if (learner) {
+            //     learner.user = userData;
+            //     user.set(learner as unknown as Learner);
+            //     isAuthenticated.set(true);
+            //     return;
+            //   }
+            // } catch (err) {
+            //   // No learner found
+            // }
+            
+            
+            isAuthenticated.set(true);
 
-            console.log('WARNING: no instructor or learner found');
 
-            // If we get here, user exists in main users collection but not in instructors/learners
             // Clear auth state and show login
-            clearAuthToken();
-            isAuthenticated.set(false);
+            //authService.clearAuthToken();
+            //isAuthenticated.set(false);
           }
         } catch (err) {
           // Token refresh failed, clear auth state
           console.error('Auth refresh failed:', err);
-          clearAuthToken();
+          authService.clearAuthToken();
           isAuthenticated.set(false);
         }
       } else {
@@ -95,7 +84,7 @@
     } catch (err) {
       // Catch any other errors
       console.error('Authentication initialization failed:', err);
-      clearAuthToken();
+      authService.clearAuthToken();
       isAuthenticated.set(false);
     } finally {
       isAuthLoading.set(false);
@@ -142,7 +131,7 @@
     </button>
   </div>
 {:else}
-  {#if $isAuthenticated && $user && !isPublic}
+  {#if $isAuthenticated && !isPublic}
     <!-- Authenticated layout -->
     <div class="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900 print:h-auto print:overflow-visible">
       <!-- Mobile sidebar - overlay when opened -->

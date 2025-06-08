@@ -39,11 +39,11 @@ const config = {
 			name: Date.now().toString() // Force cache busting
 		}
 	},
-	preprocess: vitePreprocess({
-		postcss: {
-			configFilePath: './postcss.config.cjs'
-		}
-	})
+	preprocess: [
+		vitePreprocess({
+			postcss: true
+		})
+	]
 };
 
 export default config;

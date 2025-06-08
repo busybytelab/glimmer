@@ -1,4 +1,4 @@
-import { getAuthToken, getCurrentUserId } from '$lib/auth';
+import { authService } from '$lib/services/auth';
 
 export type Chat = {
     id: string;
@@ -41,7 +41,7 @@ class ChatService {
      * Fetches all chats for the current user
      */
     public async getChats(): Promise<Chat[]> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }
@@ -66,7 +66,7 @@ class ChatService {
      * Fetches a single chat with all its messages
      */
     public async getChat(chatId: string): Promise<ChatWithMessages> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }
@@ -113,12 +113,12 @@ class ChatService {
      * Creates a new chat
      */
     public async createChat(systemPrompt: string, model?: string): Promise<Chat> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }
 
-        const userId = getCurrentUserId();
+        const userId = authService.getCurrentUserId();
         if (!userId) {
             throw new Error('User ID not found. Please log in again.');
         }
@@ -156,7 +156,7 @@ class ChatService {
      * Updates a chat's title
      */
     public async updateChatTitle(chatId: string, title: string): Promise<Chat> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }
@@ -184,7 +184,7 @@ class ChatService {
      * Deletes a chat
      */
     public async deleteChat(chatId: string): Promise<void> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }
@@ -206,12 +206,12 @@ class ChatService {
      * @param includeArchived Whether to include archived chats, defaults to false
      */
     public async getChatsWithLastMessages(includeArchived: boolean = false): Promise<Chat[]> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }
 
-        const userId = getCurrentUserId();
+        const userId = authService.getCurrentUserId();
         if (!userId) {
             throw new Error('User ID not found. Please log in again.');
         }
@@ -265,7 +265,7 @@ class ChatService {
      * Fetches the last message for a chat
      */
     public async getLastMessage(chatId: string): Promise<ChatMessage | null> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }
@@ -354,7 +354,7 @@ class ChatService {
      * Adds a message to a chat and updates the chat title if it's the first user message
      */
     public async addMessageToChat(chatId: string, message: string, role: 'user' | 'assistant' | 'system'): Promise<ChatMessage> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }
@@ -414,7 +414,7 @@ class ChatService {
      * @returns Array of chats matching the query
      */
     public async searchChats(query: string): Promise<Chat[]> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }
@@ -425,7 +425,7 @@ class ChatService {
         }
         
         try {
-            const userId = getCurrentUserId();
+            const userId = authService.getCurrentUserId();
             if (!userId) {
                 throw new Error('User ID not found. Please log in again.');
             }
@@ -591,7 +591,7 @@ class ChatService {
      * Updates a chat's archived status
      */
     public async updateChatArchiveStatus(chatId: string, archived: boolean): Promise<Chat> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }

@@ -12,8 +12,6 @@ import (
 func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
-			"createRule": null,
-			"deleteRule": null,
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -203,6 +201,9 @@ func init() {
 			"name": "%s",
 			"system": false,
 			"type": "base",
+			"createRule": null,
+			"deleteRule": null,
+			"listRule": null,
 			"updateRule": null,
 			"viewRule": null
 		}`, domain.CollectionLLMResponses, domain.CollectionLLMResponses, domain.CollectionLLMResponses)

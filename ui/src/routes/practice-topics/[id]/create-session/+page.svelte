@@ -247,7 +247,7 @@
                     <div class="ml-4">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Selected Learner</h3>
                         <p class="text-md text-gray-600 dark:text-gray-300">
-                            <span class="font-semibold">{selectedLearner?.expand?.user?.name || selectedLearner?.user?.name || 'Unnamed Learner'}</span>
+                            <span class="font-semibold">{selectedLearner?.nickname || 'Unnamed Learner'}</span>
                             {#if selectedLearner?.age}
                                 <span class="text-gray-500 dark:text-gray-400 ml-2">• Age: {selectedLearner.age}</span>
                             {/if}
@@ -307,7 +307,7 @@
                         <LoadingSpinner size="lg" color="primary" />
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Creating Practice Session</h3>
                         <p class="text-gray-600 dark:text-gray-300 text-center mb-4">
-                            We're generating personalized practice items for {selectedLearner?.expand?.user?.name || selectedLearner?.user?.name || 'the learner'}.
+                            We're generating personalized practice items for {selectedLearner?.nickname || 'the learner'}.
                         </p>
                         <p class="text-gray-600 dark:text-gray-300 text-center mb-4">
                             This may take a few minutes. Please don't refresh the page.

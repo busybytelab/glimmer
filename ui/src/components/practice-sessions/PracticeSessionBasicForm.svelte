@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { goto } from '$app/navigation';
-	import pb from '$lib/pocketbase';
+	import { sessionService } from '$lib/services/session';
+	import { learnerService } from '$lib/services/learner';
 	import type { PracticeSession } from '$lib/types';
 	import FormField from '../common/FormField.svelte';
 	import FormButton from '../common/FormButton.svelte';
@@ -42,23 +43,19 @@
 	let showLearnerSelection = false;
 
 	// Load learners when component mounts
-	fetchLearners();
+	loadLearners();
 
-	async function fetchLearners() {
+	async function loadLearners() {
 		try {
 			loadingLearners = true;
-			const result = await pb.collection('learners').getList(1, 50, {
-				sort: 'nickname',
-				expand: 'user'
-			});
-			learners = result.items;
+			learners = await learnerService.getLearners(1, 50);
 
 			// If we have the current learner, find them in the list
 			if (session?.learner) {
 				selectedLearner = learners.find(l => l.id === session.learner);
 			}
 		} catch (err) {
-			console.error('Error fetching learners:', err);
+			console.error('Error loading learners:', err);
 			error = 'Failed to load learners';
 		} finally {
 			loadingLearners = false;
@@ -87,7 +84,7 @@
 			let result;
 			if (session) {
 				// Update existing session
-				result = await pb.collection('practice_sessions').update(session.id, formData);
+				result = await sessionService.updateSession(session.id, formData);
 			} else {
 				// Create new session (should not happen in this form)
 				error = "Cannot create new sessions from this form";
@@ -118,15 +115,11 @@
 		try {
 			loading = true;
 			error = null;
-			await pb.collection('practice_sessions').delete(session.id);
+			await sessionService.deleteSession(session.id);
 			dispatch('delete', session.id);
 			
-			// Navigate back to practice topics or dashboard
-			if (session.expand?.practice_topic) {
-				goto(`/practice-topics/${session.expand.practice_topic.id}`);
-			} else {
-				goto('/dashboard');
-			}
+			// Navigate back to practice topics or home
+			goto('/home');
 		} catch (err) {
 			console.error('Failed to delete session:', err);
 			error = 'Failed to delete practice session';

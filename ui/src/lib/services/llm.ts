@@ -1,4 +1,4 @@
-import { getAuthToken } from '$lib/auth';
+import { authService } from '$lib/services/auth';
 
 export type ModelInfo = {
     name: string;
@@ -47,7 +47,7 @@ class LLMService {
      * Fetches available LLM models and platform information
      */
     public async getInfo(): Promise<LLMInfo> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }
@@ -67,7 +67,7 @@ class LLMService {
      * Sends a chat message to the LLM service
      */
     public async chat(prompt: string, systemPrompt: string, model?: string): Promise<ChatResponse> {
-        const authToken = getAuthToken();
+        const authToken = authService.getAuthToken();
         if (!authToken) {
             throw new Error('Please log in again.');
         }

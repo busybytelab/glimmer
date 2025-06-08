@@ -1,14 +1,9 @@
 import pb from '$lib/pocketbase';
-import type { PracticeSession, PracticeItem, User } from '$lib/types';
+import type { PracticeSession, PracticeItem, Learner } from '$lib/types';
 
 export interface SessionWithExpandedData extends PracticeSession {
     expand?: {
-        learner?: { 
-            id: string; 
-            expand?: {
-                user?: User;
-            }
-        };
+        learner?: Learner;
         practice_topic?: { id: string; name: string };
         practice_items?: PracticeItem[];
     };
@@ -26,7 +21,7 @@ class SessionService {
             await this.ensureAuth();
 
             const result = await pb.collection('practice_sessions').getOne(id, {
-                expand: 'learner,learner.user,practice_topic,practice_items,practice_items.reviewer,practice_items.reviewer.user',
+                expand: 'learner,practice_topic,practice_items',
                 fields: 'id,name,status,assigned_at,completed_at,generation_prompt,learner,practice_topic,practice_items,expand'
             });
 
@@ -74,27 +69,6 @@ class SessionService {
         }
     }
 
-    async checkUserRole(): Promise<boolean> {
-        await this.ensureAuth();
-
-        try {
-            const authData = pb.authStore.model;
-            if (!authData) {
-                throw new Error('User not authenticated');
-            }
-
-            try {
-                const instructorRecord = await pb.collection('instructors').getFirstListItem(`user="${authData.id}"`);
-                return !!instructorRecord;
-            } catch (err) {
-                return false;
-            }
-        } catch (err) {
-            console.error('Failed to check user role:', err);
-            return false;
-        }
-    }
-
     parsePracticeItems(session: SessionWithExpandedData): PracticeItem[] {
         if (session.expand?.practice_items) {
             return session.expand.practice_items;
@@ -102,6 +76,46 @@ class SessionService {
         // If practice_items is not expanded, it's an array of IDs
         // We should never reach here because we always expand practice_items in loadSession
         throw new Error('Practice items not expanded. This is a data integrity error.');
+    }
+
+    /**
+     * Updates a practice session
+     * @param id Session ID
+     * @param data Updated session data
+     * @returns Updated session
+     */
+    async updateSession(id: string, data: Partial<PracticeSession>): Promise<PracticeSession> {
+        await this.ensureAuth();
+        return await pb.collection('practice_sessions').update(id, data) as PracticeSession;
+    }
+
+    /**
+     * Deletes a practice session
+     * @param id Session ID
+     */
+    async deleteSession(id: string): Promise<void> {
+        await this.ensureAuth();
+        await pb.collection('practice_sessions').delete(id);
+    }
+
+    /**
+     * Gets a list of practice sessions
+     * @param page Page number (1-based)
+     * @param perPage Number of items per page
+     * @param filter Optional filter string
+     * @returns List of practice sessions
+     */
+    async getSessions(page: number = 1, perPage: number = 10, filter?: string): Promise<PracticeSession[]> {
+        await this.ensureAuth();
+        const options: any = {
+            sort: '-created',
+            expand: 'learner,practice_topic'
+        };
+        if (filter) {
+            options.filter = filter;
+        }
+        const result = await pb.collection('practice_sessions').getList(page, perPage, options);
+        return result.items as PracticeSession[];
     }
 }
 

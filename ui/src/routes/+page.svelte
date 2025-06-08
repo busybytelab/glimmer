@@ -3,10 +3,10 @@
   import { isAuthenticated } from '$lib/stores';
   import LoadingSpinner from '../components/common/LoadingSpinner.svelte';
 
-  // Redirect to dashboard if authenticated, otherwise to login
+  // Redirect to role selection if authenticated, otherwise to login
   onMount(() => {
     // Use standard browser navigation
-    const path = $isAuthenticated ? '/dashboard' : '/login';
+    const path = $isAuthenticated ? '/select-role' : '/login';
     window.location.href = path;
   });
 </script>

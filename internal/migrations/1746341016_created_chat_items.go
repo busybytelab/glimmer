@@ -12,8 +12,6 @@ import (
 func init() {
 	m.Register(func(app core.App) error {
 		jsonData := fmt.Sprintf(`{
-			"createRule": "@request.auth.id != \"\"",
-			"deleteRule": "@request.auth.id = chat.user",
 			"fields": [
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
@@ -112,10 +110,12 @@ func init() {
 				"CREATE INDEX `+"`"+`idx_chat_order`+"`"+` ON `+"`"+`%s`+"`"+` (`+"`"+`chat`+"`"+`, `+"`"+`order`+"`"+`)",
 				"CREATE INDEX `+"`"+`idx_chat_items_content`+"`"+` ON `+"`"+`%s`+"`"+` (`+"`"+`content`+"`"+`)"
 			],
-			"listRule": "@request.auth.id = chat.user",
 			"name": "%s",
 			"system": false,
 			"type": "base",
+			"createRule": "@request.auth.id != \"\"",
+			"deleteRule": "@request.auth.id = chat.user",
+			"listRule": "@request.auth.id = chat.user",
 			"updateRule": "@request.auth.id = chat.user",
 			"viewRule": "@request.auth.id = chat.user"
 		}`, domain.CollectionChats, domain.CollectionChatItems, domain.CollectionChatItems, domain.CollectionChatItems, domain.CollectionChatItems)

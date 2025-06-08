@@ -1,7 +1,8 @@
 import type { Writable } from 'svelte/store';
-import type { Instructor, Learner } from './types';
+import type { Learner } from './types';
 
-export const user: Writable<Instructor | Learner | null>;
+// TODO: look at the usage of user and fix it
+export const user: Writable<| Learner | null>;
 export const isAuthenticated: Writable<boolean>;
 export const isLoading: Writable<boolean>;
 export const error: Writable<string | null>;

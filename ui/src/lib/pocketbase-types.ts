@@ -25,7 +25,6 @@ import type {
     PracticeSession,
     Account,
     User,
-    Instructor,
     Learner
 } from './types';
 
@@ -69,6 +68,5 @@ export type PocketBaseCollections = Omit<PocketBase, 'collection'> & {
     collection(idOrName: 'practice_results'): RecordService<PracticeResult>;
     collection(idOrName: 'accounts'): RecordService<Account>;
     collection(idOrName: 'users'): RecordService<User>;
-    collection(idOrName: 'instructors'): RecordService<Instructor>;
     collection(idOrName: 'learners'): RecordService<Learner>;
 } 

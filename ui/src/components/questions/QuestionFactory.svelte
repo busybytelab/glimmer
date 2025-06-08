@@ -22,15 +22,15 @@
     export let onReviewStatusChange: ((itemId: string, status: ReviewStatus) => void) | undefined = undefined;
 
     // Derived values based on view type
-    $: showAnswer = viewType === QuestionViewType.ANSWERED || viewType === QuestionViewType.INSTRUCTOR || viewType === QuestionViewType.GENERATED;
-    $: showInstructorInfo = viewType === QuestionViewType.INSTRUCTOR || viewType === QuestionViewType.GENERATED;
+    $: showAnswer = viewType === QuestionViewType.ANSWERED || viewType === QuestionViewType.PARENT || viewType === QuestionViewType.GENERATED;
+    $: showInstructorInfo = viewType === QuestionViewType.PARENT || viewType === QuestionViewType.GENERATED;
     $: showReviewControls = viewType === QuestionViewType.GENERATED && isInstructor;
     
     // Controls whether the question can be interacted with
     // Disable in these cases:
     // 1. Explicitly disabled from parent
     // 2. Not in LEARNER view
-    // 3. Instructor using LEARNER view (to prevent accidental edits)
+    // 3. Parent using LEARNER view (to prevent accidental edits)
     $: isDisabled = disabled || 
                    viewType !== QuestionViewType.LEARNER || 
                    (isInstructor && viewType === QuestionViewType.LEARNER);
@@ -66,7 +66,7 @@
                 </svg>
             </button>
         {/if}
-        {#if (viewType === QuestionViewType.INSTRUCTOR && item.user_answer) || (viewType === QuestionViewType.LEARNER && item.is_correct)}
+        {#if (viewType === QuestionViewType.PARENT && item.user_answer) || (viewType === QuestionViewType.LEARNER && item.is_correct)}
             <button
                 class="group p-1 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors duration-200 focus:outline-none"
                 style="box-shadow: none; border: none;"
