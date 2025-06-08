@@ -63,7 +63,7 @@
     function updateBreadcrumbs() {
         breadcrumbItems = [
             {
-                label: 'Home',
+                label: `${learner.nickname}'s Profile`,
                 href: '/',
                 icon: 'home' as BreadcrumbIcon
             },

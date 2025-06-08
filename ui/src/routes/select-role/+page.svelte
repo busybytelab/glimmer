@@ -5,6 +5,7 @@
     import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../components/common/ErrorAlert.svelte';
     import type { Learner } from '$lib/types';
+    import { setCurrentLearner } from '$lib/stores/learnerStore';
 
     let learners: Learner[] = [];
     let loading = true;
@@ -22,11 +23,16 @@
         }
     });
 
-    function handleLearnerSelect(learnerId: string) {
-        goto(`/learners/${learnerId}/home`);
+    function handleLearnerSelect(learner: Learner) {
+        // Set the current learner in the store
+        setCurrentLearner(learner);
+        // Navigate to the learner's home page
+        goto(`/learners/${learner.id}/home`);
     }
 
     function handleAccountSettings() {
+        // Clear the current learner when going to account settings
+        setCurrentLearner(null);
         goto('/account');
     }
 </script>
@@ -51,7 +57,7 @@
                 <!-- Learner Cards -->
                 {#each learners as learner}
                     <button
-                        on:click={() => handleLearnerSelect(learner.id)}
+                        on:click={() => handleLearnerSelect(learner)}
                         class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col items-center text-left"
                     >
                         <div class="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 mb-4 flex items-center justify-center">
