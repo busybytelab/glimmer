@@ -1,12 +1,13 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
-    import type { PracticeTopic } from '$lib/types';
+    import type { PracticeTopic, Learner } from '$lib/types';
     import PracticeTopicCard from '../../../../components/practice-topics/PracticeTopicCard.svelte';
     import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
     import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
     import { topicsService } from '$lib/services/topics';
+    import { learnerService } from '$lib/services/learner';
     // Define the breadcrumb item type
     type BreadcrumbItem = {
         label: string;
@@ -19,6 +20,7 @@
     let error: string | null = null;
     let learnerId: string = '';
     let breadcrumbItems: BreadcrumbItem[] = [];
+    let learner: any = null;
 
     onMount(async () => {
         try {
@@ -26,7 +28,12 @@
             learnerId = $page.params.id;
             
             if (learnerId) {
-                await loadTopics();
+                // First load the learner
+                learner = await learnerService.getLearner(learnerId);
+                if (!learner) {
+                    throw new Error('Learner not found');
+                }
+                topics = await loadTopics(learner);
                 updateBreadcrumbs();
             } else {
                 error = 'Invalid learner ID';
@@ -39,14 +46,21 @@
         }
     });
 
-    async function loadTopics() {
+    async function loadTopics(learner: Learner): Promise<PracticeTopic[]> {
         try {
             loading = true;
             error = null;
-            return await topicsService.getTopics();
+            if (!learner) {
+                throw new Error('Learner information not available');
+            }
+            const result = await topicsService.getTopicsForLearner(learner.age, learner.grade_level);
+            console.log('Loaded topics for learner:', result);
+            return result;
+    
         } catch (err) {
             console.error('Failed to load topics:', err);
             error = 'Failed to load practice topics';
+            return [];
         } finally {
             loading = false;
         }
