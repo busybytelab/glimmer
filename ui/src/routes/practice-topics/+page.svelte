@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import pb from '$lib/pocketbase';
+	import { topicsService } from '$lib/services/topics';
 	import { goto } from '$app/navigation';
 	import type { PracticeTopic } from '$lib/types';
 	import PracticeTopicCard from '../../components/practice-topics/PracticeTopicCard.svelte';
@@ -16,10 +16,7 @@
 		try {
 			loading = true;
 			error = null;
-			const result = await pb.collection('practice_topics').getFullList({
-				sort: '-created',
-				expand: 'account'
-			});
+			const result = await topicsService.getTopics();
 			
 			// Make sure tags are properly formatted as arrays
 			topics = result.map((topic: any) => {

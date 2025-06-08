@@ -77,6 +77,46 @@ class SessionService {
         // We should never reach here because we always expand practice_items in loadSession
         throw new Error('Practice items not expanded. This is a data integrity error.');
     }
+
+    /**
+     * Updates a practice session
+     * @param id Session ID
+     * @param data Updated session data
+     * @returns Updated session
+     */
+    async updateSession(id: string, data: Partial<PracticeSession>): Promise<PracticeSession> {
+        await this.ensureAuth();
+        return await pb.collection('practice_sessions').update(id, data) as PracticeSession;
+    }
+
+    /**
+     * Deletes a practice session
+     * @param id Session ID
+     */
+    async deleteSession(id: string): Promise<void> {
+        await this.ensureAuth();
+        await pb.collection('practice_sessions').delete(id);
+    }
+
+    /**
+     * Gets a list of practice sessions
+     * @param page Page number (1-based)
+     * @param perPage Number of items per page
+     * @param filter Optional filter string
+     * @returns List of practice sessions
+     */
+    async getSessions(page: number = 1, perPage: number = 10, filter?: string): Promise<PracticeSession[]> {
+        await this.ensureAuth();
+        const options: any = {
+            sort: '-created',
+            expand: 'learner,practice_topic'
+        };
+        if (filter) {
+            options.filter = filter;
+        }
+        const result = await pb.collection('practice_sessions').getList(page, perPage, options);
+        return result.items as PracticeSession[];
+    }
 }
 
 export const sessionService = new SessionService(); 

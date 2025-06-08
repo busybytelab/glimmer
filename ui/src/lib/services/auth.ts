@@ -65,6 +65,40 @@ export class AuthService {
   isPublicRoute(path: string): boolean {
     return PUBLIC_ROUTES.some(route => path.startsWith(route));
   }
+
+  /**
+   * Refreshes the authentication token using PocketBase's authRefresh method.
+   * @returns Promise that resolves when the token is refreshed
+   * @throws Error if the refresh fails
+   */
+  async refreshAuthToken(): Promise<void> {
+    try {
+      await pb.collection('users').authRefresh();
+      // Update localStorage if needed
+      this.saveAuthToken();
+    } catch (error) {
+      this.clearAuthToken();
+      throw error;
+    }
+  }
+
+  /**
+   * Authenticates a user with email and password.
+   * @param email User's email address
+   * @param password User's password
+   * @param rememberMe Whether to persist the auth token
+   * @returns Promise that resolves when authentication is successful
+   * @throws Error if authentication fails
+   */
+  async authWithPassword(email: string, password: string, rememberMe: boolean = true): Promise<void> {
+    try {
+      await pb.collection('users').authWithPassword(email, password);
+      this.saveAuthToken(rememberMe);
+    } catch (error) {
+      this.clearAuthToken();
+      throw error;
+    }
+  }
 }
 
 // Export a singleton instance

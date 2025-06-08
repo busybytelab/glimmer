@@ -7,7 +7,7 @@
 	import FormButton from '../../components/common/FormButton.svelte';
 	import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
 	import ErrorAlert from '../../components/common/ErrorAlert.svelte';
-	import { userService } from '$lib/services/user';
+	import { learnerService } from '$lib/services/learner';
 	
 	let learners: Learner[] = [];
 	let loading = true;
@@ -27,7 +27,7 @@
 
 			
 			// Get learners from the same account
-			const result = await userService.getLearners();
+			const result = await learnerService.getLearners();
 			
 			// Map expanded data to the learner objects
 			learners = result.map(item => {

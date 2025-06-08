@@ -1,5 +1,5 @@
 import pb from '$lib/pocketbase';
-import type { Learner, RegistrationForm, User } from '$lib/types';
+import type { RegistrationForm, User } from '$lib/types';
 
 class UserService {
 	/**
@@ -26,16 +26,6 @@ class UserService {
 			}
 			throw new Error('Registration failed. Please try again.');
 		}
-	}
-
-	async getLearners(): Promise<Learner[]> {
-		const learners = await pb.collection('learners').getFullList();
-		return learners;
-	}
-
-	async getLearner(id: string): Promise<Learner> {
-		const learner = await pb.collection('learners').getOne(id);
-		return learner;
 	}
 
 	async getCurrentUser(): Promise<User> {

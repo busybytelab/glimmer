@@ -3,7 +3,9 @@
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
     import type { PracticeTopic } from '$lib/types';
-    import pb from '$lib/pocketbase';
+    import { topicsService } from '$lib/services/topics';
+    import { sessionService } from '$lib/services/session';
+    import { authService } from '$lib/services/auth';
     import ActionToolbar from '../../../components/common/ActionToolbar.svelte';
     import Breadcrumbs from '../../../components/common/Breadcrumbs.svelte';
     import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
@@ -53,7 +55,7 @@
                 throw new Error('Topic ID is required');
             }
 
-            const result = await pb.collection('practice_topics').getOne<PracticeTopic>(id);
+            const result = await topicsService.getTopic(id);
 
             // Parse tags if they're stored as a string
             if (result.tags) {
@@ -85,14 +87,11 @@
 
     async function loadPastPractices(id: string) {
         try {
-            const result = await pb.collection('practice_sessions').getList(1, 10, {
-                filter: `practice_topic="${id}"`,
-                sort: '-created',
-                expand: 'learner,practice_topic'
-            });
-            pastPractices = result.items;
+            const sessions = await sessionService.getSessions(1, 10, `practice_topic="${id}"`);
+            pastPractices = sessions;
         } catch (err) {
-            console.error('Failed to load past practices:', err);
+            console.error('Error loading past practices:', err);
+            error = 'Failed to load past practices';
         }
     }
 
@@ -109,7 +108,7 @@
         if (!topic) return;
 
         try {
-            const authData = pb.authStore.model;
+            const authData = authService.getCurrentUserId();
             if (!authData) {
                 console.error('User not authenticated');
                 error = 'You must be logged in to start a practice';
