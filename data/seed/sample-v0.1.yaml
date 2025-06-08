@@ -147,7 +147,7 @@ collections:
         age: 10
         grade_level: "5th"
         learning_preferences: "[\"Visual\"]"
-        avatar: "default_avatar.png"
+        avatar: "robot1.svg"
         account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
@@ -155,9 +155,9 @@ collections:
       - id: "l2"
         nickname: "Sara"
         age: 13
-        grade_level: "8th"
+        grade_level: "4th"
         learning_preferences: "[\"Auditory\", \"Visual\"]"
-        avatar: "default_avatar.png"
+        avatar: "bunny1.svg"
         account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
@@ -168,7 +168,7 @@ collections:
         age: 12
         grade_level: "6th"
         learning_preferences: "[\"Visual\"]"
-        avatar: "default_avatar.png"
+        avatar: "octopus1.svg"
         account: "__ref::accounts::a2"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
