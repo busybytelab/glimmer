@@ -1,6 +1,6 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { building } from '$app/environment';
-import { isPublicRoute } from '$lib/auth';
+import { authService } from '$lib/services/auth';
 
 export const handle: Handle = async ({ event, resolve }) => {
     // Skip auth check during build
@@ -9,38 +9,16 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
 
     const path = event.url.pathname;
-    const isPublic = isPublicRoute(path);
 
-    // Get auth token from cookies
-    const authCookie = event.request.headers.get('cookie')?.split(';')
-        .find(c => {
-            const trimmed = c.trim();
-            if (!trimmed.startsWith('pb_auth_token=')) {
-                return false;
-            }
-            const value = trimmed.split('=')[1];
-            if (value && value !== 'null' && value.trim().length > 0) {
-                return true;
-            }
-            return false;
-        });
-    
-    // Check if we have a valid auth cookie
-    const isAuthenticated = !!authCookie;
-
-    // If authenticated and trying to access login page, redirect to role selection
-    if (isAuthenticated && isPublic) {
-        throw redirect(303, '/select-role');
+    // Allow access to public routes
+    if (authService.isPublicRoute(path)) {
+        return await resolve(event);
     }
 
-    // Redirect to login if not authenticated and trying to access protected route
-    if (!isAuthenticated && !isPublic) {
-        // Get the current URL including search params
-        const returnUrl = event.url.pathname + event.url.search;
-        // Only encode if there's actually a returnUrl
-        const encodedReturnUrl = returnUrl ? encodeURIComponent(returnUrl) : '';
-        const redirectUrl = `/login${encodedReturnUrl ? `?returnUrl=${encodedReturnUrl}` : ''}`;
-        throw redirect(303, redirectUrl);
+    // Check for authentication
+    const token = event.request.headers.get('cookie')?.match(/pb_auth_token=([^;]+)/)?.[1];
+    if (!token) {
+        throw redirect(303, '/login');
     }
 
     return await resolve(event);

@@ -2,12 +2,11 @@
   import { onMount } from 'svelte';
   import { isAuthenticated, isAuthLoading, error, theme } from '$lib/stores';
   import pb from '$lib/pocketbase';
-  import { getAuthToken, clearAuthToken } from '$lib/auth';
+  import { authService } from '$lib/services/auth';
   import SideNav from '../components/layout/SideNav.svelte';
   import LoadingSpinner from '../components/common/LoadingSpinner.svelte';
   import ErrorAlert from '../components/common/ErrorAlert.svelte';
   import Toast from '../components/common/Toast.svelte';
-  import { isPublicRoute } from '$lib/auth';
   import '../app.css';
 
   // Sidebar state for layout
@@ -19,7 +18,7 @@
   }
 
   // Check if current route is public
-  $: isPublic = isPublicRoute(window.location.pathname);
+  $: isPublic = authService.isPublicRoute(window.location.pathname);
 
   // Function to handle the auth flow
   async function initializeAuth() {
@@ -27,7 +26,7 @@
     error.set(null);
     try {
       // Get token using our utility function
-      const token = getAuthToken();
+      const token = authService.getAuthToken();
       // Only proceed with auth verification if we have a token
       if (token) {
         // Set token in PocketBase if it's not already set
@@ -69,13 +68,13 @@
 
 
             // Clear auth state and show login
-            //clearAuthToken();
+            //authService.clearAuthToken();
             //isAuthenticated.set(false);
           }
         } catch (err) {
           // Token refresh failed, clear auth state
           console.error('Auth refresh failed:', err);
-          clearAuthToken();
+          authService.clearAuthToken();
           isAuthenticated.set(false);
         }
       } else {
@@ -85,7 +84,7 @@
     } catch (err) {
       // Catch any other errors
       console.error('Authentication initialization failed:', err);
-      clearAuthToken();
+      authService.clearAuthToken();
       isAuthenticated.set(false);
     } finally {
       isAuthLoading.set(false);

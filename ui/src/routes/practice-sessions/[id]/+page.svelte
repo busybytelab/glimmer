@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
     import { page } from '$app/stores';
-	import { isAuthenticated } from '$lib/auth';
+	import { authService } from '$lib/services/auth';
 	import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
 	import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
 
@@ -18,7 +18,7 @@
 			}
 
 			// Check if user is authenticated
-			const authenticated = await isAuthenticated();
+			const authenticated = await authService.isAuthenticated();
 			if (!authenticated) {
 				goto('/login');
             return;
