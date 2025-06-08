@@ -2,7 +2,7 @@
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
     import { onMount } from 'svelte';
-    import type { PracticeSession, BreadcrumbItem } from '$lib/types';
+    import type { PracticeSession, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
     import PracticeSessionBasicForm from '../../../../components/practice-sessions/PracticeSessionBasicForm.svelte';
     import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
     import ActionToolbar from '../../../../components/common/ActionToolbar.svelte';
@@ -78,7 +78,7 @@
             {
                 label: 'Topics',
                 href: '/practice-topics',
-                icon: 'topic'
+                icon: 'topic' as BreadcrumbIcon
             }
         ];
         
@@ -86,7 +86,7 @@
             items.push({
                 label: session.expand.practice_topic.name,
                 href: `/practice-topics/${session.practice_topic}`,
-                icon: 'topic'
+                icon: 'topic' as BreadcrumbIcon
             });
         }
         
@@ -96,12 +96,12 @@
         items.push({
             label: sessionName,
             href: `/practice-sessions/${session.id}`,
-            icon: 'session'
+            icon: 'session' as BreadcrumbIcon
         });
         
         items.push({
             label: 'Edit',
-            icon: 'edit'
+            icon: 'edit' as BreadcrumbIcon
         });
         
         breadcrumbItems = items;

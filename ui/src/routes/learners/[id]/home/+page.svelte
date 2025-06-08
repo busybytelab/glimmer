@@ -1,19 +1,13 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
-    import type { PracticeTopic, Learner } from '$lib/types';
+    import type { PracticeTopic, Learner, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
     import PracticeTopicCard from '../../../../components/practice-topics/PracticeTopicCard.svelte';
     import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
     import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
     import { topicsService } from '$lib/services/topics';
     import { learnersService } from '$lib/services/learners';
-    // Define the breadcrumb item type
-    type BreadcrumbItem = {
-        label: string;
-        href?: string;
-        icon?: string;
-    };
 
     let topics: PracticeTopic[] = [];
     let loading = true;
@@ -71,11 +65,11 @@
             {
                 label: 'Home',
                 href: '/',
-                icon: 'home'
+                icon: 'home' as BreadcrumbIcon
             },
             {
                 label: 'Practice Topics',
-                icon: 'topic'
+                icon: 'topic' as BreadcrumbIcon
             }
         ];
     }

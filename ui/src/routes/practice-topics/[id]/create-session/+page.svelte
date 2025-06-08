@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
-    import type { PracticeTopic, Learner } from '$lib/types';
+    import type { PracticeTopic, Learner, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
     import pb from '$lib/pocketbase';
     import LearnersList from '../../../../components/learners/LearnersList.svelte';
     import { practiceService } from '$lib/services/practice';
@@ -13,13 +13,6 @@
     import PracticeTopicCard from '../../../../components/practice-topics/PracticeTopicCard.svelte';
 
     import ExpandableTextArea from '../../../../components/common/ExpandableTextArea.svelte';
-
-    // Define the breadcrumb item type
-    type BreadcrumbItem = {
-        label: string;
-        href?: string;
-        icon?: string;
-    };
 
     // Define the steps for session creation as a string literal type
     type CreationStep = 'select_learner' | 'edit_prompts';
@@ -166,16 +159,16 @@
             {
                 label: 'Topics',
                 href: '/practice-topics',
-                icon: 'topic'
+                icon: 'topic' as BreadcrumbIcon
             },
             {
                 label: topic.name,
                 href: `/practice-topics/${topic.id}`,
-                icon: 'topic'
+                icon: 'topic' as BreadcrumbIcon
             },
             {
                 label: 'Create Session',
-                icon: 'create'
+                icon: 'create' as BreadcrumbIcon
             }
         ];
     }

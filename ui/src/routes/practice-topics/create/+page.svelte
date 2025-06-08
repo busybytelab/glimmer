@@ -1,26 +1,19 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import type { PracticeTopic } from '$lib/types';
+    import type { PracticeTopic, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
     import PracticeTopicForm from '../../../components/practice-topics/PracticeTopicForm.svelte';
     import Breadcrumbs from '../../../components/common/Breadcrumbs.svelte';
     import ActionToolbar from '../../../components/common/ActionToolbar.svelte';
-
-    // Define the breadcrumb item type
-    type BreadcrumbItem = {
-        label: string;
-        href?: string;
-        icon?: string;
-    };
 
     let breadcrumbItems: BreadcrumbItem[] = [
         {
             label: 'Topics',
             href: '/practice-topics',
-            icon: 'topic'
+            icon: 'topic' as BreadcrumbIcon
         },
         {
             label: 'New Topic',
-            icon: 'create'
+            icon: 'create' as BreadcrumbIcon
         }
     ];
 
