@@ -170,6 +170,99 @@
     @apply mt-1 text-sm;
     color: var(--danger);
   }
+
+  /* Markdown styles */
+  .prose {
+    @apply text-gray-700;
+  }
+
+  .prose pre {
+    @apply bg-gray-50 dark:bg-gray-800 rounded-lg p-4 overflow-x-auto;
+  }
+
+  .prose code {
+    @apply bg-gray-50 dark:bg-gray-800 px-1 py-0.5 rounded text-sm text-gray-800 dark:text-gray-200;
+  }
+
+  .prose pre code {
+    @apply bg-transparent p-0 text-gray-800 dark:text-gray-200;
+  }
+
+  .prose a {
+    @apply text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-gray-200 dark:border-gray-700 pl-4 italic;
+  }
+
+  .prose table {
+    @apply border-collapse w-full;
+  }
+
+  .prose th {
+    @apply border border-gray-200 dark:border-gray-700 px-4 py-2 bg-gray-50 dark:bg-gray-800;
+  }
+
+  .prose td {
+    @apply border border-gray-200 dark:border-gray-700 px-4 py-2;
+  }
+
+  /* Dark mode styles */
+  .dark .prose {
+    @apply text-gray-300;
+  }
+
+  .dark .prose h1,
+  .dark .prose h2,
+  .dark .prose h3,
+  .dark .prose h4,
+  .dark .prose h5,
+  .dark .prose h6 {
+    @apply text-blue-200;
+  }
+
+  .dark .prose li,
+  .dark .prose strong,
+  .dark .prose b,
+  .dark .prose dt,
+  .dark .prose dd {
+    @apply text-blue-100;
+  }
+
+  .dark .prose ul li::before {
+    @apply bg-blue-200;
+  }
+
+  .dark .prose ol li::before {
+    @apply text-blue-200;
+  }
+
+  /* Light mode styles */
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    @apply text-gray-900;
+  }
+
+  .prose li,
+  .prose strong,
+  .prose b,
+  .prose dt,
+  .prose dd {
+    @apply text-gray-800;
+  }
+
+  .prose ul li::before {
+    @apply bg-gray-400;
+  }
+
+  .prose ol li::before {
+    @apply text-gray-400;
+  }
 }
 
 @layer utilities {
