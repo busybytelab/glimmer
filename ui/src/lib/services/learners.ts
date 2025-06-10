@@ -1,7 +1,7 @@
 import pb from '$lib/pocketbase';
 import type { Learner } from '$lib/types';
 
-class LearnerService {
+class LearnersService {
     /**
      * Gets a list of learners
      * @param page Page number (1-based)
@@ -63,4 +63,4 @@ class LearnerService {
     }
 }
 
-export const learnerService = new LearnerService(); 
+export const learnersService = new LearnersService(); 

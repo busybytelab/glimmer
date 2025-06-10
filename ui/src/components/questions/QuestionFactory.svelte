@@ -17,7 +17,7 @@
     export let onAnswerChange: ((answer: string) => void) | undefined = undefined;
     export let printMode = false;
     export let isInstructor: boolean = false;
-    export const showHints: boolean = false;
+    export let showHints: boolean = false;
     export let onHintRequested: ((level: number) => void) | undefined = undefined;
     export let onReviewStatusChange: ((itemId: string, status: ReviewStatus) => void) | undefined = undefined;
 
@@ -54,7 +54,7 @@
 
 <div class="relative">
     <div class="absolute top-4 right-4 flex items-center space-x-2">
-        {#if viewType === QuestionViewType.LEARNER && item.hints && item.hints.length > 0 && !isInstructor && !item.is_correct}
+        {#if viewType === QuestionViewType.LEARNER && item.hints && item.hints.length > 0 && !isInstructor && !item.is_correct && showHints}
             <button
                 class="group p-1 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors duration-200 focus:outline-none"
                 style="box-shadow: none; border: none;"

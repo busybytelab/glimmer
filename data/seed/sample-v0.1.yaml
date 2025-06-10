@@ -147,17 +147,17 @@ collections:
         age: 10
         grade_level: "5th"
         learning_preferences: "[\"Visual\"]"
-        avatar: "default_avatar.png"
+        avatar: "/robot1.svg"
         account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
       - id: "l2"
         nickname: "Sara"
-        age: 13
-        grade_level: "8th"
+        age: 9
+        grade_level: "4th"
         learning_preferences: "[\"Auditory\", \"Visual\"]"
-        avatar: "default_avatar.png"
+        avatar: "/bunny1.svg"
         account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
@@ -165,10 +165,10 @@ collections:
       # Account 2 Learner
       - id: "l3"
         nickname: "John"
-        age: 12
+        age: 11
         grade_level: "6th"
         learning_preferences: "[\"Visual\"]"
-        avatar: "default_avatar.png"
+        avatar: "/octopus1.svg"
         account: "__ref::accounts::a2"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
@@ -183,13 +183,118 @@ collections:
         name: "Basic Math"
         description: "Learn basic math operations"
         subject: "Mathematics"
-        system_prompt: "You are a helpful math tutor"
-        base_prompt: "Explain this math problem in simple terms"
-        learning_goals: "Understand basic arithmetic"
+        system_prompt: |-
+          Teaching basic math to children in grades 3-5 (ages 7-10) is crucial for building a strong mathematical foundation. Here are the key areas to focus on:
+
+          1. **Number Sense and Operations**:
+             - Understanding place value
+             - Addition and subtraction with regrouping
+             - Multiplication and division facts
+             - Mental math strategies
+             - Working with fractions and decimals
+
+          2. **Problem-Solving Skills**:
+             - Reading and understanding word problems
+             - Identifying key information
+             - Choosing appropriate operations
+             - Checking answers for reasonableness
+             - Using multiple strategies
+
+          3. **Mathematical Thinking**:
+             - Pattern recognition
+             - Logical reasoning
+             - Estimation skills
+             - Making connections between concepts
+             - Using mathematical language
+
+          4. **Real-World Applications**:
+             - Money and shopping scenarios
+             - Time and measurement
+             - Geometry in everyday objects
+             - Data collection and simple graphs
+             - Practical problem-solving
+
+          5. **Learning Strategies**:
+             - Using manipulatives and visual aids
+             - Breaking down complex problems
+             - Practicing mental math
+             - Checking work systematically
+             - Building confidence through success
+
+          6. **Common Challenges**:
+             - Understanding word problems
+             - Remembering multiplication facts
+             - Working with fractions
+             - Applying concepts to real situations
+             - Building mathematical confidence
+        base_prompt: |-
+          Create a set of 7 to 10 math questions for students in grades 3-5 (ages 7-10) that cover the following key areas:
+
+          1. Number Operations:
+             - Addition and subtraction with regrouping
+             - Multiplication and division facts
+             - Working with fractions and decimals
+             - Mental math strategies
+             - Place value understanding
+
+          2. Problem-Solving:
+             - Word problems with real-world contexts
+             - Multi-step problems
+             - Pattern recognition
+             - Logical reasoning
+             - Estimation and checking
+
+          3. Mathematical Concepts:
+             - Money and shopping scenarios
+             - Time and measurement
+             - Basic geometry
+             - Simple data analysis
+             - Practical applications
+
+          Question Types:
+          - Multiple choice (with clear, age-appropriate options)
+          - Short answer (with clear expectations)
+          - True/False (with explanations)
+          - Fill in the blank (with context)
+
+          Guidelines:
+          1. Use age-appropriate language and contexts
+          2. Include visual aids or diagrams where helpful
+          3. Provide clear, encouraging explanations
+          4. Include a mix of difficulty levels
+          5. Make questions engaging and relatable
+          6. Follow curriculum standards for grades 3-5
+          7. Include real-world applications
+
+          Themed Content Creation:
+          Create questions within an engaging theme that will capture children's imagination. Choose one of these themes for the entire set of questions:
+          - Space Adventure: Frame questions around space travel, planets, and counting stars
+          - Treasure Hunt: Use pirate scenarios for counting, sharing, and measuring treasure
+          - Animal Kingdom: Create questions about animals, their habitats, and counting
+          - Sports Day: Frame questions around games, scores, and team activities
+          - Candy Shop: Use candy scenarios for fractions, money, and sharing
+          - Building Blocks: Create questions about construction, shapes, and measurements
+          - Garden Math: Frame questions around plants, growth, and measurements
+          - Toy Store: Use toy scenarios for counting, money, and sharing
+
+          For the chosen theme:
+          1. Use theme-appropriate vocabulary and scenarios
+          2. Maintain educational value while making it fun
+          3. Keep the theme consistent across all questions
+          4. Use the theme to make math concepts more memorable
+          5. Create a story-like flow between questions
+          6. Make explanations fit the theme while being clear and educational
+
+          Each question should:
+          - Have a clear learning objective
+          - Include easy to understand hints
+          - Provide detailed explanations for both correct and incorrect answers
+          - Use positive, encouraging language in feedback
+        learning_goals: "Master basic math operations and problem-solving skills"
         target_age_range: "7-10"
         target_grade_level: "3-5"
         llm_model: ""
-        tags: "[\"weekly\"]"
+        tags: "[\"weekly\", \"math\", \"basic\"]"
         account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
@@ -217,7 +322,7 @@ collections:
 
           8. **Reading Aloud**: Encourage children to read their work aloud. Hearing their writing can help them identify awkward phrasing or mistakes they might miss when reading silently.
         base_prompt: |-
-          Create a set of 6-10 editing questions for UK Year 4 students (ages 8-9) that cover the following key areas:
+          Create a set of 7 to 10 editing questions for UK Year 4 students (ages 8-9) that cover the following key areas:
 
           1. Grammar and Punctuation:
              - Subject-verb agreement
@@ -278,7 +383,7 @@ collections:
           - Use positive, encouraging language in feedback
         learning_goals: "Master essential editing skills including grammar, punctuation, spelling, and organization"
         target_age_range: "8-9"
-        target_grade_level: "4"
+        target_grade_level: "4-5"
         llm_model: ""
         tags: "[\"weekly\", \"english\", \"editing\"]"
         account: "__ref::accounts::a1"
@@ -290,9 +395,123 @@ collections:
         name: "Advanced Math"
         description: "Learn advanced mathematical concepts"
         subject: "Mathematics"
-        system_prompt: "You are a helpful advanced math tutor"
-        base_prompt: "Explain this advanced math problem in simple terms"
-        learning_goals: "Understand advanced mathematical concepts"
+        system_prompt: |-
+          Teaching advanced math to students in grades 7-9 (ages 12-15) is essential for developing higher-order mathematical thinking. Here are the key areas to focus on:
+
+          1. **Algebraic Thinking**:
+             - Solving linear equations and inequalities
+             - Working with variables and expressions
+             - Understanding functions and their graphs
+             - Systems of equations
+             - Quadratic equations and functions
+
+          2. **Geometric Concepts**:
+             - Properties of geometric figures
+             - Pythagorean theorem
+             - Similarity and congruence
+             - Transformations
+             - Coordinate geometry
+
+          3. **Data Analysis and Probability**:
+             - Statistical measures
+             - Data representation
+             - Probability concepts
+             - Statistical inference
+             - Data interpretation
+
+          4. **Mathematical Reasoning**:
+             - Logical deduction
+             - Pattern recognition
+             - Problem-solving strategies
+             - Mathematical proof
+             - Critical thinking
+
+          5. **Real-World Applications**:
+             - Financial mathematics
+             - Scientific calculations
+             - Engineering applications
+             - Data analysis
+             - Problem-solving in context
+
+          6. **Learning Strategies**:
+             - Multiple solution methods
+             - Technology integration
+             - Collaborative problem-solving
+             - Mathematical communication
+             - Self-assessment
+
+          7. **Common Challenges**:
+             - Abstract thinking
+             - Multiple solution paths
+             - Mathematical proof
+             - Real-world applications
+             - Maintaining engagement
+        base_prompt: |-
+          Create a set of 7 to 10 advanced math questions for students in grades 7-9 (ages 12-15) that cover the following key areas:
+
+          1. Algebra and Functions:
+             - Linear equations and inequalities
+             - Systems of equations
+             - Quadratic functions
+             - Function properties
+             - Algebraic expressions
+
+          2. Geometry and Measurement:
+             - Geometric properties
+             - Pythagorean theorem
+             - Transformations
+             - Coordinate geometry
+             - Similarity and congruence
+
+          3. Data Analysis:
+             - Statistical measures
+             - Probability
+             - Data interpretation
+             - Statistical inference
+             - Data representation
+
+          Question Types:
+          - Multiple choice (with challenging options)
+          - Short answer (with clear expectations)
+          - Problem-solving (with multiple steps)
+          - Mathematical proof
+          - Real-world applications
+
+          Guidelines:
+          1. Use age-appropriate but challenging language
+          2. Include visual aids where helpful
+          3. Provide detailed, mathematical explanations
+          4. Include a mix of difficulty levels
+          5. Make questions engaging and relevant
+          6. Follow curriculum standards for grades 7-9
+          7. Include real-world applications
+
+          Themed Content Creation:
+          Create questions within an engaging theme that will capture students' interest. Choose one of these themes for the entire set of questions:
+          - Technology and Innovation: Frame questions around coding, robotics, and digital systems
+          - Sports Analytics: Use sports scenarios for statistics, probability, and data analysis
+          - Environmental Science: Create questions about climate data, population growth, and measurements
+          - Architecture and Design: Frame questions around building design, measurements, and geometry
+          - Financial Planning: Use investment, budgeting, and growth scenarios
+          - Game Development: Create questions about game mechanics, probability, and algorithms
+          - Space Exploration: Frame questions around orbital mechanics, distances, and calculations
+          - Engineering Challenges: Use real-world engineering problems and calculations
+
+          For the chosen theme:
+          1. Use theme-appropriate vocabulary and scenarios
+          2. Maintain mathematical rigor while making it engaging
+          3. Keep the theme consistent across all questions
+          4. Use the theme to make abstract concepts more concrete
+          5. Create a coherent narrative between questions
+          6. Make explanations fit the theme while being mathematically precise
+
+          Each question should:
+          - Have a clear learning objective
+          - Include appropriate hints
+          - Provide detailed explanations for both correct and incorrect answers
+          - Use encouraging but mathematically precise language
+          - Connect to real-world applications
+        learning_goals: "Master advanced mathematical concepts and problem-solving strategies"
         target_age_range: "12-15"
         target_grade_level: "7-9"
         llm_model: ""

@@ -1,10 +1,11 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import { learnerService } from '$lib/services/learner';
+    import { learnersService } from '$lib/services/learners';
     import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../components/common/ErrorAlert.svelte';
     import type { Learner } from '$lib/types';
+    import { setCurrentLearner } from '$lib/stores/learnerStore';
 
     let learners: Learner[] = [];
     let loading = true;
@@ -13,7 +14,7 @@
     onMount(async () => {
         try {
             // Fetch learners associated with the current user
-            learners = await learnerService.getLearners();
+            learners = await learnersService.getLearners();
         } catch (err) {
             console.error('Error fetching learners:', err);
             error = 'Failed to load learners. Please try again.';
@@ -22,11 +23,16 @@
         }
     });
 
-    function handleLearnerSelect(learnerId: string) {
-        goto(`/learners/${learnerId}/home`);
+    function handleLearnerSelect(learner: Learner) {
+        // Set the current learner in the store
+        setCurrentLearner(learner);
+        // Navigate to the learner's home page
+        goto(`/learners/${learner.id}/home`);
     }
 
     function handleAccountSettings() {
+        // Clear the current learner when going to account settings
+        setCurrentLearner(null);
         goto('/account');
     }
 </script>
@@ -34,8 +40,7 @@
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-12">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Welcome to Glimmer</h1>
-            <p class="mt-2 text-lg text-gray-600 dark:text-gray-300">Select who you are to continue</p>
+            <p class="text-lg text-gray-600 dark:text-gray-300">Choose your profile to start learning</p>
         </div>
 
         {#if loading}
@@ -51,7 +56,7 @@
                 <!-- Learner Cards -->
                 {#each learners as learner}
                     <button
-                        on:click={() => handleLearnerSelect(learner.id)}
+                        on:click={() => handleLearnerSelect(learner)}
                         class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col items-center text-left"
                     >
                         <div class="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 mb-4 flex items-center justify-center">

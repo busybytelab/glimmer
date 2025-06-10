@@ -1,5 +1,6 @@
 import pb from '$lib/pocketbase';
 import type { PracticeSession, PracticeItem, Learner } from '$lib/types';
+import { authService } from './auth';
 
 export interface SessionWithExpandedData extends PracticeSession {
     expand?: {
@@ -55,6 +56,7 @@ class SessionService {
             // Filter practice items to only show approved or unreviewed items
             if (result.expand?.practice_items) {
                 result.expand.practice_items = result.expand.practice_items.filter(
+                    // TODO: we probably need to have a flag in topic or session to only allow approved items
                     item => !item.review_status || item.review_status === 'APPROVED'
                 );
             }
@@ -116,6 +118,39 @@ class SessionService {
         }
         const result = await pb.collection('practice_sessions').getList(page, perPage, options);
         return result.items as PracticeSession[];
+    }
+
+    /**
+     * Gets practice sessions for a specific topic and learner
+     * @param topicId Topic ID
+     * @param learnerId Learner ID
+     * @returns List of practice sessions
+     */
+    async getSessionsForTopicAndLearner(topicId: string, learnerId: string): Promise<PracticeSession[]> {
+        await this.ensureAuth();
+        try {
+            const result = await pb.collection('practice_sessions').getList(1, 50, {
+                filter: `practice_topic="${topicId}" && learner="${learnerId}"`,
+                sort: '-created',
+                expand: 'learner,practice_topic'
+            });
+            return result.items as PracticeSession[];
+        } catch (error: any) {
+            if (error.status === 401) {
+                await authService.refreshAuthToken();
+                try {
+                    const result = await pb.collection('practice_sessions').getList(1, 50, {
+                        filter: `practice_topic="${topicId}" && learner="${learnerId}"`,
+                        sort: '-created',
+                        expand: 'learner,practice_topic'
+                    });
+                    return result.items as PracticeSession[];
+                } catch (retryError: any) {
+                    throw new Error(retryError.message);
+                }
+            }
+            throw new Error(error.message);
+        }
     }
 }
 

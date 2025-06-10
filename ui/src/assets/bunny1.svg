@@ -1,0 +1,90 @@
+<svg width="250" height="250" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Define gradients for a soft, warm look -->
+  <defs>
+    <radialGradient id="bunnyGradient" cx="50%" cy="40%" r="60%" fx="50%" fy="40%">
+      <stop offset="0%" style="stop-color:#FFB6C1; stop-opacity:1" /> <!-- Light Pink -->
+      <stop offset="100%" style="stop-color:#FF69B4; stop-opacity:1" /> <!-- Hot Pink -->
+    </radialGradient>
+    <radialGradient id="earGradient" cx="50%" cy="40%" r="60%" fx="50%" fy="40%">
+      <stop offset="0%" style="stop-color:#FFC0CB; stop-opacity:1" /> <!-- Pink -->
+      <stop offset="100%" style="stop-color:#FFB6C1; stop-opacity:1" /> <!-- Light Pink -->
+    </radialGradient>
+  </defs>
+
+  <!-- Bunny's Body -->
+  <ellipse cx="50" cy="55" rx="25" ry="30" fill="url(#bunnyGradient)" stroke="#FF69B4" stroke-width="1.5"/>
+
+  <!-- Bunny's Head -->
+  <circle cx="50" cy="35" r="20" fill="url(#bunnyGradient)" stroke="#FF69B4" stroke-width="1.5"/>
+
+  <!-- Bunny's Ears -->
+  <g fill="url(#earGradient)" stroke="#FF69B4" stroke-width="1">
+    <!-- Left Ear -->
+    <path d="M 40 25
+             C 35 15, 30 5, 35 0
+             C 40 -5, 45 0, 45 10
+             C 45 15, 42 20, 40 25 Z" />
+    <!-- Right Ear -->
+    <path d="M 60 25
+             C 65 15, 70 5, 65 0
+             C 60 -5, 55 0, 55 10
+             C 55 15, 58 20, 60 25 Z" />
+  </g>
+
+  <!-- Inner Ears (Darker Pink) -->
+  <g fill="#FF69B4" opacity="0.6">
+    <path d="M 40 25
+             C 38 20, 37 15, 38 10
+             C 39 5, 41 0, 43 5
+             C 44 10, 42 20, 40 25 Z" />
+    <path d="M 60 25
+             C 62 20, 63 15, 62 10
+             C 61 5, 59 0, 57 5
+             C 56 10, 58 20, 60 25 Z" />
+  </g>
+
+  <!-- Eyes -->
+  <!-- Left Eye -->
+  <circle cx="42" cy="32" r="6" fill="white" stroke="#333" stroke-width="0.5"/>
+  <circle cx="42" cy="32" r="3" fill="#9370DB"/> <!-- Purple Pupil -->
+  <circle cx="41" cy="31" r="1" fill="white"/> <!-- Highlight -->
+
+  <!-- Right Eye -->
+  <circle cx="58" cy="32" r="6" fill="white" stroke="#333" stroke-width="0.5"/>
+  <circle cx="58" cy="32" r="3" fill="#9370DB"/> <!-- Purple Pupil -->
+  <circle cx="57" cy="31" r="1" fill="white"/> <!-- Highlight -->
+
+  <!-- Nose -->
+  <ellipse cx="50" cy="38" rx="3" ry="2" fill="#FF69B4"/>
+
+  <!-- Whiskers -->
+  <g stroke="#FF69B4" stroke-width="0.5">
+    <line x1="47" y1="39" x2="35" y2="37"/>
+    <line x1="47" y1="40" x2="35" y2="40"/>
+    <line x1="47" y1="41" x2="35" y2="43"/>
+    <line x1="53" y1="39" x2="65" y2="37"/>
+    <line x1="53" y1="40" x2="65" y2="40"/>
+    <line x1="53" y1="41" x2="65" y2="43"/>
+  </g>
+
+  <!-- Cheeks -->
+  <ellipse cx="35" cy="42" rx="4" ry="2.5" fill="#FFB6C1" opacity="0.6"/>
+  <ellipse cx="65" cy="42" rx="4" ry="2.5" fill="#FFB6C1" opacity="0.6"/>
+
+  <!-- Bunny's Tiny Hands -->
+  <g fill="url(#bunnyGradient)" stroke="#FF69B4" stroke-width="1">
+    <!-- Left Hand -->
+    <circle cx="28" cy="60" r="4"/>
+    <!-- Right Hand -->
+    <circle cx="72" cy="60" r="4"/>
+  </g>
+
+  <!-- Bunny's Legs -->
+  <g fill="url(#bunnyGradient)" stroke="#FF69B4" stroke-width="1">
+    <!-- Left Leg -->
+    <ellipse cx="40" cy="85" rx="6" ry="8" transform="rotate(-15 40 85)"/>
+    <!-- Right Leg -->
+    <ellipse cx="60" cy="85" rx="6" ry="8" transform="rotate(15 60 85)"/>
+  </g>
+
+</svg> 

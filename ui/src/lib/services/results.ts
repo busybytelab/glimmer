@@ -59,9 +59,10 @@ class ResultsService {
         score?: number;
         feedback?: string;
         hint_level_reached?: number;
-    }): Promise<void> {
+    }): Promise<PracticeResult> {
         try {
-            await pb.collection('practice_results').create(data);
+            // return the created result
+            return await pb.collection('practice_results').create(data);
         } catch (err) {
             console.error('Failed to create practice result:', err);
             if (err instanceof Error) {

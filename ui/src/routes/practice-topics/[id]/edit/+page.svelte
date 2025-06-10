@@ -2,20 +2,13 @@
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
-    import type { PracticeTopic } from '$lib/types';
+    import type { PracticeTopic, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
     import pb from '$lib/pocketbase';
     import PracticeTopicForm from '../../../../components/practice-topics/PracticeTopicForm.svelte';
     import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
     import ActionToolbar from '../../../../components/common/ActionToolbar.svelte';
     import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
-
-    // Define the breadcrumb item type
-    type BreadcrumbItem = {
-        label: string;
-        href?: string;
-        icon?: string;
-    };
 
     let topic: PracticeTopic | null = null;
     let loading = true;
@@ -78,11 +71,11 @@
                 {
                     label: 'Topics',
                     href: '/practice-topics',
-                    icon: 'topic'
+                    icon: 'topic' as BreadcrumbIcon
                 },
                 {
                     label: 'Edit Topic',
-                    icon: 'edit'
+                    icon: 'edit' as BreadcrumbIcon
                 }
             ];
             return;
@@ -92,16 +85,16 @@
             {
                 label: 'Topics',
                 href: '/practice-topics',
-                icon: 'topic'
+                icon: 'topic' as BreadcrumbIcon
             },
             {
                 label: topic.name,
                 href: `/practice-topics/${topic.id}`,
-                icon: 'topic'
+                icon: 'topic' as BreadcrumbIcon
             },
             {
                 label: `Edit ${topic.name}`,
-                icon: 'edit'
+                icon: 'edit' as BreadcrumbIcon
             }
         ];
     }

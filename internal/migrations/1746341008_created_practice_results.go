@@ -89,7 +89,7 @@ func init() {
 					"pattern": "",
 					"presentable": false,
 					"primaryKey": false,
-					"required": true,
+					"required": false,
 					"system": false,
 					"type": "number"
 				},

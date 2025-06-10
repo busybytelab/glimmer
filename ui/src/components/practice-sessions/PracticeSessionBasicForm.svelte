@@ -2,7 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { sessionService } from '$lib/services/session';
-	import { learnerService } from '$lib/services/learner';
+	import { learnersService } from '$lib/services/learners';
 	import type { PracticeSession } from '$lib/types';
 	import FormField from '../common/FormField.svelte';
 	import FormButton from '../common/FormButton.svelte';
@@ -48,7 +48,7 @@
 	async function loadLearners() {
 		try {
 			loadingLearners = true;
-			learners = await learnerService.getLearners(1, 50);
+			learners = await learnersService.getLearners(1, 50);
 
 			// If we have the current learner, find them in the list
 			if (session?.learner) {

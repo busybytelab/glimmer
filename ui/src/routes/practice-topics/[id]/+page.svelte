@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
-    import type { PracticeTopic } from '$lib/types';
+    import type { PracticeTopic, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
     import { topicsService } from '$lib/services/topics';
     import { sessionService } from '$lib/services/session';
     import { authService } from '$lib/services/auth';
@@ -10,13 +10,6 @@
     import Breadcrumbs from '../../../components/common/Breadcrumbs.svelte';
     import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
-
-    // Define the breadcrumb item type
-    type BreadcrumbItem = {
-        label: string;
-        href?: string;
-        icon?: string;
-    };
 
     let topic: PracticeTopic | null = null;
     let pastPractices: any[] = [];
@@ -131,11 +124,11 @@
             {
                 label: 'Topics',
                 href: '/practice-topics',
-                icon: 'topic'
+                icon: 'topic' as BreadcrumbIcon
             },
             {
                 label: topic.name,
-                icon: 'topic'
+                icon: 'topic' as BreadcrumbIcon
             }
         ];
     }
