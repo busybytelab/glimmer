@@ -259,6 +259,58 @@ export interface BreadcrumbItem {
     icon?: BreadcrumbIcon;
 }
 
+/**
+ * Available icons for achievements
+ */
+export type AchievementIcon = 'math-whiz' | 'math-apprentice' | 'science-explorer' | 'reading-master' | 'writing-pro' | 'problem-solver' | 'quick-thinker' | 'perfect-score' | 'practice-streak' | 'helper' | 'explorer';
+
+/**
+ * Map of achievement icons to their SVG path data
+ */
+export const AchievementIconMap: Record<AchievementIcon, string> = {
+    'math-whiz': 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-4v-4H6v-2h4V7h4v4h4v2h-4v4z',
+    'math-apprentice': 'M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z',
+    'science-explorer': 'M9.5 3A6.5 6.5 0 003 9.5c0 1.61.59 3.09 1.56 4.23l.27.27A2 2 0 006.5 15H8a1 1 0 011 1v1a2 2 0 002 2h2a2 2 0 002-2v-1a1 1 0 011-1h1.5a2 2 0 001.67-1.23l.27-.27A6.5 6.5 0 1016 9.5a6.5 6.5 0 00-6.5-6.5z',
+    'reading-master': 'M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z',
+    'writing-pro': 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
+    'problem-solver': 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+    'quick-thinker': 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
+    'perfect-score': 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z',
+    'practice-streak': 'M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6 0 3.31 2.69 6 6 6 2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-2H12.65zM7 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z',
+    'helper': 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z',
+    'explorer': 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'
+};
+
+/**
+ * Interface for achievement data with progress tracking
+ */
+export interface Achievement {
+    /** Title of the achievement */
+    title: string;
+    /** Description explaining how to earn the achievement */
+    description: string;
+    /** Icon identifier for the achievement */
+    icon: AchievementIcon;
+    /** Current progress towards completion */
+    progress: number;
+    /** Required progress to complete the achievement */
+    requiredProgress: number;
+    /** List of actions needed to complete the achievement */
+    actions: string[];
+}
+
+/**
+ * Interface for displaying latest achievement badge
+ */
+export interface LatestAchievement {
+    /** Title of the achievement */
+    title: string;
+    /** Icon identifier for the achievement */
+    icon: AchievementIcon;
+    /** Description of what was achieved */
+    description: string;
+}
+
 export interface RegistrationForm {
 	email: string;
 	password: string;

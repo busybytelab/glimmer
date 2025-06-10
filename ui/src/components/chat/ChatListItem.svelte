@@ -259,7 +259,7 @@
                                     tabindex="0"
                                     on:click|stopPropagation={handleArchiveChat}
                                     on:keydown={(e) => e.key === 'Enter' && handleKeyArchiveChat(e)}
-                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center cursor-pointer"
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center cursor-pointer"
                                     aria-label="Archive chat"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -273,7 +273,7 @@
                                     tabindex="0"
                                     on:click|stopPropagation={handleDeleteChat}
                                     on:keydown={(e) => e.key === 'Enter' && handleKeyDeleteChat(e)}
-                                    class="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center cursor-pointer"
+                                    class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center cursor-pointer"
                                     aria-label="Delete chat"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">

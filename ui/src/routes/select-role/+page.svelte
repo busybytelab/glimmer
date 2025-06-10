@@ -40,8 +40,7 @@
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-12">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Welcome to Glimmer</h1>
-            <p class="mt-2 text-lg text-gray-600 dark:text-gray-300">Select who you are to continue</p>
+            <p class="text-lg text-gray-600 dark:text-gray-300">Choose your profile to start learning</p>
         </div>
 
         {#if loading}
