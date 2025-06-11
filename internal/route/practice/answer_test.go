@@ -57,7 +57,7 @@ func setupTestApp(t *testing.T) *tests.TestApp {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err = cmd.Run()
-	
+
 	if err != nil {
 		t.Logf("Migration stdout: %s", stdout.String())
 		t.Logf("Migration stderr: %s", stderr.String())
@@ -335,4 +335,517 @@ func TestHandleEvaluateAnswer(t *testing.T) {
 			assert.Equal(t, tt.expectedBody.IsCorrect, response.IsCorrect)
 		})
 	}
+}
+
+func TestHandleProcessAnswer(t *testing.T) {
+	// Setup PocketBase test instance with temporary data directory
+	app := setupTestApp(t)
+
+	// Create test user once
+	userCollection, err := app.FindCollectionByNameOrId("users")
+	require.NoError(t, err)
+	user := core.NewRecord(userCollection)
+	user.Set("email", "test@example.com")
+	user.Set("password", "test123")
+	err = app.SaveNoValidate(user)
+	require.NoError(t, err)
+
+	// Create test learner once
+	learnerCollection, err := app.FindCollectionByNameOrId(domain.CollectionLearners)
+	require.NoError(t, err)
+	learner := core.NewRecord(learnerCollection)
+	learner.Set("nickname", "Test Learner")
+	learner.Set("user", user.Id)
+	err = app.SaveNoValidate(learner)
+	require.NoError(t, err)
+
+	t.Run("correct answer with no hints", func(t *testing.T) {
+		// Create practice item with hints
+		collection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeItems)
+		require.NoError(t, err)
+		practiceItem := core.NewRecord(collection)
+		correctAnswerJSON, err := json.Marshal("test answer")
+		require.NoError(t, err)
+		practiceItem.Set("correct_answer", string(correctAnswerJSON))
+		hintsJSON, err := json.Marshal([]string{"First hint", "Second hint", "Third hint"})
+		require.NoError(t, err)
+		practiceItem.Set("hints", string(hintsJSON))
+		err = app.SaveNoValidate(practiceItem)
+		require.NoError(t, err)
+
+		// Create practice session
+		sessionCollection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeSessions)
+		require.NoError(t, err)
+		session := core.NewRecord(sessionCollection)
+		session.Set("learner", learner.Id)
+		session.Set("status", "active")
+		err = app.SaveNoValidate(session)
+		require.NoError(t, err)
+
+		request := ProcessAnswerRequest{
+			PracticeItemId:   practiceItem.Id,
+			UserAnswer:       "test answer",
+			PracticeSession:  session.Id,
+			LearnerId:        learner.Id,
+			HintLevelReached: 0,
+		}
+
+		body, err := json.Marshal(request)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		e := &core.RequestEvent{
+			App:  app,
+			Auth: user,
+			Event: router.Event{
+				Response: rec,
+				Request:  req,
+			},
+		}
+
+		route := NewAnswerRoute()
+		err = route.HandleProcessAnswer(e)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var response ProcessAnswerResponse
+		err = json.Unmarshal(rec.Body.Bytes(), &response)
+		require.NoError(t, err)
+
+		assert.True(t, response.IsCorrect)
+		assert.Equal(t, 1.0, response.Score)
+		assert.Equal(t, "Excellent! You got it right on your own!", response.Feedback)
+		assert.Equal(t, 0, response.HintLevelReached)
+		assert.Equal(t, 1, response.AttemptNumber)
+	})
+
+	t.Run("correct answer with hints used (score 0.5)", func(t *testing.T) {
+		// Create practice item with hints
+		collection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeItems)
+		require.NoError(t, err)
+		practiceItem := core.NewRecord(collection)
+		correctAnswerJSON, err := json.Marshal("test answer 2")
+		require.NoError(t, err)
+		practiceItem.Set("correct_answer", string(correctAnswerJSON))
+		hintsJSON, err := json.Marshal([]string{"First hint", "Second hint", "Third hint"})
+		require.NoError(t, err)
+		practiceItem.Set("hints", string(hintsJSON))
+		err = app.SaveNoValidate(practiceItem)
+		require.NoError(t, err)
+
+		// Create practice session
+		sessionCollection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeSessions)
+		require.NoError(t, err)
+		session := core.NewRecord(sessionCollection)
+		session.Set("learner", learner.Id)
+		session.Set("status", "active")
+		err = app.SaveNoValidate(session)
+		require.NoError(t, err)
+
+		request := ProcessAnswerRequest{
+			PracticeItemId:   practiceItem.Id,
+			UserAnswer:       "test answer 2",
+			PracticeSession:  session.Id,
+			LearnerId:        learner.Id,
+			HintLevelReached: 2, // Using 2 hints to get score 0.5
+		}
+
+		body, err := json.Marshal(request)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		e := &core.RequestEvent{
+			App:  app,
+			Auth: user,
+			Event: router.Event{
+				Response: rec,
+				Request:  req,
+			},
+		}
+
+		route := NewAnswerRoute()
+		err = route.HandleProcessAnswer(e)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var response ProcessAnswerResponse
+		err = json.Unmarshal(rec.Body.Bytes(), &response)
+		require.NoError(t, err)
+
+		assert.True(t, response.IsCorrect)
+		assert.InDelta(t, 0.5, response.Score, 0.01) // 1.0 - (2/(3+1)) = 0.5
+		assert.Equal(t, "Good job! You found the right answer with some help from the hints.", response.Feedback)
+		assert.Equal(t, 2, response.HintLevelReached)
+		assert.Equal(t, 1, response.AttemptNumber)
+	})
+
+	t.Run("incorrect answer", func(t *testing.T) {
+		// Create practice item
+		collection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeItems)
+		require.NoError(t, err)
+		practiceItem := core.NewRecord(collection)
+		correctAnswerJSON, err := json.Marshal("correct answer")
+		require.NoError(t, err)
+		practiceItem.Set("correct_answer", string(correctAnswerJSON))
+		err = app.SaveNoValidate(practiceItem)
+		require.NoError(t, err)
+
+		// Create practice session
+		sessionCollection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeSessions)
+		require.NoError(t, err)
+		session := core.NewRecord(sessionCollection)
+		session.Set("learner", learner.Id)
+		session.Set("status", "active")
+		err = app.SaveNoValidate(session)
+		require.NoError(t, err)
+
+		request := ProcessAnswerRequest{
+			PracticeItemId:   practiceItem.Id,
+			UserAnswer:       "wrong answer",
+			PracticeSession:  session.Id,
+			LearnerId:        learner.Id,
+			HintLevelReached: 0,
+		}
+
+		body, err := json.Marshal(request)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		e := &core.RequestEvent{
+			App:  app,
+			Auth: user,
+			Event: router.Event{
+				Response: rec,
+				Request:  req,
+			},
+		}
+
+		route := NewAnswerRoute()
+		err = route.HandleProcessAnswer(e)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var response ProcessAnswerResponse
+		err = json.Unmarshal(rec.Body.Bytes(), &response)
+		require.NoError(t, err)
+
+		assert.False(t, response.IsCorrect)
+		assert.Equal(t, 0.0, response.Score)
+		assert.Equal(t, "That's not correct. Consider using the hints for guidance.", response.Feedback)
+		assert.Equal(t, 0, response.HintLevelReached)
+		assert.Equal(t, 1, response.AttemptNumber)
+	})
+
+	t.Run("case insensitive match", func(t *testing.T) {
+		// Create practice item
+		collection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeItems)
+		require.NoError(t, err)
+		practiceItem := core.NewRecord(collection)
+		correctAnswerJSON, err := json.Marshal("case test")
+		require.NoError(t, err)
+		practiceItem.Set("correct_answer", string(correctAnswerJSON))
+		err = app.SaveNoValidate(practiceItem)
+		require.NoError(t, err)
+
+		// Create practice session
+		sessionCollection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeSessions)
+		require.NoError(t, err)
+		session := core.NewRecord(sessionCollection)
+		session.Set("learner", learner.Id)
+		session.Set("status", "active")
+		err = app.SaveNoValidate(session)
+		require.NoError(t, err)
+
+		request := ProcessAnswerRequest{
+			PracticeItemId:   practiceItem.Id,
+			UserAnswer:       "CASE TEST",
+			PracticeSession:  session.Id,
+			LearnerId:        learner.Id,
+			HintLevelReached: 0,
+		}
+
+		body, err := json.Marshal(request)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		e := &core.RequestEvent{
+			App:  app,
+			Auth: user,
+			Event: router.Event{
+				Response: rec,
+				Request:  req,
+			},
+		}
+
+		route := NewAnswerRoute()
+		err = route.HandleProcessAnswer(e)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var response ProcessAnswerResponse
+		err = json.Unmarshal(rec.Body.Bytes(), &response)
+		require.NoError(t, err)
+
+		assert.True(t, response.IsCorrect)
+		assert.Equal(t, 1.0, response.Score)
+		assert.Equal(t, "Excellent! You got it right on your own!", response.Feedback)
+		assert.Equal(t, 0, response.HintLevelReached)
+		assert.Equal(t, 1, response.AttemptNumber)
+	})
+
+	t.Run("missing practice item id", func(t *testing.T) {
+		request := ProcessAnswerRequest{
+			UserAnswer:       "test answer",
+			PracticeSession:  "session-id",
+			LearnerId:        learner.Id,
+			HintLevelReached: 0,
+		}
+
+		body, err := json.Marshal(request)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		e := &core.RequestEvent{
+			App:  app,
+			Auth: user,
+			Event: router.Event{
+				Response: rec,
+				Request:  req,
+			},
+		}
+
+		route := NewAnswerRoute()
+		err = route.HandleProcessAnswer(e)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "PracticeItemId is required")
+	})
+
+	t.Run("unauthorized request", func(t *testing.T) {
+		request := ProcessAnswerRequest{
+			PracticeItemId:   "item-id",
+			UserAnswer:       "test answer",
+			PracticeSession:  "session-id",
+			LearnerId:        learner.Id,
+			HintLevelReached: 0,
+		}
+
+		body, err := json.Marshal(request)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		e := &core.RequestEvent{
+			App:  app,
+			Auth: nil, // No auth
+			Event: router.Event{
+				Response: rec,
+				Request:  req,
+			},
+		}
+
+		route := NewAnswerRoute()
+		err = route.HandleProcessAnswer(e)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "You must be logged in")
+	})
+
+	t.Run("practice item with no correct answer", func(t *testing.T) {
+		// Create practice item with no correct answer
+		collection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeItems)
+		require.NoError(t, err)
+		practiceItem := core.NewRecord(collection)
+		err = app.SaveNoValidate(practiceItem)
+		require.NoError(t, err)
+
+		// Create practice session
+		sessionCollection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeSessions)
+		require.NoError(t, err)
+		session := core.NewRecord(sessionCollection)
+		session.Set("learner", learner.Id)
+		session.Set("status", "active")
+		err = app.SaveNoValidate(session)
+		require.NoError(t, err)
+
+		request := ProcessAnswerRequest{
+			PracticeItemId:   practiceItem.Id,
+			UserAnswer:       "test answer",
+			PracticeSession:  session.Id,
+			LearnerId:        learner.Id,
+			HintLevelReached: 0,
+		}
+
+		body, err := json.Marshal(request)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		e := &core.RequestEvent{
+			App:  app,
+			Auth: user,
+			Event: router.Event{
+				Response: rec,
+				Request:  req,
+			},
+		}
+
+		route := NewAnswerRoute()
+		err = route.HandleProcessAnswer(e)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Practice item has no correct answer")
+	})
+}
+
+// TestHandleProcessAnswerSecondAttempt tests that second attempts increment attempt number
+func TestHandleProcessAnswerSecondAttempt(t *testing.T) {
+	app := setupTestApp(t)
+
+	// Create test data
+	collection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeItems)
+	require.NoError(t, err)
+
+	practiceItem := core.NewRecord(collection)
+	correctAnswerJSON, err := json.Marshal("correct answer")
+	require.NoError(t, err)
+	practiceItem.Set("correct_answer", string(correctAnswerJSON))
+	err = app.SaveNoValidate(practiceItem)
+	require.NoError(t, err)
+
+	userCollection, err := app.FindCollectionByNameOrId("users")
+	require.NoError(t, err)
+	user := core.NewRecord(userCollection)
+	user.Set("email", "test@example.com")
+	user.Set("password", "test123")
+	err = app.SaveNoValidate(user)
+	require.NoError(t, err)
+
+	learnerCollection, err := app.FindCollectionByNameOrId(domain.CollectionLearners)
+	require.NoError(t, err)
+	learner := core.NewRecord(learnerCollection)
+	learner.Set("nickname", "Test Learner")
+	learner.Set("user", user.Id)
+	err = app.SaveNoValidate(learner)
+	require.NoError(t, err)
+
+	sessionCollection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeSessions)
+	require.NoError(t, err)
+	session := core.NewRecord(sessionCollection)
+	session.Set("learner", learner.Id)
+	session.Set("status", "active")
+	err = app.SaveNoValidate(session)
+	require.NoError(t, err)
+
+	route := NewAnswerRoute()
+
+	// First attempt - incorrect answer
+	req1 := ProcessAnswerRequest{
+		PracticeItemId:   practiceItem.Id,
+		UserAnswer:       "wrong answer",
+		PracticeSession:  session.Id,
+		LearnerId:        learner.Id,
+		HintLevelReached: 0,
+	}
+
+	body1, err := json.Marshal(req1)
+	require.NoError(t, err)
+
+	httpReq1 := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body1))
+	httpReq1.Header.Set("Content-Type", "application/json")
+	rec1 := httptest.NewRecorder()
+
+	e1 := &core.RequestEvent{
+		App:  app,
+		Auth: user,
+		Event: router.Event{
+			Response: rec1,
+			Request:  httpReq1,
+		},
+	}
+
+	err = route.HandleProcessAnswer(e1)
+	require.NoError(t, err)
+
+	var response1 ProcessAnswerResponse
+	err = json.Unmarshal(rec1.Body.Bytes(), &response1)
+	require.NoError(t, err)
+	assert.Equal(t, 1, response1.AttemptNumber)
+	assert.False(t, response1.IsCorrect)
+
+	// Second attempt - correct answer
+	req2 := ProcessAnswerRequest{
+		PracticeItemId:   practiceItem.Id,
+		UserAnswer:       "correct answer",
+		PracticeSession:  session.Id,
+		LearnerId:        learner.Id,
+		HintLevelReached: 1,
+	}
+
+	body2, err := json.Marshal(req2)
+	require.NoError(t, err)
+
+	httpReq2 := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body2))
+	httpReq2.Header.Set("Content-Type", "application/json")
+	rec2 := httptest.NewRecorder()
+
+	e2 := &core.RequestEvent{
+		App:  app,
+		Auth: user,
+		Event: router.Event{
+			Response: rec2,
+			Request:  httpReq2,
+		},
+	}
+
+	err = route.HandleProcessAnswer(e2)
+	require.NoError(t, err)
+
+	var response2 ProcessAnswerResponse
+	err = json.Unmarshal(rec2.Body.Bytes(), &response2)
+	require.NoError(t, err)
+	assert.Equal(t, 2, response2.AttemptNumber)
+	assert.True(t, response2.IsCorrect)
+
+	// Verify database record was updated
+	results, err := app.FindRecordsByFilter(
+		domain.CollectionPracticeResults,
+		"practice_item = {:practiceItem} && practice_session = {:session}",
+		"-created",
+		1,
+		0,
+		map[string]any{
+			"practiceItem": practiceItem.Id,
+			"session":      session.Id,
+		},
+	)
+	require.NoError(t, err)
+	require.Len(t, results, 1)
+
+	result := results[0]
+	// The answer is stored as JSON string, so we need to unmarshal it for comparison
+	var storedAnswer string
+	err = json.Unmarshal([]byte(result.GetString("answer")), &storedAnswer)
+	require.NoError(t, err)
+	assert.Equal(t, "correct answer", storedAnswer)
+	assert.True(t, result.GetBool("is_correct"))
+	assert.Equal(t, 1, result.GetInt("hint_level_reached"))
+	assert.Equal(t, 2, result.GetInt("attempt_number"))
+	assert.Greater(t, result.GetFloat("score"), 0.0)
 }

@@ -6,7 +6,7 @@
   // Redirect to role selection if authenticated, otherwise to login
   onMount(() => {
     // Use standard browser navigation
-    const path = $isAuthenticated ? '/select-role' : '/login';
+    const path = $isAuthenticated ? '/home' : '/login';
     window.location.href = path;
   });
 </script>

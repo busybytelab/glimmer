@@ -89,6 +89,7 @@ func (app *Application) setupRoutes() {
 		e.Router.GET("/api/glimmer/v1/llm/info", llmRoutes.HandleInfoRequest).Bind(apis.RequireAuth())
 		e.Router.POST("/api/glimmer/v1/practice/session", practiceRoute.HandleCreatePracticeSession).Bind(apis.RequireAuth())
 		e.Router.POST("/api/glimmer/v1/practice/evaluate-answer", answerRoute.HandleEvaluateAnswer).Bind(apis.RequireAuth())
+		e.Router.POST("/api/glimmer/v1/practice/process-answer", answerRoute.HandleProcessAnswer).Bind(apis.RequireAuth())
 
 		// Chat API endpoints
 		e.Router.POST("/api/glimmer/v1/chat", chatRoutes.HandleChatRequest).Bind(apis.RequireAuth())

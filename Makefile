@@ -32,12 +32,12 @@ format: ## Tidy modules and format code
 
 test: ## Run unit tests (excluding integration tests)
 	@echo "==> Running tests..."
-	@go test -count=1 -v --race --timeout 30s $(shell go list ./... | grep -v /tests/) | { grep "\\(FAIL\\|panic:\\)" || test $$? = 1; }
+	@go test -count=1 -v --race --timeout 60s $(shell go list ./... | grep -v /tests/) | { grep "\\(FAIL\\|panic:\\)" || test $$? = 1; }
 
 test-local: ## Run all tests with variables
 	@echo "==> Running tests locally..."
 	@if [ -f .env ]; then \
-	    export $$(grep -v '^#' .env | xargs) && go test -count=1 -v --race --timeout 30s $(shell go list ./... | grep -v /tests/) | { grep "\\(FAIL\\|panic:\\)" || test $$? = 1; } \
+	    export $$(grep -v '^#' .env | xargs) && go test -count=1 -v --race --timeout 60s $(shell go list ./... | grep -v /tests/) | { grep "\\(FAIL\\|panic:\\)" || test $$? = 1; } \
 	else \
 		echo "Error: .env file not found"; \
 		exit 1; \
