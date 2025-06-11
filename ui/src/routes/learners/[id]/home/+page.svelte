@@ -70,8 +70,7 @@
             
             breadcrumbs = [
                 { label: 'Home', href: '/', icon: 'home' },
-                { label: 'Learners', href: '/learners', icon: 'learner' },
-                { label: learner.nickname, href: `/learners/${learnerId}/home`, icon: 'home' }
+                { label: learner.nickname, href: `/learners/${learnerId}/home`, icon: 'learner' }
             ];
         } catch (e) {
             error = 'Failed to load learner data';
