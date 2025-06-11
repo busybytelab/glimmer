@@ -65,7 +65,7 @@
 			type="button"
 			on:click={handleCreateNew}
 		>
-			Create New Topic
+			Create Topic
 		</FormButton>
 	</div>
 

@@ -43,6 +43,14 @@
 	// Current chat ID from the URL
 	$: chatId = $page.params.id || null;
 	
+	// Get initial prompt from URL if available
+	$: initialPrompt = $page.data.initialPrompt;
+	
+	// Set the message input value when initialPrompt is available
+	$: if (initialPrompt && !chatId && !message) {
+		message = initialPrompt;
+	}
+	
 	// Settings
 	let autoScrollEnabled = true;
 	let sendWithEnter = true;
@@ -218,12 +226,29 @@
 				isLoading = true; // Set loading state
 				const newChatId = await createNewChat(systemPrompt, selectedModel || undefined);
 				
+				// Add user message to local state
+				const userMessage: Message = {
+					role: 'user',
+					content: userMessageContent,
+					timestamp: new Date()
+				};
+				messages = [...messages, userMessage];
+				
 				// First save the user message to the backend
 				await chatService.addMessageToChat(newChatId, userMessageContent, 'user');
 				
 				// Send message to LLM and get response
 				const chatHistory = [userMessageContent]; // Only the first message for new chat
 				const data = await llmService.chat(chatHistory.join('\n\n'), systemPrompt, selectedModel || undefined);
+				
+				// Add assistant response to local state
+				const assistantMessage: Message = {
+					role: 'assistant',
+					content: data.response,
+					timestamp: new Date(),
+					usage: data.usage
+				};
+				messages = [...messages, assistantMessage];
 				
 				// Save the assistant's response
 				await chatService.addMessageToChat(newChatId, data.response, 'assistant');
