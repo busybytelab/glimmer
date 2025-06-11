@@ -1,5 +1,5 @@
 import pb from '$lib/pocketbase';
-import type { PracticeSession, PracticeItem, Learner } from '$lib/types';
+import type { PracticeSession, PracticeItem, Learner, PracticeSessionStats } from '$lib/types';
 import { authService } from './auth';
 
 export interface SessionWithExpandedData extends PracticeSession {
@@ -145,6 +145,37 @@ class SessionService {
                         expand: 'learner,practice_topic'
                     });
                     return result.items as PracticeSession[];
+                } catch (retryError: any) {
+                    throw new Error(retryError.message);
+                }
+            }
+            throw new Error(error.message);
+        }
+    }
+
+    /**
+     * Gets practice session stats for a learner, excluding sessions where all items are answered correctly
+     * A session is considered complete when all items are answered (answered_items = total_items) and all answers are correct (wrong_answers_count = 0)
+     * @param learnerId Learner ID
+     * @returns List of practice session stats
+     */
+    async getSessionStatsForLearner(learnerId: string): Promise<PracticeSessionStats[]> {
+        await this.ensureAuth();
+        try {
+            const result = await pb.collection('pbc_practice_session_stats').getList(1, 50, {
+                filter: `learner_id="${learnerId}" && (answered_items < total_items || wrong_answers_count > 0)`,
+                sort: '-last_answer_time'
+            });
+            return result.items as PracticeSessionStats[];
+        } catch (error: any) {
+            if (error.status === 401) {
+                await authService.refreshAuthToken();
+                try {
+                    const result = await pb.collection('pbc_practice_session_stats').getList(1, 50, {
+                        filter: `learner_id="${learnerId}" && (answered_items < total_items || wrong_answers_count > 0)`,
+                        sort: '-last_answer_time'
+                    });
+                    return result.items as PracticeSessionStats[];
                 } catch (retryError: any) {
                     throw new Error(retryError.message);
                 }

@@ -207,6 +207,25 @@ export interface PracticeSession extends PocketBaseRecord {
     };
 }
 
+/**
+ * Statistics for a practice session
+ * Generated from the practice_session_stats view
+ */
+export interface PracticeSessionStats extends PocketBaseRecord {
+    session_name: string;
+    topic_name: string;
+    total_items: number;
+    answered_items: number;
+    wrong_answers_count: number;
+    total_score: number;
+    session_status: string;
+    last_answer_time: string;
+    learner_id: string;
+    approved_items: number;
+    edited_items: number;
+    not_reviewed_items: number;
+}
+
 export interface Account extends PocketBaseRecord {
     owner: User;
     llm_api_key?: string;
