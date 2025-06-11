@@ -243,6 +243,90 @@ class TopicsService {
             throw new Error(error.message);
         }
     }
+
+    /**
+     * Finds topics with similar names to the given topic name
+     * Returns the best matching topic if similarity is above threshold
+     */
+    async findSimilarTopic(topicName: string): Promise<PracticeTopic | null> {
+        await this.ensureAuth();
+        
+        try {
+            // Get all topics
+            const topics = await this.getTopics();
+            
+            // Find the best match using string similarity
+            let bestMatch: { topic: PracticeTopic; similarity: number } | null = null;
+            
+            for (const topic of topics) {
+                // Calculate similarity score (basic implementation)
+                const similarity = this.calculateSimilarity(
+                    this.normalizeString(topic.name),
+                    this.normalizeString(topicName)
+                );
+                
+                if (similarity > 0.8 && (!bestMatch || similarity > bestMatch.similarity)) {
+                    bestMatch = { topic, similarity };
+                }
+            }
+            
+            return bestMatch?.topic || null;
+        } catch (error) {
+            console.error('Error finding similar topics:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Calculates similarity between two strings
+     * Returns a score between 0 and 1, where 1 is exact match
+     */
+    private calculateSimilarity(str1: string, str2: string): number {
+        const len1 = str1.length;
+        const len2 = str2.length;
+        
+        // If either string is empty, return 0
+        if (len1 === 0 || len2 === 0) return 0;
+        
+        // If strings are identical, return 1
+        if (str1 === str2) return 1;
+        
+        // Calculate Levenshtein distance
+        const matrix: number[][] = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(0));
+        
+        for (let i = 0; i <= len1; i++) matrix[i][0] = i;
+        for (let j = 0; j <= len2; j++) matrix[0][j] = j;
+        
+        for (let i = 1; i <= len1; i++) {
+            for (let j = 1; j <= len2; j++) {
+                const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j] + 1,      // deletion
+                    matrix[i][j - 1] + 1,      // insertion
+                    matrix[i - 1][j - 1] + cost // substitution
+                );
+            }
+        }
+        
+        // Convert distance to similarity score
+        const maxLen = Math.max(len1, len2);
+        const distance = matrix[len1][len2];
+        return 1 - (distance / maxLen);
+    }
+
+    /**
+     * Normalizes a string for comparison by:
+     * - Converting to lowercase
+     * - Removing special characters
+     * - Removing extra whitespace
+     */
+    private normalizeString(str: string): string {
+        return str
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
 }
 
 export const topicsService = new TopicsService(); 

@@ -208,6 +208,33 @@ export interface PracticeSession extends PocketBaseRecord {
 }
 
 /**
+ * Represents a practice session for export/import functionality
+ * Excludes user-specific data (learner, account) to allow session reuse
+ */
+export interface ExportedSession {
+    /** The practice session data without user-specific fields */
+    session: Omit<PracticeSession, 'learner' | 'account' | 'expand'>;
+    
+    /** The associated practice topic data */
+    topic: {
+        id: string;
+        name: string;
+        subject: string;
+        description?: string;
+        target_age_range?: string;
+        target_grade_level?: string;
+        learning_goals?: string[];
+        base_prompt: string;
+        system_prompt?: string;
+        tags?: string[];
+        llm_model?: string;
+    };
+    
+    /** The practice items associated with this session */
+    practice_items: Array<Omit<PracticeItem, 'account' | 'reviewer' | 'expand'>>;
+}
+
+/**
  * Statistics for a practice session
  * Generated from the practice_session_stats view
  */

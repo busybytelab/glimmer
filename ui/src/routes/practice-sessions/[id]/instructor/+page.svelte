@@ -13,6 +13,7 @@
     import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
     import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
     import SessionHeader from '../../../../components/practice-sessions/SessionHeader.svelte';
+    import ExportSessionButton from '../../../../components/practice-session/ExportSessionButton.svelte';
     import { updateBreadcrumbs, handlePrint } from '$lib/utils/practice-session';
 
     let session: SessionWithExpandedData | null = null;
@@ -184,7 +185,10 @@
         <div>
             <Breadcrumbs items={breadcrumbItems} />
         </div>
-        <ActionToolbar actions={sessionActions} />
+        <div class="flex items-center gap-2">
+            <ExportSessionButton sessionId={$page.params.id} disabled={loading} />
+            <ActionToolbar actions={sessionActions} />
+        </div>
     </div>
 
     {#if loading}

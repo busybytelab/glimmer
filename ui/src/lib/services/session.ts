@@ -1,11 +1,11 @@
 import pb from '$lib/pocketbase';
-import type { PracticeSession, PracticeItem, Learner, PracticeSessionStats } from '$lib/types';
+import type { PracticeSession, PracticeItem, Learner, PracticeSessionStats, PracticeTopic } from '$lib/types';
 import { authService } from './auth';
 
 export interface SessionWithExpandedData extends PracticeSession {
     expand?: {
         learner?: Learner;
-        practice_topic?: { id: string; name: string };
+        practice_topic?: PracticeTopic;
         practice_items?: PracticeItem[];
     };
 }
