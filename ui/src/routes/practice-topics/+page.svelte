@@ -56,17 +56,33 @@
 	function handleCreateNew() {
 		goto('/practice-topics/create');
 	}
+
+	function handleImport() {
+		goto('/practice-topics/import');
+	}
 </script>
 
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
 	<div class="flex justify-between items-center mb-6">
 		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Practice Topics</h1>
-		<FormButton
-			type="button"
-			on:click={handleCreateNew}
-		>
-			Create New Topic
-		</FormButton>
+		<div class="flex items-center gap-2">
+			<FormButton
+				type="button"
+				variant="secondary"
+				on:click={handleImport}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+				</svg>
+				Import Session
+			</FormButton>
+			<FormButton
+				type="button"
+				on:click={handleCreateNew}
+			>
+				Create Topic
+			</FormButton>
+		</div>
 	</div>
 
 	{#if loading}

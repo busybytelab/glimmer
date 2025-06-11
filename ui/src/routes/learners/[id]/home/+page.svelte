@@ -1,48 +1,25 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
-    import type { BreadcrumbItem, Learner, AchievementIcon, Achievement } from '$lib/types';
+    import type { BreadcrumbItem, Learner, AchievementIcon, Achievement, PracticeSessionStats } from '$lib/types';
     import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
     import ErrorAlert from '$components/common/ErrorAlert.svelte';
     import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
     import { learnersService } from '$lib/services/learners';
+    import { sessionService } from '$lib/services/session';
     import WelcomeMessage from '$components/learners/WelcomeMessage.svelte';
     import RecommendedTopics from '$components/learners/RecommendedTopics.svelte';
     import NextAchievement from '$components/learners/NextAchievement.svelte';
-
-    type Difficulty = 'easy' | 'medium' | 'hard';
 
     let loading = false;
     let error: string | null = null;
     let learnerId: string = '';
     let learner: Learner | null = null;
+    let sessionStats: PracticeSessionStats[] = [];
     let breadcrumbs: BreadcrumbItem[] = [];
 
-    // Mock data for now - will be replaced with actual data from services
+    // Mock data for achievements - will be replaced with actual data later
     const mockData = {
-        recommendedTopics: [
-            {
-                id: '1',
-                title: 'Multiplication Tables',
-                description: 'Practice multiplication tables from 1 to 12 with interactive exercises.',
-                difficulty: 'medium' as Difficulty,
-                estimatedMinutes: 15
-            },
-            {
-                id: '2',
-                title: 'Fractions Basics',
-                description: 'Learn about fractions and how to work with them.',
-                difficulty: 'hard' as Difficulty,
-                estimatedMinutes: 20
-            },
-            {
-                id: '3',
-                title: 'Basic Geometry',
-                description: 'Explore shapes, angles, and basic geometric concepts.',
-                difficulty: 'easy' as Difficulty,
-                estimatedMinutes: 10
-            }
-        ],
         latestAchievement: {
             title: 'math-apprentice',
             icon: 'math-apprentice' as AchievementIcon,
@@ -66,12 +43,19 @@
         try {
             loading = true;
             learnerId = $page.params.id;
-            learner = await learnersService.getLearner(learnerId);
+            
+            // Load learner and session stats in parallel
+            const [learnerData, stats] = await Promise.all([
+                learnersService.getLearner(learnerId),
+                sessionService.getSessionStatsForLearner(learnerId)
+            ]);
+            
+            learner = learnerData;
+            sessionStats = stats;
             
             breadcrumbs = [
                 { label: 'Home', href: '/', icon: 'home' },
-                { label: 'Learners', href: '/learners', icon: 'learner' },
-                { label: learner.nickname, href: `/learners/${learnerId}/home`, icon: 'home' }
+                { label: learner.nickname, href: `/learners/${learnerId}/home`, icon: 'learner' }
             ];
         } catch (e) {
             error = 'Failed to load learner data';
@@ -80,6 +64,13 @@
             loading = false;
         }
     });
+
+    // Transform session stats into the format expected by RecommendedTopics
+    $: recommendedTopics = sessionStats.map(stat => ({
+        id: stat.id,
+        title: stat.topic_name,
+        description: `Progress: ${stat.answered_items}/${stat.total_items} items completed. Score: ${stat.total_score}%`
+    }));
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -99,7 +90,7 @@
                 latestAchievement={mockData.latestAchievement}
             />
 
-            <RecommendedTopics topics={mockData.recommendedTopics} />
+            <RecommendedTopics topics={recommendedTopics} />
 
             <NextAchievement achievement={mockData.nextAchievement} />
         </div>

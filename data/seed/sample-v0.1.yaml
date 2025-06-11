@@ -658,7 +658,7 @@ collections:
   # Practice Sessions
   - name: "practice_sessions"
     select: "SELECT COUNT(*) FROM practice_sessions WHERE id = {:id}"
-    insert: "INSERT INTO practice_sessions (id, name, assigned_at, completed_at, status, generation_prompt, practice_topic, practice_items, learner, created, updated) VALUES ({:id}, {:name}, {:assigned_at}, {:completed_at}, {:status}, {:generation_prompt}, {:practice_topic}, {:practice_items}, {:learner}, {:created}, {:updated})"
+    insert: "INSERT INTO practice_sessions (id, name, assigned_at, completed_at, status, generation_prompt, practice_topic, practice_items, learner, account, created, updated) VALUES ({:id}, {:name}, {:assigned_at}, {:completed_at}, {:status}, {:generation_prompt}, {:practice_topic}, {:practice_items}, {:learner}, {:account}, {:created}, {:updated})"
     items:
       # Account 1 Practice Sessions
       - id: "ps1"
@@ -670,6 +670,7 @@ collections:
         practice_topic: "__ref::practice_topics::pt1"
         practice_items: "[\"pi1\", \"pi2\"]" 
         learner: "__ref::learners::l1"
+        account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
@@ -682,6 +683,7 @@ collections:
         practice_topic: "__ref::practice_topics::pt1"
         practice_items: "[\"pi3\", \"pi4\", \"pi5\", \"pi6\"]"
         learner: "__ref::learners::l2"
+        account: "__ref::accounts::a1"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
@@ -695,6 +697,7 @@ collections:
         practice_topic: "__ref::practice_topics::pt3"
         practice_items: "[\"pi7\", \"pi8\"]"
         learner: "__ref::learners::l3"
+        account: "__ref::accounts::a2"
         created: __::currentTimestamp::__
         updated: __::currentTimestamp::__
 
@@ -711,7 +714,7 @@ collections:
         feedback: "Great job!"
         hint_level_reached: 0
         is_correct: true
-        score: 100
+        score: 1
         started_at: __::currentTimestamp::__
         submitted_at: __::currentTimestamp::__
         learner: "__ref::learners::l1"
@@ -743,7 +746,7 @@ collections:
         feedback: "Correct! You used a hint to get there."
         hint_level_reached: 1
         is_correct: true
-        score: 90
+        score: 0.9
         started_at: __::currentTimestamp::__
         submitted_at: __::currentTimestamp::__
         learner: "__ref::learners::l1"
@@ -760,7 +763,7 @@ collections:
         feedback: "Excellent work! You solved the equation correctly."
         hint_level_reached: 0
         is_correct: true
-        score: 100
+        score: 1
         started_at: __::currentTimestamp::__
         submitted_at: __::currentTimestamp::__
         learner: "__ref::learners::l2"

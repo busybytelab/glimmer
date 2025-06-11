@@ -158,10 +158,16 @@
             practiceItems[index].user_answer = answer;
             
             const practiceItem = practiceItems[index];
-            const now = new Date().toISOString();
+            const hintLevel = practiceItem.hint_level_reached || 0;
 
-            // Call the evaluate answer endpoint
-            const { isCorrect } = await answersService.evaluateAnswer(practiceItem.id, answer);
+            // Call the new process answer endpoint
+            const { isCorrect, score, feedback, hintLevelReached, attemptNumber } = await answersService.processAnswer(
+                practiceItem.id, 
+                answer, 
+                session.id, 
+                session.learner, 
+                hintLevel
+            );
             
             if (isCorrect) {
                 consecutiveIncorrectAttempts.set(practiceItem.id, 0);
@@ -170,33 +176,14 @@
                 consecutiveIncorrectAttempts.set(practiceItem.id, currentAttempts + 1);
             }
 
-            const existingResult = await resultsService.getLatestResult(practiceItem.id, session.id);
-
-            if (existingResult) {
-                await resultsService.updateResult(existingResult.id, {
-                    answer: answer,
-                    is_correct: isCorrect,
-                    submitted_at: now,
-                    attempt_number: (existingResult.attempt_number || 0) + 1
-                });
-            } else {
-                const result = await resultsService.createResult({
-                    practice_item: practiceItem.id,
-                    practice_session: session.id,
-                    learner: session.learner,
-                    answer: answer,
-                    is_correct: isCorrect,
-                    started_at: now,
-                    submitted_at: now,
-                    attempt_number: 1,
-                    hint_level_reached: 0
-                });
-                console.log('result', result);
-            }
-
+            // Update the practice item with all the new data
             practiceItems[index] = {
                 ...practiceItems[index],
-                is_correct: isCorrect
+                is_correct: isCorrect,
+                score: score,
+                feedback: feedback,
+                hint_level_reached: hintLevelReached,
+                attempt_number: attemptNumber
             };
             
             practiceItems = [...practiceItems];
@@ -206,8 +193,8 @@
                 currentStep++;
             }
         } catch (err) {
-            console.error('Failed to save answer:', err);
-            error = 'Failed to save answer: ' + (err instanceof Error ? err.message : String(err));
+            console.error('Failed to process answer:', err);
+            error = 'Failed to process answer: ' + (err instanceof Error ? err.message : String(err));
         } finally {
             savingItems.delete(index);
         }
@@ -219,6 +206,7 @@
         const practiceItem = practiceItems[index];
         
         try {
+            // Update the hint level in the practice item
             practiceItems[index] = {
                 ...practiceItem,
                 hint_level_reached: level

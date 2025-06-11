@@ -6,6 +6,7 @@
     import { topicsService } from '$lib/services/topics';
     import { sessionService } from '$lib/services/session';
     import { authService } from '$lib/services/auth';
+    import { error as errorStore } from '$lib/stores';
     import ActionToolbar from '../../../components/common/ActionToolbar.svelte';
     import Breadcrumbs from '../../../components/common/Breadcrumbs.svelte';
     import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
@@ -17,6 +18,7 @@
     let error: string | null = null;
     let topicId: string | null = null;
     let breadcrumbItems: BreadcrumbItem[] = [];
+    let isCreatingTemplate = false;
 
     onMount(async () => {
         try {
@@ -67,6 +69,25 @@
                 }
             } else {
                 result.tags = [];
+            }
+
+            // Parse learning goals if they're stored as a string
+            if (result.learning_goals) {
+                const goalsValue = result.learning_goals as string | string[];
+                if (typeof goalsValue === 'string') {
+                    try {
+                        if (goalsValue.trim().startsWith('[')) {
+                            result.learning_goals = JSON.parse(goalsValue);
+                        } else {
+                            result.learning_goals = goalsValue.split(',').map((goal: string) => goal.trim()).filter(Boolean);
+                        }
+                    } catch (err) {
+                        console.error('Error parsing learning goals:', err);
+                        result.learning_goals = [];
+                    }
+                }
+            } else {
+                result.learning_goals = [];
             }
 
             topic = result;
@@ -140,16 +161,72 @@
             label: 'Back',
             icon: 'back',
             variant: 'secondary' as const,
-            onClick: goBack
+            onClick: goBack,
+            disabled: isCreatingTemplate
         },
         {
             id: 'edit',
             label: 'Edit',
             icon: 'edit',
             variant: 'primary' as const,
-            onClick: editTopic
+            onClick: editTopic,
+            disabled: isCreatingTemplate
+        },
+        {
+            id: 'useTemplate',
+            label: 'Use as Template',
+            icon: 'copy',
+            variant: 'primary' as const,
+            onClick: useAsTemplate,
+            disabled: isCreatingTemplate
         }
     ];
+
+    async function useAsTemplate() {
+        if (!topic) return;
+
+        try {
+            isCreatingTemplate = true;
+
+            // Create a draft prompt for the chat
+            const draftPrompt = `I want to create a new learning topic based on this existing one. Please help me improve and adapt it while maintaining its educational effectiveness:
+
+Topic Details:
+- Title: ${topic.name}
+- Subject: ${topic.subject}
+- Description: ${topic.description || 'N/A'}
+- Target Age Range: ${topic.target_age_range || 'N/A'}
+- Target Grade Level: ${topic.target_grade_level || 'N/A'}
+- Difficulty Level: ${topic.difficulty_level || 'N/A'}
+- Learning Goals: ${topic.learning_goals?.join(', ') || 'N/A'}
+- Tags: ${topic.tags?.join(', ') || 'N/A'}
+
+Base Prompt:
+"""
+${topic.base_prompt}
+"""
+
+System Prompt:
+"""
+${topic.system_prompt || 'N/A'}
+"""
+
+Please help me:
+1. Review and suggest improvements to the base prompt and system prompt
+2. Suggest any adjustments to other fields that could enhance the topic
+3. Provide a complete new topic configuration that I can use
+
+Feel free to maintain similar structure but adapt content and difficulty as needed while preserving educational value.`;
+
+            // Navigate to chat with the draft prompt
+            await goto('/chat?prompt=' + encodeURIComponent(draftPrompt));
+        } catch (err) {
+            console.error('Error creating template:', err);
+            errorStore.set(err instanceof Error ? err.message : 'Failed to create template');
+        } finally {
+            isCreatingTemplate = false;
+        }
+    }
 </script>
 
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -157,7 +234,14 @@
         <div>
             <Breadcrumbs items={breadcrumbItems} />
         </div>
-        <ActionToolbar actions={topicActions} />
+        <div class="flex gap-2">
+            <ActionToolbar actions={topicActions} />
+            {#if isCreatingTemplate}
+                <div class="flex items-center">
+                    <LoadingSpinner size="sm" color="primary" />
+                </div>
+            {/if}
+        </div>
     </div>
 
     {#if loading}
