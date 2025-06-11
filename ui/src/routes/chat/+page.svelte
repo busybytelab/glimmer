@@ -211,23 +211,35 @@
 	// Handle message submission from the ChatInput component
 	async function handleMessageSubmit(event: CustomEvent<{ message: string }>) {
 		const userMessageContent = event.detail.message;
-		message = ''; // Clear the input
 		
 		if (!chatId) {
 			// For a new chat, create it first
 			try {
+				isLoading = true; // Set loading state
 				const newChatId = await createNewChat(systemPrompt, selectedModel || undefined);
-				// Navigate to the new chat
+				
+				// First save the user message to the backend
+				await chatService.addMessageToChat(newChatId, userMessageContent, 'user');
+				
+				// Send message to LLM and get response
+				const chatHistory = [userMessageContent]; // Only the first message for new chat
+				const data = await llmService.chat(chatHistory.join('\n\n'), systemPrompt, selectedModel || undefined);
+				
+				// Save the assistant's response
+				await chatService.addMessageToChat(newChatId, data.response, 'assistant');
+				
+				// Generate and update chat title based on the first message
+				const truncatedMessage = userMessageContent.length > 50 
+					? userMessageContent.substring(0, 47) + '...' 
+					: userMessageContent;
+				await updateChatTitle(newChatId, truncatedMessage);
+				
+				// Then navigate to the new chat - both messages will be loaded
 				await goto(`/chat/${newChatId}`);
-				// After navigation, the chatId will be updated, and we'll send the message
-				// in the next tick
-				setTimeout(() => {
-					message = userMessageContent;
-					sendMessage();
-				}, 50);
 			} catch (err) {
 				console.error('Error creating new chat:', err);
 				errorStore.set(err instanceof Error ? err.message : 'Failed to create new chat');
+				isLoading = false; // Reset loading state on error
 			}
 		} else {
 			// For an existing chat, just send the message
