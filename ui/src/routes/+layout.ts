@@ -1,12 +1,12 @@
 import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
 import { authService } from '$lib/services/auth';
-import type { LayoutLoad } from './$types';
+import type { LoadEvent } from '@sveltejs/kit';
 
 export const prerender = false;
 export const ssr = false;
 
-export const load: LayoutLoad = async ({ url, fetch }) => {
+export const load = async ({ url, fetch }: LoadEvent) => {
   // Skip auth check for public routes
   if (authService.isPublicRoute(url.pathname)) {
     return {

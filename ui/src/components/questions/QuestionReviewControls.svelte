@@ -17,7 +17,7 @@
     
     async function handleReviewStatusChange(status: PracticeItem['review_status']) {
         try {
-            const updatedItem = await practiceItemService.updatePracticeItem(item.id, {
+            const updatedItem = await practiceItemService.updateItem(item.id, {
                 review_status: status
             });
             if (updatedItem.review_status) {
