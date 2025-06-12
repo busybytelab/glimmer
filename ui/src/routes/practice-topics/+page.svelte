@@ -3,10 +3,10 @@
 	import { topicsService } from '$lib/services/topics';
 	import { goto } from '$app/navigation';
 	import type { PracticeTopic } from '$lib/types';
-	import PracticeTopicCard from '../../components/practice-topics/PracticeTopicCard.svelte';
-	import FormButton from '../../components/common/FormButton.svelte';
-	import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
-	import ErrorAlert from '../../components/common/ErrorAlert.svelte';
+	import PracticeTopicCard from '$components/practice-topics/PracticeTopicCard.svelte';
+	import FormButton from '$components/common/FormButton.svelte';
+	import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+	import ErrorAlert from '$components/common/ErrorAlert.svelte';
 
 	let topics: PracticeTopic[] = [];
 	let loading = true;

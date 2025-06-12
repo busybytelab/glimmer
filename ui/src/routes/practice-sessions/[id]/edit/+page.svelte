@@ -3,11 +3,11 @@
     import { page } from '$app/stores';
     import { onMount } from 'svelte';
     import type { PracticeSession, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
-    import PracticeSessionBasicForm from '../../../../components/practice-sessions/PracticeSessionBasicForm.svelte';
-    import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
-    import ActionToolbar from '../../../../components/common/ActionToolbar.svelte';
-    import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
-    import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
+    import PracticeSessionBasicForm from '$components/practice-sessions/PracticeSessionBasicForm.svelte';
+    import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
+    import ActionToolbar from '$components/common/ActionToolbar.svelte';
+    import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+    import ErrorAlert from '$components/common/ErrorAlert.svelte';
     import { sessionService } from '$lib/services/session';
     
     let session: PracticeSession | null = null;

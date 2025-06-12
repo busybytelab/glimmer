@@ -2,23 +2,7 @@ import pb from '$lib/pocketbase';
 import type { PracticeTopic, PracticeSession, TopicFormData } from '$lib/types';
 import { accountService } from './accounts';
 
-class TopicsService {
-    // TODO: remove these auth methods, replace usage with auth
-    private async ensureAuth(): Promise<void> {
-        if (!pb.authStore.isValid) {
-            throw new Error('You must be logged in to access practice topics');
-        }
-    }
-
-    private async refreshAuth(): Promise<void> {
-        try {
-            await pb.collection('users').authRefresh();
-        } catch (err) {
-            pb.authStore.clear();
-            throw new Error('Your session has expired. Please log in again.');
-        }
-    }
-
+export class TopicsService {
     private formatTags(tags: any): string[] {
         if (!tags) return [];
         
@@ -38,37 +22,23 @@ class TopicsService {
     }
 
     async getTopics(): Promise<PracticeTopic[]> {
-        return await pb.collection('practice_topics').getFullList({
+        const response = await pb.collection('topics').getList<PracticeTopic>(1, 50, {
             sort: '-created',
-            expand: 'account'
         });
+        return response.items;
     }
 
     async getTopic(topicId: string): Promise<PracticeTopic> {
-        await this.ensureAuth();
-
         try {
             const result = await pb.collection('practice_topics').getOne(topicId);
             result.tags = this.formatTags(result.tags);
             return result as unknown as PracticeTopic;
         } catch (error: any) {
-            if (error.status === 401) {
-                await this.refreshAuth();
-                try {
-                    const result = await pb.collection('practice_topics').getOne(topicId);
-                    result.tags = this.formatTags(result.tags);
-                    return result as unknown as PracticeTopic;
-                } catch (retryError: any) {
-                    throw new Error(retryError.message);
-                }
-            }
             throw new Error(error.message);
         }
     }
 
     async getPastPractices(topicId: string): Promise<PracticeSession[]> {
-        await this.ensureAuth();
-
         try {
             const result = await pb.collection('practice_sessions').getList(1, 10, {
                 filter: `practice_topic="${topicId}"`,
@@ -78,27 +48,11 @@ class TopicsService {
             
             return result.items as unknown as PracticeSession[];
         } catch (error: any) {
-            if (error.status === 401) {
-                await this.refreshAuth();
-                try {
-                    const result = await pb.collection('practice_sessions').getList(1, 10, {
-                        filter: `practice_topic="${topicId}"`,
-                        sort: '-created',
-                        expand: 'learner,practice_topic'
-                    });
-                    
-                    return result.items as unknown as PracticeSession[];
-                } catch (retryError: any) {
-                    throw new Error(retryError.message);
-                }
-            }
             throw new Error(error.message);
         }
     }
 
     async createTopic(formData: TopicFormData): Promise<PracticeTopic> {
-        await this.ensureAuth();
-
         try {
             const account = await accountService.getAccount();
             const dataToSend = {
@@ -110,61 +64,24 @@ class TopicsService {
             result.tags = this.formatTags(result.tags);
             return result as unknown as PracticeTopic;
         } catch (error: any) {
-            if (error.status === 401) {
-                await this.refreshAuth();
-                try {
-                    const account = await accountService.getAccount();
-                    const dataToSend = {
-                        ...formData,
-                        account: account.id
-                    };
-                    const result = await pb.collection('practice_topics').create(dataToSend);
-                    result.tags = this.formatTags(result.tags);
-                    return result as unknown as PracticeTopic;
-                } catch (retryError: any) {
-                    throw new Error(retryError.message);
-                }
-            }
             throw new Error(error.message);
         }
     }
 
     async updateTopic(id: string, formData: TopicFormData): Promise<PracticeTopic> {
-        await this.ensureAuth();
-
         try {
             const result = await pb.collection('practice_topics').update(id, formData);
             result.tags = this.formatTags(result.tags);
             return result as unknown as PracticeTopic;
         } catch (error: any) {
-            if (error.status === 401) {
-                await this.refreshAuth();
-                try {
-                    const result = await pb.collection('practice_topics').update(id, formData);
-                    result.tags = this.formatTags(result.tags);
-                    return result as unknown as PracticeTopic;
-                } catch (retryError: any) {
-                    throw new Error(retryError.message);
-                }
-            }
             throw new Error(error.message);
         }
     }
 
     async deleteTopic(id: string): Promise<void> {
-        await this.ensureAuth();
-
         try {
             await pb.collection('practice_topics').delete(id);
         } catch (error: any) {
-            if (error.status === 401) {
-                await this.refreshAuth();
-                try {
-                    await pb.collection('practice_topics').delete(id);
-                } catch (retryError: any) {
-                    throw new Error(retryError.message);
-                }
-            }
             throw new Error(error.message);
         }
     }
@@ -197,8 +114,6 @@ class TopicsService {
     }
 
     async getTopicsForLearner(learnerAge: number | undefined, learnerGrade: string | undefined): Promise<PracticeTopic[]> {
-        await this.ensureAuth();
-
         try {
             // First get all topics for the account
             const allTopics = await this.getTopics();
@@ -218,28 +133,6 @@ class TopicsService {
 
             return filteredTopics;
         } catch (error: any) {
-            if (error.status === 401) {
-                await this.refreshAuth();
-                try {
-                    const allTopics = await this.getTopics();
-                    const filteredTopics = allTopics.filter(topic => {
-                        const ageMatch = topic.target_age_range ? this.isAgeInRange(learnerAge, topic.target_age_range) : true;
-                        const gradeMatch = topic.target_grade_level ? this.isGradeInRange(learnerGrade, topic.target_grade_level) : true;
-                        console.log(topic.name, 'ageMatch:', ageMatch, 'gradeMatch:', gradeMatch);
-                        return ageMatch && gradeMatch;
-                    });
-
-                    // If no matching topics found, return all topics
-                    if (filteredTopics.length === 0) {
-                        console.log('No matching topics found for learner, returning all topics');
-                        return allTopics;
-                    }
-
-                    return filteredTopics;
-                } catch (retryError: any) {
-                    throw new Error(retryError.message);
-                }
-            }
             throw new Error(error.message);
         }
     }
@@ -249,8 +142,6 @@ class TopicsService {
      * Returns the best matching topic if similarity is above threshold
      */
     async findSimilarTopic(topicName: string): Promise<PracticeTopic | null> {
-        await this.ensureAuth();
-        
         try {
             // Get all topics
             const topics = await this.getTopics();

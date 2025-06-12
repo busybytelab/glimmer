@@ -7,10 +7,10 @@
     import { sessionService } from '$lib/services/session';
     import { authService } from '$lib/services/auth';
     import { error as errorStore } from '$lib/stores';
-    import ActionToolbar from '../../../components/common/ActionToolbar.svelte';
-    import Breadcrumbs from '../../../components/common/Breadcrumbs.svelte';
-    import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
-    import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
+    import ActionToolbar from '$components/common/ActionToolbar.svelte';
+    import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
+    import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+    import ErrorAlert from '$components/common/ErrorAlert.svelte';
 
     let topic: PracticeTopic | null = null;
     let pastPractices: any[] = [];

@@ -1,6 +1,6 @@
 <script lang="ts">
-    import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
-    import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
+    import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+    import ErrorAlert from '$components/common/ErrorAlert.svelte';
 
     export let loading = false;
     export let error: string | null = null;

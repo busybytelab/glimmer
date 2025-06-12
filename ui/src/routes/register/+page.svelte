@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { error } from '$lib/stores';
 	import { onMount } from 'svelte';
-	import ErrorAlert from '../../components/common/ErrorAlert.svelte';
-	import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
+	import ErrorAlert from '$components/common/ErrorAlert.svelte';
+	import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
 	import { userService } from '$lib/services/user';
 
 	// Use the public URL instead of importing the asset

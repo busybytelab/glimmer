@@ -3,8 +3,8 @@
 	import { goto } from '$app/navigation';
     import { page } from '$app/stores';
 	import { authService } from '$lib/services/auth';
-	import LoadingSpinner from '../../../components/common/LoadingSpinner.svelte';
-	import ErrorAlert from '../../../components/common/ErrorAlert.svelte';
+	import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+	import ErrorAlert from '$components/common/ErrorAlert.svelte';
 
     let loading = true;
     let error: string | null = null;

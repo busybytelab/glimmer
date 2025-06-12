@@ -3,10 +3,10 @@
 	import pb from '$lib/pocketbase';
 	import { goto } from '$app/navigation';
 	import type { Learner } from '$lib/types';
-	import LearnersList from '../../components/learners/LearnersList.svelte';
-	import FormButton from '../../components/common/FormButton.svelte';
-	import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
-	import ErrorAlert from '../../components/common/ErrorAlert.svelte';
+	import LearnersList from '$components/learners/LearnersList.svelte';
+	import FormButton from '$components/common/FormButton.svelte';
+	import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+	import ErrorAlert from '$components/common/ErrorAlert.svelte';
 	import { learnersService } from '$lib/services/learners';
 	
 	let learners: Learner[] = [];

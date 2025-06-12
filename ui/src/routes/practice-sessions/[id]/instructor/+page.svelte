@@ -2,18 +2,18 @@
     import { onMount } from 'svelte';
     import type { PracticeItem, BreadcrumbItem, ReviewStatus } from '$lib/types';
     import { QuestionViewType } from '$lib/types';
-    import QuestionFactory from '../../../../components/questions/QuestionFactory.svelte';
-    import ViewSelector from '../../../../components/questions/ViewSelector.svelte';
+    import QuestionFactory from '$components/questions/QuestionFactory.svelte';
+    import ViewSelector from '$components/questions/ViewSelector.svelte';
     import { sessionService, type SessionWithExpandedData } from '$lib/services/session';
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
     import { resultsService } from '$lib/services/results';
-    import ActionToolbar from '../../../../components/common/ActionToolbar.svelte';
-    import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
-    import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
-    import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
-    import SessionHeader from '../../../../components/practice-sessions/SessionHeader.svelte';
-    import ExportSessionButton from '../../../../components/practice-session/ExportSessionButton.svelte';
+    import ActionToolbar from '$components/common/ActionToolbar.svelte';
+    import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
+    import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+    import ErrorAlert from '$components/common/ErrorAlert.svelte';
+    import SessionHeader from '$components/practice-sessions/SessionHeader.svelte';
+    import ExportSessionButton from '$components/practice-session/ExportSessionButton.svelte';
     import { updateBreadcrumbs, handlePrint } from '$lib/utils/practice-session';
 
     let session: SessionWithExpandedData | null = null;

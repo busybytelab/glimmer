@@ -4,8 +4,8 @@
 	import { onMount } from 'svelte';
 	import { authService } from '$lib/services/auth';
 	import { page } from '$app/stores';
-	import ErrorAlert from '../../components/common/ErrorAlert.svelte';
-	import LoadingSpinner from '../../components/common/LoadingSpinner.svelte';
+	import ErrorAlert from '$components/common/ErrorAlert.svelte';
+	import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
 	// Use the public URL instead of importing the asset
 	const glimmerLogoUrl = '/glimmer.svg';
 
