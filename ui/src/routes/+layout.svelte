@@ -3,10 +3,10 @@
   import { isAuthenticated, isAuthLoading, error, theme } from '$lib/stores';
   import pb from '$lib/pocketbase';
   import { authService } from '$lib/services/auth';
-  import SideNav from '../components/layout/SideNav.svelte';
-  import LoadingSpinner from '../components/common/LoadingSpinner.svelte';
-  import ErrorAlert from '../components/common/ErrorAlert.svelte';
-  import Toast from '../components/common/Toast.svelte';
+  import SideNav from '$components/layout/SideNav.svelte';
+  import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+  import ErrorAlert from '$components/common/ErrorAlert.svelte';
+  import Toast from '$components/common/Toast.svelte';
   import '../app.css';
 
   // Sidebar state for layout

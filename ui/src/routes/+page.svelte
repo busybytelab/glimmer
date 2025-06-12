@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { isAuthenticated } from '$lib/stores';
-  import LoadingSpinner from '../components/common/LoadingSpinner.svelte';
+  import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
 
   // Redirect to role selection if authenticated, otherwise to login
   onMount(() => {
