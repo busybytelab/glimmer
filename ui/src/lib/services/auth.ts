@@ -68,13 +68,33 @@ export class AuthService {
 
   /**
    * Refreshes the authentication token using PocketBase's authRefresh method.
+   * @param customFetch Optional fetch function to use (provided by SvelteKit)
    * @returns Promise that resolves when the token is refreshed
    * @throws Error if the refresh fails
    */
-  async refreshAuthToken(): Promise<void> {
+  async refreshAuthToken(customFetch?: typeof fetch): Promise<void> {
     try {
-      await pb.collection('users').authRefresh();
-      // Update localStorage if needed
+      if (customFetch) {
+        const originalSend = pb.send;
+        pb.send = async <T = any>(path: string, options: any = {}) => {
+          const url = pb.buildURL(path);
+          // Ensure headers are properly set
+          options.headers = {
+            ...options.headers,
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.getAuthToken()}`
+          };
+          const response = await customFetch(url, options);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json() as Promise<T>;
+        };
+        await pb.collection('users').authRefresh();
+        pb.send = originalSend;
+      } else {
+        await pb.collection('users').authRefresh();
+      }
       this.saveAuthToken();
     } catch (error) {
       this.clearAuthToken();

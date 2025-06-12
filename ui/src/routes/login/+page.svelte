@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { isAuthenticated, error } from '$lib/stores';
-	import pb from '$lib/pocketbase';
 	import { onMount } from 'svelte';
 	import { authService } from '$lib/services/auth';
 	import { page } from '$app/stores';
@@ -55,9 +54,7 @@
 		error.set(null);
 
 		try {
-			await pb.collection('users').authWithPassword(form.email, form.password);
-			// Use the centralized auth utility to save the token if rememberMe is checked
-			authService.saveAuthToken(form.rememberMe);
+			await authService.authWithPassword(form.email, form.password, form.rememberMe);
 			isAuthenticated.set(true);
 			
 			// Redirect to returnUrl if it exists, otherwise to role selection

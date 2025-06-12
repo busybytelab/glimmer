@@ -22,7 +22,7 @@ export class TopicsService {
     }
 
     async getTopics(): Promise<PracticeTopic[]> {
-        const response = await pb.collection('topics').getList<PracticeTopic>(1, 50, {
+        const response = await pb.collection('practice_topics').getList<PracticeTopic>(1, 50, {
             sort: '-created',
         });
         return response.items;

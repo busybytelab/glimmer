@@ -6,7 +6,7 @@ import type { LayoutLoad } from './$types';
 export const prerender = false;
 export const ssr = false;
 
-export const load: LayoutLoad = async ({ url }) => {
+export const load: LayoutLoad = async ({ url, fetch }) => {
   // Skip auth check for public routes
   if (authService.isPublicRoute(url.pathname)) {
     return {
@@ -27,8 +27,8 @@ export const load: LayoutLoad = async ({ url }) => {
         };
       }
 
-      // Try to refresh the token
-      await authService.refreshAuthToken();
+      // Try to refresh the token using the provided fetch instance
+      await authService.refreshAuthToken(fetch);
       
       return {
         authenticated: true
