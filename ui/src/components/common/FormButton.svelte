@@ -14,10 +14,10 @@
 
 <button 
 	{type} 
-	class={`inline-flex justify-center py-2 px-5 border shadow-sm text-sm font-medium rounded-md text-white 
+	class={`inline-flex justify-center items-center py-3 px-6 min-h-[48px] min-w-[48px] border shadow-sm text-base font-medium rounded-md text-white 
 	${variants[variant]} 
 	focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800
-	transition-all duration-200 ease-in-out
+	active:shadow-lg transition-all duration-200 ease-in-out
 	disabled:opacity-50 disabled:cursor-not-allowed
 	`}
 	disabled={disabled || isLoading}
