@@ -237,19 +237,36 @@ export interface ExportedSession {
 /**
  * Statistics for a practice session
  * Generated from the practice_session_stats view
+ * Matches all fields from the migration 1746341017_created_practice_session_stats.go
  */
 export interface PracticeSessionStats extends PocketBaseRecord {
+    /** session_id */
+    id: string;
+    /** Name of the practice session */
     session_name: string;
+    /** Name of the associated topic */
     topic_name: string;
+    /** Total number of items in the session */
     total_items: number;
+    /** Number of items answered by the learner */
     answered_items: number;
+    /** Number of wrong answers */
     wrong_answers_count: number;
+    /** Total score for the session */
     total_score: number;
+    /** Status of the session (e.g., completed, in-progress) */
     session_status: string;
+    /** Timestamp of the last answer */
     last_answer_time: string;
+    /** Learner ID associated with the session */
     learner_id: string;
+    /** Account ID associated with the session */
+    account: string;
+    /** Number of approved items */
     approved_items: number;
+    /** Number of edited items */
     edited_items: number;
+    /** Number of not reviewed items */
     not_reviewed_items: number;
 }
 

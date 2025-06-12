@@ -8,7 +8,7 @@
     import { learnersService } from '$lib/services/learners';
     import { sessionService } from '$lib/services/session';
     import WelcomeMessage from '$components/learners/WelcomeMessage.svelte';
-    import RecommendedTopics from '$components/learners/RecommendedTopics.svelte';
+    import AvailableSessions from '$components/learners/AvailableSessions.svelte';
     import NextAchievement from '$components/learners/NextAchievement.svelte';
 
     let loading = false;
@@ -65,12 +65,8 @@
         }
     });
 
-    // Transform session stats into the format expected by RecommendedTopics
-    $: recommendedTopics = sessionStats.map(stat => ({
-        id: stat.id,
-        title: stat.topic_name,
-        description: `Progress: ${stat.answered_items}/${stat.total_items} items completed. Score: ${stat.total_score}%`
-    }));
+    // Transform session stats into the format expected by AvailableSessions
+    $: availableSessions = sessionStats;
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -90,7 +86,7 @@
                 latestAchievement={mockData.latestAchievement}
             />
 
-            <RecommendedTopics topics={recommendedTopics} />
+            <AvailableSessions sessions={availableSessions} learnerId={learnerId} />
 
             <NextAchievement achievement={mockData.nextAchievement} />
         </div>
