@@ -95,53 +95,35 @@ pb.send = async function <T = any>(path: string, options: any = {}): Promise<T> 
   const method = options.method || 'GET';
   const isListRequest = method === 'GET' && path.startsWith('/api/collections/') && path.endsWith('/records');
 
-  if (isListRequest) {
-    const requestKey = `${path}?${JSON.stringify(options.query || {})}`;
-
-    if (debounceTimers[requestKey]) {
-      clearTimeout(debounceTimers[requestKey].timer);
-      debounceTimers[requestKey].reject(new AutoCancellationError('Request superseded by a new debounced request.'));
-
-      return new Promise<T>((resolve, reject) => {
-        const timer = setTimeout(async () => {
-          delete debounceTimers[requestKey];
-          try {
-            const result = await originalSend.call(this, path, options) as T;
-            resolve(result);
-          } catch (err) {
-            if (isAutoCancelledErrorInternal(err)) {
-              console.log(`PocketBase request auto-cancelled for path: ${path} - ignoring.`);
-              reject(new AutoCancellationError('The request was automatically cancelled by PocketBase.'));
-            } else {
-              reject(err);
-            }
-          }
-        }, DEBOUNCE_DELAY_MS);
-
-        debounceTimers[requestKey] = { timer, reject };
-      });
-    }
-
-    try {
-      return await originalSend.call(this, path, options) as T;
-    } catch (err) {
-      if (isAutoCancelledErrorInternal(err)) {
-        console.log(`PocketBase request auto-cancelled for path: ${path} - ignoring as another request is pending`);
-        throw new AutoCancellationError('The request was automatically cancelled because a newer request was made');
-      }
-      throw err;
-    }
-  }
-
-  try {
+  // For non-list requests, just pass through to original send
+  if (!isListRequest) {
     return await originalSend.call(this, path, options) as T;
-  } catch (err) {
-    if (isAutoCancelledErrorInternal(err)) {
-      console.log(`PocketBase request auto-cancelled for path: ${path} - ignoring as another request is pending`);
-      throw new AutoCancellationError('The request was automatically cancelled because a newer request was made');
-    }
-    throw err;
   }
+
+  const requestKey = `${path}?${JSON.stringify(options.query || {})}`;
+
+  // If there's a pending request, cancel it and set up debouncing
+  if (debounceTimers[requestKey]) {
+    clearTimeout(debounceTimers[requestKey].timer);
+    debounceTimers[requestKey].reject(new AutoCancellationError('Request superseded by a new debounced request.'));
+
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(async () => {
+        delete debounceTimers[requestKey];
+        try {
+          const result = await originalSend.call(this, path, options) as T;
+          resolve(result);
+        } catch (err) {
+          reject(err);
+        }
+      }, DEBOUNCE_DELAY_MS);
+
+      debounceTimers[requestKey] = { timer, reject };
+    });
+  }
+
+  // First request goes through immediately
+  return await originalSend.call(this, path, options) as T;
 };
 
 

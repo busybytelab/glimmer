@@ -49,7 +49,7 @@
         <div class="flex items-start justify-between">
           <div class="flex-1">
             <h3 class="font-medium text-gray-900 dark:text-white mb-2">
-              {session.session_name} <span class="text-xs text-gray-500 ml-2">({session.topic_name})</span>
+              {session.topic_name} <span class="text-xs text-gray-500 ml-2">{session.session_name}</span>
             </h3>
             
             <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
