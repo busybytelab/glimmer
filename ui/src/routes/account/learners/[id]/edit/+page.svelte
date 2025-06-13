@@ -1,56 +1,58 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
-	import type { Learner } from '$lib/types';
-	import LearnerForm from '$components/learners/LearnerForm.svelte';
-	import FormButton from '$components/common/FormButton.svelte';
-	import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
-	import ErrorAlert from '$components/common/ErrorAlert.svelte';
-	import { learnersService } from '$lib/services/learners';
+	import { onMount } from "svelte";
+	import { page } from "$app/stores";
+	import { goto } from "$app/navigation";
+	import type { Learner } from "$lib/types";
+	import LearnerForm from "$components/learners/LearnerForm.svelte";
+	import FormButton from "$components/common/FormButton.svelte";
+	import LoadingSpinner from "$components/common/LoadingSpinner.svelte";
+	import ErrorAlert from "$components/common/ErrorAlert.svelte";
+	import { learnersService } from "$lib/services/learners";
 	let learner: Learner | null = null;
 	let loading = true;
 	let error: string | null = null;
 
 	onMount(async () => {
-		// Get learner ID from the URL parameter
-		const learnerId = $page.params.id;
-		
-		if (!learnerId) {
-			error = 'No learner ID provided';
+		try {
+			loading = true;
+
+			// Get learner ID from the URL parameter
+			const learnerId = $page.params.id;
+
+			if (!learnerId) {
+				error = "No learner ID provided";
+				loading = false;
+				return;
+			}
+			learner = await learnersService.getLearner(learnerId);
+		} catch (err) {
+			console.error("Error loading learner:", err);
+			error = "Failed to load learner";
+		} finally {
 			loading = false;
-			return;
 		}
-		
-		learner = await learnersService.getLearner(learnerId);
 	});
 
-
-
 	function handleLearnerUpdate() {
-		goto('/learners');
+		goto(`/account/learners/${learner?.id}`);
 	}
 
 	function handleLearnerDelete() {
-		goto('/learners');
+		goto(`/account/learners`);
 	}
 
 	function handleCancel() {
-		goto('/learners');
+		goto(`/account/learners/${learner?.id}`);
 	}
 </script>
 
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
 	<div class="flex justify-between items-center mb-6">
 		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-			{learner ? 'Edit Learner' : 'Loading...'}
+			{learner ? "Edit Profile" : "Loading..."}
 		</h1>
-		<FormButton
-			type="button"
-			variant="secondary"
-			on:click={handleCancel}
-		>
-			Back to Learners
+		<FormButton type="button" variant="secondary" on:click={handleCancel}>
+			Back to {learner?.nickname}'s profile
 		</FormButton>
 	</div>
 
@@ -70,4 +72,4 @@
 			/>
 		</div>
 	{/if}
-</div> 
+</div>

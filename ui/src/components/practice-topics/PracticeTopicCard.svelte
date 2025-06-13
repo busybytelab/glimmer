@@ -12,7 +12,7 @@
     
     function handleEditClick(e: Event) {
         e.stopPropagation();
-        goto(`/practice-topics/${topic.id}/edit`);
+        goto(`/account/practice-topics/${topic.id}/edit`);
     }
 </script>
 

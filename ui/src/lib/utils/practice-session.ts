@@ -18,7 +18,7 @@ export function updateBreadcrumbs(session: SessionWithExpandedData | null): Brea
     if (session.expand?.practice_topic) {
         items.push({
             label: session.expand.practice_topic.name,
-            href: `/practice-topics/${session.expand.practice_topic.id}`,
+            href: `/account/practice-topics/${session.expand.practice_topic.id}`,
             icon: 'topic' as BreadcrumbIcon
         });
     }

@@ -54,22 +54,22 @@
 	});
 
 	function handleCreateNew() {
-		goto('/learners/create');
+		goto('/account/learners/create');
 	}
 
 	function viewLearner(learner: Learner) {
-		goto(`/learners/${learner.id}`);
+		goto(`/account/learners/${learner.id}`);
 	}
 </script>
 
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
 	<div class="flex justify-between items-center mb-6">
-		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Learners</h1>
+		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Children Profiles</h1>
 		<FormButton
 			type="button"
 			on:click={handleCreateNew}
 		>
-			Create New Learner
+			Add Child
 		</FormButton>
 	</div>
 
