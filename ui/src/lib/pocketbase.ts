@@ -50,4 +50,99 @@ pb.authStore.onChange(() => {
   document.cookie = `pb_auth_token=${pb.authStore.token || ''}; path=/; SameSite=Lax`;
 });
 
+// Enhanced error class for better error handling
+export class AutoCancellationError extends Error {
+  constructor(message: string = 'Request was automatically cancelled') {
+    super(message);
+    this.name = 'AutoCancellationError';
+  }
+}
+
+// Store the original send method
+const originalSend = pb.send;
+
+// A map to store debounce timers and associated promise resolvers
+const debounceTimers: { [key: string]: { timer: NodeJS.Timeout; reject: (reason?: any) => void } } = {};
+const DEBOUNCE_DELAY_MS = 300;
+
+/**
+ * Checks if an error is due to PocketBase auto-cancellation
+ * @param err - The error to check
+ * @returns true if the error is due to auto-cancellation
+ */
+function isAutoCancelledErrorInternal(err: any): boolean {
+  // Check for the isAbort property that PocketBase sets on auto-cancelled requests
+  if (err && err.isAbort === true) {
+    return true;
+  }
+
+  // Also check for error messages that indicate auto-cancellation
+  if (err && err.message && typeof err.message === 'string') {
+    const message = err.message.toLowerCase();
+    return (
+      message.includes('autocancelled') ||
+      message.includes('auto-cancelled') ||
+      message.includes('request was autocancelled') ||
+      message.includes('the request was autocancelled')
+    );
+  }
+
+  return false;
+}
+
+// Override the send method to globally handle auto-cancellation and add debouncing for read requests.
+pb.send = async function <T = any>(path: string, options: any = {}): Promise<T> {
+  const method = options.method || 'GET';
+  const isListRequest = method === 'GET' && path.startsWith('/api/collections/') && path.endsWith('/records');
+
+  if (isListRequest) {
+    const requestKey = `${path}?${JSON.stringify(options.query || {})}`;
+
+    if (debounceTimers[requestKey]) {
+      clearTimeout(debounceTimers[requestKey].timer);
+      debounceTimers[requestKey].reject(new AutoCancellationError('Request superseded by a new debounced request.'));
+
+      return new Promise<T>((resolve, reject) => {
+        const timer = setTimeout(async () => {
+          delete debounceTimers[requestKey];
+          try {
+            const result = await originalSend.call(this, path, options) as T;
+            resolve(result);
+          } catch (err) {
+            if (isAutoCancelledErrorInternal(err)) {
+              console.log(`PocketBase request auto-cancelled for path: ${path} - ignoring.`);
+              reject(new AutoCancellationError('The request was automatically cancelled by PocketBase.'));
+            } else {
+              reject(err);
+            }
+          }
+        }, DEBOUNCE_DELAY_MS);
+
+        debounceTimers[requestKey] = { timer, reject };
+      });
+    }
+
+    try {
+      return await originalSend.call(this, path, options) as T;
+    } catch (err) {
+      if (isAutoCancelledErrorInternal(err)) {
+        console.log(`PocketBase request auto-cancelled for path: ${path} - ignoring as another request is pending`);
+        throw new AutoCancellationError('The request was automatically cancelled because a newer request was made');
+      }
+      throw err;
+    }
+  }
+
+  try {
+    return await originalSend.call(this, path, options) as T;
+  } catch (err) {
+    if (isAutoCancelledErrorInternal(err)) {
+      console.log(`PocketBase request auto-cancelled for path: ${path} - ignoring as another request is pending`);
+      throw new AutoCancellationError('The request was automatically cancelled because a newer request was made');
+    }
+    throw err;
+  }
+};
+
+
 export default pb; 
