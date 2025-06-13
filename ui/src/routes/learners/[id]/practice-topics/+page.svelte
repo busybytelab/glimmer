@@ -2,10 +2,10 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import type { PracticeTopic, Learner, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
-	import PracticeTopicCard from '../../../../components/practice-topics/PracticeTopicCard.svelte';
-	import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
-	import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
-	import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
+	import PracticeTopicCard from '$components/practice-topics/PracticeTopicCard.svelte';
+	import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+	import ErrorAlert from '$components/common/ErrorAlert.svelte';
+	import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
 	import { topicsService } from '$lib/services/topics';
 	import { learnersService } from '$lib/services/learners';
 

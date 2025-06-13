@@ -3,10 +3,10 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import type { Learner } from '$lib/types';
-	import LearnerForm from '../../../../components/learners/LearnerForm.svelte';
-	import FormButton from '../../../../components/common/FormButton.svelte';
-	import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
-	import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
+	import LearnerForm from '$components/learners/LearnerForm.svelte';
+	import FormButton from '$components/common/FormButton.svelte';
+	import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+	import ErrorAlert from '$components/common/ErrorAlert.svelte';
 	import { learnersService } from '$lib/services/learners';
 	let learner: Learner | null = null;
 	let loading = true;

@@ -1,6 +1,6 @@
 <script lang="ts">
-    import ProfileCard from '../../components/account/ProfileCard.svelte';
-    import LLMSettingsCard from '../../components/account/LLMSettingsCard.svelte';
+    import ProfileCard from '$components/account/ProfileCard.svelte';
+    import LLMSettingsCard from '$components/account/LLMSettingsCard.svelte';
     import pb from '$lib/pocketbase';
     
     let isLoading = {

@@ -1,6 +1,5 @@
 import pb from '$lib/pocketbase';
 import type { PracticeSession, PracticeItem, Learner, PracticeSessionStats, PracticeTopic } from '$lib/types';
-import { authService } from './auth';
 
 export interface SessionWithExpandedData extends PracticeSession {
     expand?: {
@@ -11,16 +10,8 @@ export interface SessionWithExpandedData extends PracticeSession {
 }
 
 class SessionService {
-    private async ensureAuth(): Promise<void> {
-        if (!pb.authStore.isValid) {
-            throw new Error('You must be logged in to access practice sessions');
-        }
-    }
-
     async loadSession(id: string): Promise<SessionWithExpandedData> {
         try {
-            await this.ensureAuth();
-
             const result = await pb.collection('practice_sessions').getOne(id, {
                 expand: 'learner,practice_topic,practice_items',
                 fields: 'id,name,status,assigned_at,completed_at,generation_prompt,learner,practice_topic,practice_items,expand'
@@ -42,8 +33,6 @@ class SessionService {
 
     async loadSessionForLearner(id: string): Promise<SessionWithExpandedData> {
         try {
-            await this.ensureAuth();
-
             const result = await pb.collection('practice_sessions').getOne(id, {
                 expand: 'learner,learner.user,practice_topic,practice_items',
                 fields: 'id,name,status,assigned_at,completed_at,generation_prompt,learner,practice_topic,practice_items,expand'
@@ -80,35 +69,15 @@ class SessionService {
         throw new Error('Practice items not expanded. This is a data integrity error.');
     }
 
-    /**
-     * Updates a practice session
-     * @param id Session ID
-     * @param data Updated session data
-     * @returns Updated session
-     */
     async updateSession(id: string, data: Partial<PracticeSession>): Promise<PracticeSession> {
-        await this.ensureAuth();
         return await pb.collection('practice_sessions').update(id, data) as PracticeSession;
     }
 
-    /**
-     * Deletes a practice session
-     * @param id Session ID
-     */
     async deleteSession(id: string): Promise<void> {
-        await this.ensureAuth();
         await pb.collection('practice_sessions').delete(id);
     }
 
-    /**
-     * Gets a list of practice sessions
-     * @param page Page number (1-based)
-     * @param perPage Number of items per page
-     * @param filter Optional filter string
-     * @returns List of practice sessions
-     */
     async getSessions(page: number = 1, perPage: number = 10, filter?: string): Promise<PracticeSession[]> {
-        await this.ensureAuth();
         const options: any = {
             sort: '-created',
             expand: 'learner,practice_topic'
@@ -120,14 +89,7 @@ class SessionService {
         return result.items as PracticeSession[];
     }
 
-    /**
-     * Gets practice sessions for a specific topic and learner
-     * @param topicId Topic ID
-     * @param learnerId Learner ID
-     * @returns List of practice sessions
-     */
     async getSessionsForTopicAndLearner(topicId: string, learnerId: string): Promise<PracticeSession[]> {
-        await this.ensureAuth();
         try {
             const result = await pb.collection('practice_sessions').getList(1, 50, {
                 filter: `practice_topic="${topicId}" && learner="${learnerId}"`,
@@ -136,31 +98,11 @@ class SessionService {
             });
             return result.items as PracticeSession[];
         } catch (error: any) {
-            if (error.status === 401) {
-                await authService.refreshAuthToken();
-                try {
-                    const result = await pb.collection('practice_sessions').getList(1, 50, {
-                        filter: `practice_topic="${topicId}" && learner="${learnerId}"`,
-                        sort: '-created',
-                        expand: 'learner,practice_topic'
-                    });
-                    return result.items as PracticeSession[];
-                } catch (retryError: any) {
-                    throw new Error(retryError.message);
-                }
-            }
             throw new Error(error.message);
         }
     }
 
-    /**
-     * Gets practice session stats for a learner, excluding sessions where all items are answered correctly
-     * A session is considered complete when all items are answered (answered_items = total_items) and all answers are correct (wrong_answers_count = 0)
-     * @param learnerId Learner ID
-     * @returns List of practice session stats
-     */
     async getSessionStatsForLearner(learnerId: string): Promise<PracticeSessionStats[]> {
-        await this.ensureAuth();
         try {
             const result = await pb.collection('pbc_practice_session_stats').getList(1, 50, {
                 filter: `learner_id="${learnerId}" && (answered_items < total_items || wrong_answers_count > 0)`,
@@ -168,18 +110,6 @@ class SessionService {
             });
             return result.items as PracticeSessionStats[];
         } catch (error: any) {
-            if (error.status === 401) {
-                await authService.refreshAuthToken();
-                try {
-                    const result = await pb.collection('pbc_practice_session_stats').getList(1, 50, {
-                        filter: `learner_id="${learnerId}" && (answered_items < total_items || wrong_answers_count > 0)`,
-                        sort: '-last_answer_time'
-                    });
-                    return result.items as PracticeSessionStats[];
-                } catch (retryError: any) {
-                    throw new Error(retryError.message);
-                }
-            }
             throw new Error(error.message);
         }
     }

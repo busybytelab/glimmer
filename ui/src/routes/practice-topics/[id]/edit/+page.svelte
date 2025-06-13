@@ -4,11 +4,11 @@
     import { goto } from '$app/navigation';
     import type { PracticeTopic, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
     import pb from '$lib/pocketbase';
-    import PracticeTopicForm from '../../../../components/practice-topics/PracticeTopicForm.svelte';
-    import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
-    import ActionToolbar from '../../../../components/common/ActionToolbar.svelte';
-    import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
-    import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
+    import PracticeTopicForm from '$components/practice-topics/PracticeTopicForm.svelte';
+    import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
+    import ActionToolbar from '$components/common/ActionToolbar.svelte';
+    import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+    import ErrorAlert from '$components/common/ErrorAlert.svelte';
 
     let topic: PracticeTopic | null = null;
     let loading = true;

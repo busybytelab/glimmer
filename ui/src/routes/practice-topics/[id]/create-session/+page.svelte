@@ -4,15 +4,15 @@
     import { goto } from '$app/navigation';
     import type { PracticeTopic, Learner, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
     import pb from '$lib/pocketbase';
-    import LearnersList from '../../../../components/learners/LearnersList.svelte';
+    import LearnersList from '$components/learners/LearnersList.svelte';
     import { practiceService } from '$lib/services/practice';
-    import ActionToolbar from '../../../../components/common/ActionToolbar.svelte';
-    import Breadcrumbs from '../../../../components/common/Breadcrumbs.svelte';
-    import LoadingSpinner from '../../../../components/common/LoadingSpinner.svelte';
-    import ErrorAlert from '../../../../components/common/ErrorAlert.svelte';
-    import PracticeTopicCard from '../../../../components/practice-topics/PracticeTopicCard.svelte';
+    import ActionToolbar from '$components/common/ActionToolbar.svelte';
+    import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
+    import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+    import ErrorAlert from '$components/common/ErrorAlert.svelte';
+    import PracticeTopicCard from '$components/practice-topics/PracticeTopicCard.svelte';
 
-    import ExpandableTextArea from '../../../../components/common/ExpandableTextArea.svelte';
+    import ExpandableTextArea from '$components/common/ExpandableTextArea.svelte';
 
     // Define the steps for session creation as a string literal type
     type CreationStep = 'select_learner' | 'edit_prompts';

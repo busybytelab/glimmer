@@ -24,8 +24,10 @@
 		{required}
 		{disabled}
 		{rows}
+		autocapitalize="sentences"
+		inputmode="text"
 		on:keydown
-		class="{class_override || `mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+		class="{class_override || `mt-1 block w-full px-4 py-3 min-h-[48px] min-w-[48px] bg-white border border-gray-300 rounded-md text-base shadow-sm placeholder-gray-400
 		focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
 		dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 dark:placeholder-gray-500
 		disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 disabled:shadow-none

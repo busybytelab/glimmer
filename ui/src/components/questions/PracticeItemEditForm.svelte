@@ -76,7 +76,7 @@
             // Parse tags back into array
             const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
 
-            const updatedItem = await practiceItemService.updatePracticeItem(item.id, {
+            const updatedItem = await practiceItemService.updateItem(item.id, {
                 question_text: questionText,
                 correct_answer: correctAnswer,
                 explanation,

@@ -1,9 +1,9 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import type { PracticeTopic, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
-    import PracticeTopicForm from '../../../components/practice-topics/PracticeTopicForm.svelte';
-    import Breadcrumbs from '../../../components/common/Breadcrumbs.svelte';
-    import ActionToolbar from '../../../components/common/ActionToolbar.svelte';
+    import PracticeTopicForm from '$components/practice-topics/PracticeTopicForm.svelte';
+    import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
+    import ActionToolbar from '$components/common/ActionToolbar.svelte';
 
     let breadcrumbItems: BreadcrumbItem[] = [
         {

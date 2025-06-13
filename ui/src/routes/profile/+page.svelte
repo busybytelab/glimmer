@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { error } from '$lib/stores';
 	import { onMount } from 'svelte';
-	import EditProfile from '../../components/settings/EditProfile.svelte';
+	import EditProfile from '$components/settings/EditProfile.svelte';
 	import { userService } from '$lib/services/user';
 	let isLoading = false;
 	let userProfile: { name: string; email: string } | null = null;

@@ -4,9 +4,9 @@
 	import { llmService } from '$lib/services/llm';
 	import type { Usage } from '$lib/services/llm';
 	import type { ChatMessage } from '$lib/services/chat';
-	import SelectField from '../../components/common/SelectField.svelte';
-	import ChatInput from '../../components/chat/ChatInput.svelte';
-	import MarkdownRenderer from '../../components/common/MarkdownRenderer.svelte';
+	import SelectField from '$components/common/SelectField.svelte';
+	import ChatInput from '$components/chat/ChatInput.svelte';
+	import MarkdownRenderer from '$components/common/MarkdownRenderer.svelte';
 	import { onMount } from 'svelte';
 	import { 
 		activeChatStore, 

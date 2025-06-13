@@ -10,6 +10,7 @@ lerna-debug.log*
 # Node dependencies and build outputs
 node_modules
 *.local
+*.tsbuildinfo
 
 # SvelteKit specific
 .svelte-kit/
