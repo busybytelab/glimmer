@@ -77,22 +77,22 @@
 	});
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-	<div class="max-w-sm w-full space-y-6 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+<div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 sm:px-6">
+	<div class="max-w-md w-full space-y-8 p-6 sm:p-8 bg-white dark:bg-gray-800 rounded-xl shadow-md">
 		<div class="text-center">
 			<div class="flex items-center justify-center">
-				<img src={glimmerLogoUrl} alt="Glimmer Logo" class="h-10 w-10 mr-3" />
-				<h1 class="text-2xl font-bold text-primary dark:text-white">Glimmer</h1>
+				<img src={glimmerLogoUrl} alt="Glimmer Logo" class="h-12 w-12 sm:h-14 sm:w-14 mr-3" />
+				<h1 class="text-2xl sm:text-3xl font-bold text-primary dark:text-white">Glimmer</h1>
 			</div>
-			<p class="mt-1 text-gray-600 dark:text-gray-300 text-base">Learning Helper for Kids</p>
+			<p class="mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">Learning Helper for Kids</p>
 		</div>
-		<form on:submit|preventDefault={handleSubmit} class="space-y-4">
+		<form on:submit|preventDefault={handleSubmit} class="space-y-6">
 			{#if $error}
 				<ErrorAlert message={$error} />
 			{/if}
-			<div class="space-y-2">
+			<div class="space-y-4">
 				<div>
-					<label for="email" class="sr-only">Email address</label>
+					<label for="email" class="block text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 mb-1">Email address</label>
 					<input
 						id="email"
 						name="email"
@@ -100,18 +100,18 @@
 						autocomplete="email"
 						required
 						bind:value={form.email}
-						class="block w-full px-3 py-2 rounded-t-md border {formErrors.email ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm"
-						placeholder="Email address"
+						class="block w-full px-4 py-3 sm:py-4 rounded-lg border {formErrors.email ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-secondary focus:border-secondary text-base"
+						placeholder="Enter your email"
 						disabled={isSubmitting}
 						aria-invalid={!!formErrors.email}
 						aria-describedby={formErrors.email ? 'email-error' : undefined}
 					/>
 					{#if formErrors.email}
-						<p id="email-error" class="mt-1 text-xs text-red-600 dark:text-red-300">{formErrors.email}</p>
+						<p id="email-error" class="mt-2 text-sm text-red-600 dark:text-red-300">{formErrors.email}</p>
 					{/if}
 				</div>
 				<div>
-					<label for="password" class="sr-only">Password</label>
+					<label for="password" class="block text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
 					<input
 						id="password"
 						name="password"
@@ -119,14 +119,14 @@
 						autocomplete="current-password"
 						required
 						bind:value={form.password}
-						class="block w-full px-3 py-2 rounded-b-md border {formErrors.password ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm"
-						placeholder="Password"
+						class="block w-full px-4 py-3 sm:py-4 rounded-lg border {formErrors.password ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-secondary focus:border-secondary text-base"
+						placeholder="Enter your password"
 						disabled={isSubmitting}
 						aria-invalid={!!formErrors.password}
 						aria-describedby={formErrors.password ? 'password-error' : undefined}
 					/>
 					{#if formErrors.password}
-						<p id="password-error" class="mt-1 text-xs text-red-600 dark:text-red-300">{formErrors.password}</p>
+						<p id="password-error" class="mt-2 text-sm text-red-600 dark:text-red-300">{formErrors.password}</p>
 					{/if}
 				</div>
 			</div>
@@ -137,27 +137,27 @@
 						name="remember-me"
 						type="checkbox"
 						bind:checked={form.rememberMe}
-						class="h-4 w-4 text-secondary focus:ring-secondary border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+						class="h-5 w-5 text-secondary focus:ring-secondary border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
 						disabled={isSubmitting}
 					/>
-					<label for="remember-me" class="ml-2 block text-xs text-gray-900 dark:text-gray-200">
+					<label for="remember-me" class="ml-2 block text-sm sm:text-base text-gray-900 dark:text-gray-200">
 						Remember me
 					</label>
 				</div>
-				<div class="text-xs">
+				<div class="text-sm sm:text-base">
 					<a href="/forgot-password" class="font-medium text-secondary hover:text-secondary focus:outline-none focus:underline dark:text-blue-400">
-						Forgot your password?
+						Forgot password?
 					</a>
 				</div>
 			</div>
-			<div>
+			<div class="pt-2">
 				<button
 					type="submit"
 					disabled={isSubmitting}
-					class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-secondary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+					class="w-full flex justify-center py-3 sm:py-4 px-4 border border-transparent text-base sm:text-lg font-semibold rounded-lg text-white bg-secondary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] shadow-sm hover:shadow-md"
 				>
 					{#if isSubmitting}
-						<div class="w-5 h-5 mr-3">
+						<div class="w-6 h-6 mr-3">
 							<LoadingSpinner size="sm" color="white" />
 						</div>
 						Signing in...
@@ -166,11 +166,29 @@
 					{/if}
 				</button>
 			</div>
-			<div class="text-center text-sm">
-				<p class="text-gray-600 dark:text-gray-400">
-					Don't have an account?
-					<a href="/register" class="font-medium text-secondary hover:text-blue-600 focus:outline-none focus:underline dark:text-blue-400">
-						Create one
+			<div class="relative mt-8">
+				<div class="absolute inset-0 flex items-center">
+					<div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
+				</div>
+				<div class="relative flex justify-center text-base sm:text-lg">
+					<span class="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium">New to Glimmer?</span>
+				</div>
+			</div>
+			<div class="mt-6">
+				<a
+					href="/register"
+					class="w-full flex justify-center py-3 sm:py-4 px-4 border-2 border-secondary text-base sm:text-lg font-semibold rounded-lg text-secondary hover:bg-emerald-500 hover:border-emerald-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 transform hover:scale-[1.02] shadow-sm hover:shadow-md"
+				>
+					Create new account
+				</a>
+				<p class="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+					By creating an account, you agree to our
+					<a href="/terms" class="text-secondary hover:text-emerald-500 focus:outline-none focus:underline dark:text-blue-400">
+						Terms & Conditions
+					</a>
+					and
+					<a href="/privacy" class="text-secondary hover:text-emerald-500 focus:outline-none focus:underline dark:text-blue-400">
+						Privacy Policy
 					</a>
 				</p>
 			</div>

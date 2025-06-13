@@ -16,7 +16,6 @@ func createUserAccount(e *core.RecordConfirmVerificationRequestEvent, username s
 	var accounts []*core.Record
 	err := e.App.RecordQuery("accounts").
 		AndWhere(dbx.NewExp("owner = {:owner}", dbx.Params{"owner": e.Record.Id})).
-		OrderBy("order").
 		Limit(1).
 		All(&accounts)
 	if err != nil {
