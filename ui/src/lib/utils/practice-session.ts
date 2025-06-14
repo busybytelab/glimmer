@@ -7,10 +7,16 @@ import type { SessionWithExpandedData } from '$lib/services/session';
 export function updateBreadcrumbs(session: SessionWithExpandedData | null): BreadcrumbItem[] {
     if (!session) return [];
     
+    // Check if we're in a learner route by looking at the current URL
+    const isLearnerRoute = window.location.pathname.startsWith('/learners/');
+    const learnerId = isLearnerRoute ? window.location.pathname.split('/')[2] : null;
+    
     const items: BreadcrumbItem[] = [
         {
             label: 'Topics',
-            href: '/practice-topics',
+            href: isLearnerRoute 
+                ? `/learners/${learnerId}/practice-topics`
+                : '/account/practice-topics',
             icon: 'topic' as BreadcrumbIcon
         }
     ];
@@ -18,7 +24,9 @@ export function updateBreadcrumbs(session: SessionWithExpandedData | null): Brea
     if (session.expand?.practice_topic) {
         items.push({
             label: session.expand.practice_topic.name,
-            href: `/account/practice-topics/${session.expand.practice_topic.id}`,
+            href: isLearnerRoute
+                ? `/learners/${learnerId}/practice-topics/${session.expand.practice_topic.id}`
+                : `/account/practice-topics/${session.expand.practice_topic.id}`,
             icon: 'topic' as BreadcrumbIcon
         });
     }

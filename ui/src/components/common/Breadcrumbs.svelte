@@ -12,12 +12,12 @@
     }
 </script>
 
-<nav class="flex" aria-label="Breadcrumb">
+<nav class="flex py-1" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2">
         {#if showHomeIcon && items.length > 0}
             <li class="inline-flex items-center">
-                <a href="/" class="inline-flex items-center text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <a href="/" class="inline-flex items-center text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d={getIconPath('home')}></path>
                     </svg>
                     Home
@@ -35,10 +35,10 @@
                     {#if item.href && index !== items.length - 1}
                         <a 
                             href={item.href} 
-                            class="inline-flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                            class="inline-flex items-center text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                         >
                             {#if item.icon}
-                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path d={getIconPath(item.icon)}></path>
                                 </svg>
                             {/if}
@@ -46,11 +46,11 @@
                         </a>
                     {:else}
                         <span 
-                            class="inline-flex items-center text-sm font-medium text-gray-500 dark:text-gray-400"
+                            class="inline-flex items-center text-base font-medium text-gray-500 dark:text-gray-400"
                             aria-current={index === items.length - 1 ? 'page' : undefined}
                         >
                             {#if item.icon}
-                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path d={getIconPath(item.icon)}></path>
                                 </svg>
                             {/if}

@@ -1,10 +1,9 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
-    import type { BreadcrumbItem, Learner, AchievementIcon, Achievement, PracticeSessionStats } from '$lib/types';
+    import type { Learner, AchievementIcon, Achievement, PracticeSessionStats } from '$lib/types';
     import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
     import ErrorAlert from '$components/common/ErrorAlert.svelte';
-    import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
     import { learnersService } from '$lib/services/learners';
     import { sessionService } from '$lib/services/session';
     import WelcomeMessage from '$components/learners/WelcomeMessage.svelte';
@@ -15,8 +14,8 @@
     let error: string | null = null;
     let learnerId: string = '';
     let learner: Learner | null = null;
-    let sessionStats: PracticeSessionStats[] = [];
-    let breadcrumbs: BreadcrumbItem[] = [];
+    let activeSessionStats: PracticeSessionStats[] = [];
+    let completedSessionStats: PracticeSessionStats[] = [];
 
     // Mock data for achievements - will be replaced with actual data later
     const mockData = {
@@ -45,18 +44,14 @@
             learnerId = $page.params.id;
             
             // Load learner and session stats in parallel
-            const [learnerData, stats] = await Promise.all([
+            const [learnerData, sessionStats] = await Promise.all([
                 learnersService.getLearner(learnerId),
                 sessionService.getSessionStatsForLearner(learnerId)
             ]);
             
             learner = learnerData;
-            sessionStats = stats;
-            
-            breadcrumbs = [
-                { label: 'Home', href: '/', icon: 'home' },
-                { label: learner.nickname, href: `/learners/${learnerId}/home`, icon: 'learner' }
-            ];
+            activeSessionStats = sessionStats.active;
+            completedSessionStats = sessionStats.completed;
         } catch (e) {
             error = 'Failed to load learner data';
             console.error(e);
@@ -66,11 +61,11 @@
     });
 
     // Transform session stats into the format expected by AvailableSessions
-    $: availableSessions = sessionStats;
+    $: availableSessions = activeSessionStats;
+    $: completedSessions = completedSessionStats;
 </script>
 
 <div class="container mx-auto px-4 py-8">
-    <Breadcrumbs items={breadcrumbs} />
 
     {#if loading}
         <div class="flex justify-center items-center min-h-[400px]">
@@ -87,6 +82,15 @@
             />
 
             <AvailableSessions sessions={availableSessions} learnerId={learnerId} />
+
+            {#if completedSessions.length > 0}
+                <AvailableSessions 
+                    sessions={completedSessions} 
+                    learnerId={learnerId} 
+                    title="Completed Sessions"
+                    mode="completed"
+                />
+            {/if}
 
             <NextAchievement achievement={mockData.nextAchievement} />
         </div>

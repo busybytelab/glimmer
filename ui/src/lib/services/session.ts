@@ -102,13 +102,27 @@ class SessionService {
         }
     }
 
-    async getSessionStatsForLearner(learnerId: string): Promise<PracticeSessionStats[]> {
+    async getSessionStatsForLearner(learnerId: string): Promise<{
+        active: PracticeSessionStats[];
+        completed: PracticeSessionStats[];
+    }> {
         try {
-            const result = await pb.collection('pbc_practice_session_stats').getList(1, 50, {
-                filter: `learner_id="${learnerId}" && (answered_items < total_items || wrong_answers_count > 0)`,
+            const result = await pb.collection('pbc_practice_session_stats').getList(1, 100, {
+                filter: `learner_id="${learnerId}"`,
                 sort: '-last_answer_time'
             });
-            return result.items as PracticeSessionStats[];
+
+            const items = result.items as PracticeSessionStats[];
+            
+            // Split items into active and completed
+            return {
+                active: items.filter(item => 
+                    item.answered_items < item.total_items || item.wrong_answers_count > 0
+                ),
+                completed: items.filter(item => 
+                    item.answered_items === item.total_items && item.wrong_answers_count === 0
+                )
+            };
         } catch (error: any) {
             throw new Error(error.message);
         }
