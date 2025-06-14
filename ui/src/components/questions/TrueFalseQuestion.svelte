@@ -40,7 +40,19 @@
         {#each ['True', 'False'] as option}
             <div class="flex items-center min-h-[48px] px-2 rounded-lg transition cursor-pointer
                 {selectedAnswer === option || item.user_answer === option ? 'bg-indigo-100 dark:bg-indigo-800' : 'active:bg-indigo-50 hover:bg-indigo-50 dark:active:bg-indigo-900 dark:hover:bg-indigo-900'}"
-                on:click={() => { if (!disabled) { selectedAnswer = option; if (onAnswerChange) onAnswerChange(option); } }}>
+                role="radio"
+                aria-checked={selectedAnswer === option || item.user_answer === option}
+                on:click={() => { if (!disabled) { selectedAnswer = option; if (onAnswerChange) onAnswerChange(option); } }}
+                on:keydown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (!disabled) {
+                            selectedAnswer = option;
+                            if (onAnswerChange) onAnswerChange(option);
+                        }
+                    }
+                }}
+                tabindex={disabled ? -1 : 0}>
                 {#if printMode}
                     <div class="w-6 h-6 border border-gray-400 dark:border-gray-500 rounded mr-3"></div>
                 {:else}
@@ -58,7 +70,7 @@
                 {/if}
                 <label 
                     for={printMode ? undefined : `question-${index}-option-${option}-${item.id}`}
-                    class="ml-4 text-base cursor-pointer select-none flex-1 {showInstructorInfo && String(option) === String(item.correct_answer) 
+                    class="ml-4 text-base cursor-pointer select-none flex-1 {showInstructorInfo && String(option) === String(item.correct_answer)
                         ? 'text-green-600 dark:text-green-400 font-medium' 
                         : 'text-gray-700 dark:text-gray-300'} {item.user_answer === option 
                         ? 'font-medium border-b border-indigo-300 dark:border-indigo-500' 

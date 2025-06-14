@@ -1,13 +1,13 @@
 <script lang="ts">
     import { IconTypeMap } from '$lib/types';
-    import type { BreadcrumbItem } from '$lib/types';
+    import type { BreadcrumbItem, IconType } from '$lib/types';
 
     export let items: BreadcrumbItem[] = [];
 
     export let divider: string = '/';
     export let showHomeIcon: boolean = false;
 
-    function getIconPath(icon: string | undefined): string {
+    function getIconPath(icon: IconType | undefined): string {
         if (!icon) return '';
         return IconTypeMap[icon] || '';
     }

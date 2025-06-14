@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
-    import type { PracticeTopic, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
+    import type { PracticeTopic, BreadcrumbItem, IconType } from '$lib/types';
     import pb from '$lib/pocketbase';
     import PracticeTopicForm from '$components/practice-topics/PracticeTopicForm.svelte';
     import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
@@ -71,11 +71,11 @@
                 {
                     label: 'Topics',
                     href: '/account/practice-topics',
-                    icon: 'topic' as BreadcrumbIcon
+                    icon: 'topic' as IconType
                 },
                 {
                     label: 'Edit Topic',
-                    icon: 'edit' as BreadcrumbIcon
+                    icon: 'edit' as IconType
                 }
             ];
             return;
@@ -85,16 +85,16 @@
             {
                 label: 'Topics',
                 href: '/account/practice-topics',
-                icon: 'topic' as BreadcrumbIcon
+                icon: 'topic' as IconType
             },
             {
                 label: topic.name,
                 href: `/account/practice-topics/${topic.id}`,
-                icon: 'topic' as BreadcrumbIcon
+                icon: 'topic' as IconType
             },
             {
                 label: `Edit ${topic.name}`,
-                icon: 'edit' as BreadcrumbIcon
+                icon: 'edit' as IconType
             }
         ];
     }
@@ -116,7 +116,7 @@
         {
             id: 'back',
             label: 'Back',
-            icon: 'back',
+            icon: 'back' as IconType,
             variant: 'secondary' as const,
             onClick: handleCancel
         }

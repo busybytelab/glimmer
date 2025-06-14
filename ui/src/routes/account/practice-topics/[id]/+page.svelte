@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
-    import type { PracticeTopic, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
+    import type { PracticeTopic, BreadcrumbItem, IconType } from '$lib/types';
     import { topicsService } from '$lib/services/topics';
     import { sessionService } from '$lib/services/session';
     import { authService } from '$lib/services/auth';
@@ -145,11 +145,11 @@
             {
                 label: 'Topics',
                 href: '/account/practice-topics',
-                icon: 'topic' as BreadcrumbIcon
+                icon: 'topic' as IconType
             },
             {
                 label: topic.name,
-                icon: 'topic' as BreadcrumbIcon
+                icon: 'topic' as IconType
             }
         ];
     }
@@ -159,7 +159,7 @@
         {
             id: 'back',
             label: 'Back',
-            icon: 'back',
+            icon: 'back' as IconType,
             variant: 'secondary' as const,
             onClick: goBack,
             disabled: isCreatingTemplate
@@ -167,7 +167,7 @@
         {
             id: 'edit',
             label: 'Edit',
-            icon: 'edit',
+            icon: 'edit' as IconType,
             variant: 'primary' as const,
             onClick: editTopic,
             disabled: isCreatingTemplate
@@ -175,7 +175,7 @@
         {
             id: 'useTemplate',
             label: 'Use as Template',
-            icon: 'copy',
+            icon: 'duplicate' as IconType,
             variant: 'primary' as const,
             onClick: useAsTemplate,
             disabled: isCreatingTemplate
@@ -219,7 +219,7 @@ Please help me:
 Feel free to maintain similar structure but adapt content and difficulty as needed while preserving educational value.`;
 
             // Navigate to chat with the draft prompt
-            await goto('/chat?prompt=' + encodeURIComponent(draftPrompt));
+            await goto('/account/chat?prompt=' + encodeURIComponent(draftPrompt));
         } catch (err) {
             console.error('Error creating template:', err);
             errorStore.set(err instanceof Error ? err.message : 'Failed to create template');

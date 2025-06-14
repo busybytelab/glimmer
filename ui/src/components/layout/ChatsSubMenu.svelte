@@ -118,7 +118,7 @@
     
     async function selectChat(id: string) {
         // Navigate to the selected chat
-        await goto(`/chat/${id}`);
+        await goto(`/account/chat/${id}`);
         
         // Check screen size to determine if we should close the sidebar
         const isMobile = window.innerWidth < 768;

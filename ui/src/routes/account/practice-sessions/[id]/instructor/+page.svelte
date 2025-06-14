@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import type { PracticeItem, BreadcrumbItem, ReviewStatus } from '$lib/types';
+    import type { PracticeItem, BreadcrumbItem, ReviewStatus, IconType } from '$lib/types';
     import { QuestionViewType } from '$lib/types';
     import QuestionFactory from '$components/questions/QuestionFactory.svelte';
     import ViewSelector from '$components/questions/ViewSelector.svelte';
@@ -138,7 +138,7 @@
         {
             id: 'export',
             label: 'Export',
-            icon: 'download',
+            icon: 'download' as IconType,
             variant: 'secondary' as const,
             disabled: loading,
             onClick: async () => {
@@ -155,21 +155,21 @@
         {
             id: 'print',
             label: 'Print',
-            icon: 'print',
+            icon: 'print' as IconType,
             variant: 'primary' as const,
             onClick: handlePrint
         },
         {
             id: 'edit',
             label: 'Edit',
-            icon: 'edit',
+            icon: 'edit' as IconType,
             variant: 'secondary' as const,
             onClick: editSession
         },
         {
             id: 'delete',
             label: 'Delete',
-            icon: 'delete',
+            icon: 'delete' as IconType,
             variant: 'danger' as const,
             onClick: deleteSession
         }

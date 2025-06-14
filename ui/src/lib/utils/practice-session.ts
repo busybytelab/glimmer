@@ -1,4 +1,4 @@
-import type { BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
+import type { BreadcrumbItem, IconType } from '$lib/types';
 import type { SessionWithExpandedData } from '$lib/services/session';
 
 /**
@@ -17,7 +17,7 @@ export function updateBreadcrumbs(session: SessionWithExpandedData | null): Brea
             href: isLearnerRoute 
                 ? `/learners/${learnerId}/practice-topics`
                 : '/account/practice-topics',
-            icon: 'topic' as BreadcrumbIcon
+            icon: 'topic'
         }
     ];
     
@@ -27,13 +27,13 @@ export function updateBreadcrumbs(session: SessionWithExpandedData | null): Brea
             href: isLearnerRoute
                 ? `/learners/${learnerId}/practice-topics/${session.expand.practice_topic.id}`
                 : `/account/practice-topics/${session.expand.practice_topic.id}`,
-            icon: 'topic' as BreadcrumbIcon
+            icon: 'topic'
         });
     }
     
     items.push({
         label: session.name || 'Practice Session',
-        icon: 'session' as BreadcrumbIcon
+        icon: 'session'
     });
     
     return items;

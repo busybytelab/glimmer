@@ -63,11 +63,6 @@
      */
     export let enableMarkdown = true;
 
-    /**
-     * Whether the textarea should be expanded by default
-     */
-    export let defaultExpanded = true;
-    
     // Reference to the textarea element - used for focusing
     let textareaRef: SvelteComponent;
     let textareaWrapper: HTMLDivElement;

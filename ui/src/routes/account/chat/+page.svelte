@@ -123,7 +123,7 @@
 	async function handleCreateNewChat() {
 		try {
 			const newChatId = await createNewChat(systemPrompt, selectedModel || undefined);
-			goto(`/chat/${newChatId}`);
+			goto(`/account/chat/${newChatId}`);
 		} catch (err) {
 			console.error('Error creating new chat:', err);
 			errorStore.set(err instanceof Error ? err.message : 'Failed to create new chat');
@@ -260,7 +260,7 @@
 				await updateChatTitle(newChatId, truncatedMessage);
 				
 				// Then navigate to the new chat - both messages will be loaded
-				await goto(`/chat/${newChatId}`);
+				await goto(`/account/chat/${newChatId}`);
 			} catch (err) {
 				console.error('Error creating new chat:', err);
 				errorStore.set(err instanceof Error ? err.message : 'Failed to create new chat');
@@ -355,7 +355,7 @@
 			try {
 				await deleteChat(chatId);
 				// Navigate to main chat page
-				goto('/chat');
+				goto('/account/chat');
 			} catch (error) {
 				console.error('Failed to delete chat:', error);
 				errorStore.set(error instanceof Error ? error.message : 'Failed to delete chat');
@@ -369,7 +369,7 @@
 		try {
 			await archiveChat(chatId, true);
 			// Navigate to main chat page after archiving
-			goto('/chat');
+			goto('/account/chat');
 		} catch (error) {
 			console.error('Failed to archive chat:', error);
 			errorStore.set(error instanceof Error ? error.message : 'Failed to archive chat');

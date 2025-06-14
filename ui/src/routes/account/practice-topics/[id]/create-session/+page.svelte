@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
-    import type { PracticeTopic, Learner, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
+    import type { PracticeTopic, Learner, BreadcrumbItem, IconType } from '$lib/types';
     import pb from '$lib/pocketbase';
     import LearnersList from '$components/learners/LearnersList.svelte';
     import { practiceService } from '$lib/services/practice';
@@ -159,16 +159,16 @@
             {
                 label: 'Topics',
                 href: '/account/practice-topics',
-                icon: 'topic' as BreadcrumbIcon
+                icon: 'topic' as IconType
             },
             {
                 label: topic.name,
                 href: `/account/practice-topics/${topic.id}`,
-                icon: 'topic' as BreadcrumbIcon
+                icon: 'topic' as IconType
             },
             {
                 label: 'Create Session',
-                icon: 'create' as BreadcrumbIcon
+                icon: 'create' as IconType
             }
         ];
     }
@@ -177,7 +177,7 @@
     $: backAction = {
         id: 'back',
         label: 'Back',
-        icon: 'back',
+        icon: 'back' as IconType,
         variant: 'secondary' as const,
         onClick: goBack
     };
@@ -186,7 +186,7 @@
     $: createAction = {
         id: 'create',
         label: 'Create Practice Session',
-        icon: 'add',
+        icon: 'add' as IconType,
         variant: 'primary' as const,
         onClick: createPracticeSession
     };

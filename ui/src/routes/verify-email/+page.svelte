@@ -67,14 +67,6 @@
 		color: var(--primary);
 	}
 
-	.bg-secondary {
-		background-color: var(--secondary);
-	}
-
-	.focus\:ring-secondary:focus {
-		--tw-ring-color: var(--secondary);
-	}
-
 	.text-secondary {
 		color: var(--secondary);
 	}

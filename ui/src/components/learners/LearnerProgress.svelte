@@ -116,7 +116,7 @@
                                 </div>
                             </div>
                             <div class="mt-2 w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: {(session.answered_items / session.total_items) * 100}%" />
+                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: {(session.answered_items / session.total_items) * 100}%"></div>
                             </div>
                         </div>
                     {/each}
