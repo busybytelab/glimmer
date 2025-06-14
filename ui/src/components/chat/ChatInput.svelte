@@ -4,6 +4,8 @@
      * A reusable input component for chat messages with expandable textarea functionality
      */
     import { createEventDispatcher, onMount } from 'svelte';
+    import ExpandableTextArea from '../common/ExpandableTextArea.svelte';
+    import type { SvelteComponent } from 'svelte';
     
     // Props with proper type definitions
     /**
@@ -55,9 +57,27 @@
      * Whether to show keyboard shortcuts info
      */
     export let showKeyboardShortcuts = true;
+
+    /**
+     * Whether to enable markdown syntax highlighting
+     */
+    export let enableMarkdown = true;
+
+    /**
+     * Whether the textarea should be expanded by default
+     */
+    export let defaultExpanded = true;
     
     // Reference to the textarea element - used for focusing
-    let textareaRef: HTMLTextAreaElement;
+    let textareaRef: SvelteComponent;
+    let textareaWrapper: HTMLDivElement;
+
+    // Calculate a reasonable maxRows value that effectively keeps the textarea expanded
+    // This should be high enough to show most content but not so high that it becomes unwieldy
+    const effectiveMaxRows = 20; // Same as the default in ExpandableTextArea
+
+    // Set minRows to a value that provides enough initial space
+    const effectiveMinRows = 3;
 
     // Set up event dispatcher for component events
     const dispatch = createEventDispatcher<{
@@ -73,25 +93,36 @@
     }
     
     // Handle keydown events
-    function handleKeyDown(event: KeyboardEvent) {
-        dispatch('keydown', event);
+    function handleKeydown(event: CustomEvent<KeyboardEvent>) {
+        const keyboardEvent = event.detail;
+        dispatch('keydown', keyboardEvent);
         
         // Handle Enter key for sending
-        if (sendWithEnter && event.key === 'Enter' && !event.shiftKey && !disabled) {
-            event.preventDefault();
+        if (sendWithEnter && keyboardEvent.key === 'Enter' && !keyboardEvent.shiftKey && !disabled) {
+            keyboardEvent.preventDefault();
             handleSubmit();
         }
     }
 
     onMount(() => {
-        // Focus textarea when component is mounted if needed
-        // This can be used later if the component needs to be focused
+        // Ensure the textarea is properly sized for initial value
+        if (textareaRef && value) {
+            // Force a resize by dispatching an input event
+            const event = new Event('input', { bubbles: true });
+            const textarea = textareaWrapper?.querySelector('textarea');
+            if (textarea) {
+                textarea.dispatchEvent(event);
+            }
+        }
     });
 
     // Function to focus the textarea - can be called externally
     export function focus() {
         if (textareaRef) {
-            textareaRef.focus();
+            const textarea = textareaWrapper?.querySelector('textarea');
+            if (textarea) {
+                textarea.focus();
+            }
         }
     }
 
@@ -101,16 +132,22 @@
 
 <div class="chat-input-container {containerClass}">
     <form on:submit|preventDefault={handleSubmit} class="flex flex-col w-full">
-        <div class="w-full mb-2">
-            <textarea
-                bind:this={textareaRef}
-                bind:value
-                {placeholder}
-                {disabled}
-                class="chat-textarea"
-                rows="3"
-                on:keydown={handleKeyDown}
-            ></textarea>
+        <div class="w-full mb-2 relative">
+            <div class="chat-textarea-wrapper" bind:this={textareaWrapper}>
+                <ExpandableTextArea
+                    bind:this={textareaRef}
+                    bind:value
+                    id="chat-input"
+                    label=""
+                    {placeholder}
+                    {disabled}
+                    minRows={effectiveMinRows}
+                    maxRows={effectiveMaxRows}
+                    on:keydown={handleKeydown}
+                    cols="w-full"
+                    language={enableMarkdown ? 'markdown' : ''}
+                />
+            </div>
         </div>
         <div class="flex items-center justify-between mb-1">
             {#if showKeyboardShortcuts}
@@ -157,38 +194,88 @@
     .chat-input-container {
         width: 100%;
     }
-    
-    .chat-textarea {
+
+    .chat-textarea-wrapper {
+        position: relative;
         width: 100%;
-        min-height: 80px;
-        padding: 0.75rem;
+    }
+
+    .chat-textarea-wrapper :global(.editor-container) {
+        border: none !important;
+        position: relative !important;
+        padding: 0 !important;
+    }
+
+    /* Style the pre element that shows the text */
+    .chat-textarea-wrapper :global(.syntax-highlight-pre) {
+        margin: 0 !important;
+        background-color: white !important;
+        color: #1f2937 !important;
+        padding: 0.75rem !important;
+        font-family: inherit !important;
+        font-size: 1rem !important;
+        line-height: 1.5 !important;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        tab-size: 4 !important;
+        text-align: left !important;
+    }
+
+    .chat-textarea-wrapper :global(.syntax-highlight-pre code) {
+        display: block !important;
+        min-width: 100% !important;
+        font-family: inherit !important;
+        font-size: inherit !important;
+        line-height: inherit !important;
+        text-align: left !important;
+    }
+
+    .chat-textarea-wrapper :global(textarea) {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        text-align: left !important;
+        background-color: transparent !important;
         border: 1px solid #d1d5db;
         border-radius: 0.375rem;
-        background-color: white;
-        color: #1f2937;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
-                     "Helvetica Neue", Arial, sans-serif;
-        font-size: 1rem;
-        line-height: 1.5;
+        padding: 0.75rem !important;
+        margin: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        font-family: inherit !important;
+        font-size: 1rem !important;
+        line-height: 1.5 !important;
         resize: none;
-        outline: none;
-        overflow-y: auto;
-        box-sizing: border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        tab-size: 4 !important;
+        caret-color: #1f2937 !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
     }
-    
-    .chat-textarea:focus {
+
+    .chat-textarea-wrapper :global(textarea:focus) {
         border-color: #6366f1;
-        box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        outline: none;
     }
-    
+
     /* Dark mode support */
-    :global(.dark) .chat-textarea {
-        background-color: rgb(55, 65, 81); /* dark:bg-gray-700 */
-        border-color: rgb(75, 85, 99); /* dark:border-gray-600 */
-        color: #f3f4f6; /* dark:text-gray-100 */
+    :global(.dark) .chat-textarea-wrapper :global(.syntax-highlight-pre) {
+        background-color: rgb(55, 65, 81) !important; /* dark:bg-gray-700 */
+        color: #f3f4f6 !important;
     }
-    
-    :global(.dark) .chat-textarea:focus {
+
+    :global(.dark) .chat-textarea-wrapper :global(textarea) {
+        background-color: transparent !important;
+        border-color: rgb(75, 85, 99); /* dark:border-gray-600 */
+        caret-color: #f3f4f6 !important;
+    }
+
+    :global(.dark) .chat-textarea-wrapper :global(textarea:focus) {
         border-color: #6366f1;
     }
     
@@ -248,5 +335,67 @@
         min-width: 200px;
         text-align: left;
         font-weight: normal;
+    }
+
+    /* Add syntax highlighting styles for markdown */
+    .chat-textarea-wrapper :global(.token.heading),
+    .chat-textarea-wrapper :global(.token.title) {
+        color: #2563eb !important; /* blue-600 */
+        font-weight: 600 !important;
+    }
+
+    .chat-textarea-wrapper :global(.token.bold) {
+        font-weight: 600 !important;
+    }
+
+    .chat-textarea-wrapper :global(.token.italic) {
+        font-style: italic !important;
+    }
+
+    .chat-textarea-wrapper :global(.token.list),
+    .chat-textarea-wrapper :global(.token.bullet) {
+        color: #059669 !important; /* green-600 */
+    }
+
+    .chat-textarea-wrapper :global(.token.url),
+    .chat-textarea-wrapper :global(.token.link) {
+        color: #2563eb !important; /* blue-600 */
+        text-decoration: underline !important;
+    }
+
+    .chat-textarea-wrapper :global(.token.blockquote) {
+        color: #4b5563 !important; /* gray-600 */
+        font-style: italic !important;
+    }
+
+    .chat-textarea-wrapper :global(.token.code),
+    .chat-textarea-wrapper :global(.token.codespan) {
+        color: #dc2626 !important; /* red-600 */
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    }
+
+    /* Dark mode syntax highlighting */
+    :global(.dark) .chat-textarea-wrapper :global(.token.heading),
+    :global(.dark) .chat-textarea-wrapper :global(.token.title) {
+        color: #3b82f6 !important; /* blue-500 */
+    }
+
+    :global(.dark) .chat-textarea-wrapper :global(.token.list),
+    :global(.dark) .chat-textarea-wrapper :global(.token.bullet) {
+        color: #10b981 !important; /* green-500 */
+    }
+
+    :global(.dark) .chat-textarea-wrapper :global(.token.url),
+    :global(.dark) .chat-textarea-wrapper :global(.token.link) {
+        color: #3b82f6 !important; /* blue-500 */
+    }
+
+    :global(.dark) .chat-textarea-wrapper :global(.token.blockquote) {
+        color: #9ca3af !important; /* gray-400 */
+    }
+
+    :global(.dark) .chat-textarea-wrapper :global(.token.code),
+    :global(.dark) .chat-textarea-wrapper :global(.token.codespan) {
+        color: #ef4444 !important; /* red-500 */
     }
 </style> 
