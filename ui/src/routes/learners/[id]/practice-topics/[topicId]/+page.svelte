@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import type { PracticeTopic, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
+	import type { PracticeTopic, BreadcrumbItem, IconType } from '$lib/types';
 	import { topicsService } from '$lib/services/topics';
 	import { sessionService } from '$lib/services/session';
 	import ActionToolbar from '$components/common/ActionToolbar.svelte';
@@ -102,11 +102,11 @@
 			{
 				label: 'Practice Topics',
 				href: `/learners/${learnerId}/practice-topics`,
-				icon: 'topic' as BreadcrumbIcon
+				icon: 'topic' as IconType
 			},
 			{
 				label: topic.name,
-				icon: 'topic' as BreadcrumbIcon
+				icon: 'topic' as IconType
 			}
 		];
 	}
@@ -116,7 +116,7 @@
 		{
 			id: 'back',
 			label: 'Back',
-			icon: 'back',
+			icon: 'back' as IconType,
 			variant: 'secondary' as const,
 			onClick: goBack
 		}

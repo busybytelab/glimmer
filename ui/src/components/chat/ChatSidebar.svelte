@@ -54,7 +54,7 @@
     });
     
     function selectChat(id: string) {
-        goto(`/chat/${id}`);
+        goto(`/account/chat/${id}`);
     }
 
     // Handle delete chat
@@ -63,7 +63,7 @@
             await deleteChat(chatId);
             // If we deleted the active chat, navigate to the home page
             if (activeChatId === chatId) {
-                goto('/chat');
+                goto('/account/chat');
             }
         } catch (error) {
             console.error('Failed to delete chat:', error);

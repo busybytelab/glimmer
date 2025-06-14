@@ -10,6 +10,7 @@
     export let showPreferences: boolean = true;
     
     export let onClick: (learner: Learner) => void = () => {};
+    export let onEdit: ((learner: Learner) => void) | undefined = undefined;
     export let cardActions: Array<{
         label: string;
         color?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning';
@@ -49,6 +50,7 @@
                 {learner} 
                 clickable={onClick !== undefined}
                 {onClick}
+                {onEdit}
                 {showPreferences}
                 actions={getActionsForLearner(learner)}
             />

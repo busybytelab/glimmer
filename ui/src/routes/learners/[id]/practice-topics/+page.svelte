@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import type { PracticeTopic, Learner, BreadcrumbItem, BreadcrumbIcon } from '$lib/types';
+	import type { PracticeTopic, Learner, BreadcrumbItem, IconType } from '$lib/types';
 	import PracticeTopicCard from '$components/practice-topics/PracticeTopicCard.svelte';
 	import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
 	import ErrorAlert from '$components/common/ErrorAlert.svelte';
@@ -65,11 +65,11 @@
 			{
 				label: `${learner.nickname}'s Profile`,
 				href: '/',
-				icon: 'home' as BreadcrumbIcon
+				icon: 'home' as IconType
 			},
 			{
 				label: 'Practice Topics',
-				icon: 'topic' as BreadcrumbIcon
+				icon: 'topic' as IconType
 			}
 		];
 	}

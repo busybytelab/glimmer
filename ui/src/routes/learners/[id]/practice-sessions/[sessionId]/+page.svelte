@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import type { PracticeItem, PracticeResult, BreadcrumbItem } from '$lib/types';
+    import type { PracticeItem, PracticeResult, BreadcrumbItem, IconType } from '$lib/types';
     import { QuestionViewType } from '$lib/types';
     import QuestionFactory from '$components/questions/QuestionFactory.svelte';
     import { sessionService, type SessionWithExpandedData } from '$lib/services/session';
@@ -232,7 +232,7 @@
         {
             id: 'print',
             label: 'Print',
-            icon: 'print',
+            icon: 'print' as IconType,
             variant: 'primary' as const,
             onClick: handlePrint
         }

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="250" height="250" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Define gradients -->
+  <defs>
+    <radialGradient id="suitGradient" cx="50%" cy="40%" r="60%" fx="50%" fy="40%">
+      <stop offset="0%" style="stop-color:#4169E1; stop-opacity:1" /> <!-- Royal Blue -->
+      <stop offset="100%" style="stop-color:#1E40AF; stop-opacity:1" /> <!-- Darker Blue -->
+    </radialGradient>
+    <radialGradient id="skinGradient" cx="50%" cy="40%" r="60%" fx="50%" fy="40%">
+      <stop offset="0%" style="stop-color:#FFE0C2; stop-opacity:1" /> <!-- Light Skin -->
+      <stop offset="100%" style="stop-color:#FFD1A1; stop-opacity:1" /> <!-- Darker Skin -->
+    </radialGradient>
+    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF4040; stop-opacity:1" /> <!-- Bright Red -->
+      <stop offset="100%" style="stop-color:#DC2626; stop-opacity:1" /> <!-- Darker Red -->
+    </linearGradient>
+  </defs>
+
+  <!-- Body -->
+  <ellipse cx="50" cy="65" rx="22" ry="25" fill="url(#suitGradient)" stroke="#1E40AF" stroke-width="1.5"/>
+
+  <!-- Head -->
+  <circle cx="50" cy="35" r="20" fill="url(#skinGradient)" stroke="#1E40AF" stroke-width="1.5"/>
+
+  <!-- Helmet -->
+  <path d="M 30 35 
+           Q 50 38 70 35
+           Q 70 15 50 12
+           Q 30 15 30 35 Z" 
+        fill="url(#suitGradient)" stroke="#1E40AF" stroke-width="1.5"/>
+  
+  <!-- Helmet "A" -->
+  <path d="M 45 20 L 50 15 L 55 20 M 47 18 L 53 18" 
+        stroke="white" stroke-width="2" fill="none"/>
+
+  <!-- Eyes -->
+  <circle cx="42" cy="35" r="4" fill="white" stroke="#333" stroke-width="0.5"/>
+  <circle cx="42" cy="35" r="2" fill="#4B0082"/> <!-- Purple Pupil -->
+  <circle cx="41.5" cy="34.5" r="0.8" fill="white"/> <!-- Highlight -->
+
+  <circle cx="58" cy="35" r="4" fill="white" stroke="#333" stroke-width="0.5"/>
+  <circle cx="58" cy="35" r="2" fill="#4B0082"/> <!-- Purple Pupil -->
+  <circle cx="57.5" cy="34.5" r="0.8" fill="white"/> <!-- Highlight -->
+
+  <!-- Determined Smile -->
+  <path d="M 45 42 Q 50 44 55 42" 
+        stroke="#1E40AF" stroke-width="1.5" 
+        fill="none" stroke-linecap="round"/>
+
+  <!-- Shield -->
+  <g transform="translate(20, 55) rotate(-15)">
+    <circle cx="0" cy="0" r="8" fill="url(#shieldGradient)" stroke="#DC2626" stroke-width="1.5"/>
+    <circle cx="0" cy="0" r="6" fill="white" stroke="#1E40AF" stroke-width="1"/>
+    <circle cx="0" cy="0" r="4" fill="url(#suitGradient)" stroke="#1E40AF" stroke-width="1"/>
+    <circle cx="0" cy="0" r="2" fill="white"/>
+  </g>
+
+  <!-- Star on Chest -->
+  <path d="M 50 55 l 2 6 l 6 0 l -5 4 l 2 6 l -5 -4 l -5 4 l 2 -6 l -5 -4 l 6 0 z" 
+        fill="white" stroke="#1E40AF" stroke-width="0.5"/>
+
+  <!-- Arms -->
+  <path d="M 28 60
+           C 20 65, 15 75, 25 80
+           C 30 82, 35 75, 32 70 Z" 
+        fill="url(#suitGradient)" stroke="#1E40AF" stroke-width="1.5"/>
+  <path d="M 72 60
+           C 80 65, 85 75, 75 80
+           C 70 82, 65 75, 68 70 Z" 
+        fill="url(#suitGradient)" stroke="#1E40AF" stroke-width="1.5"/>
+
+  <!-- Boots -->
+  <path d="M 40 85
+           C 35 95, 45 95, 45 85 Z" 
+        fill="#8B4513" stroke="#654321" stroke-width="1.5"/>
+  <path d="M 60 85
+           C 65 95, 55 95, 55 85 Z" 
+        fill="#8B4513" stroke="#654321" stroke-width="1.5"/>
+</svg> 

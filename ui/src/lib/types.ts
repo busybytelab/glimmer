@@ -300,26 +300,51 @@ export interface Learner extends PocketBaseRecord {
 // -------------------------------------------------------------------------
 
 /**
- * Available icons for breadcrumb items
+ * Icon types supported by the application
+ * Used for both breadcrumbs and action buttons
  */
-export type BreadcrumbIcon = 'home' | 'topic' | 'session' | 'learner' | 'edit' | 'create';
+export type IconType = 'home' | 'topic' | 'session' | 'learner' | 'edit' | 'create' | 
+    'print' | 'delete' | 'view' | 'download' | 'share' | 'duplicate' | 'add' | 
+    'start' | 'complete' | 'reset' | 'back' | 'next' | 'more' | 'user';
 
 /**
- * Map of breadcrumb icons to their SVG path data
+ * Map of icon types to their SVG path data
  */
-export const BreadcrumbIconMap: Record<BreadcrumbIcon, string> = {
+export const IconTypeMap: Record<IconType, string> = {
+    // Breadcrumb icons
     home: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
     topic: 'M4 14h4v-4H4v4zm0 5h4v-4H4v4zM4 9h4V5H4v4zm5 5h12v-4H9v4zm0 5h12v-4H9v4zM9 5v4h12V5H9z',
     session: 'M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z',
     learner: 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
-    edit: 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
-    create: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'
+    edit: 'M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10',
+    create: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
+    
+    // Action toolbar icons
+    print: 'M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z',
+    delete: 'M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0',
+    view: 'M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
+    download: 'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3',
+    share: 'M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z',
+    duplicate: 'M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75',
+    add: 'M12 4.5v15m7.5-7.5h-15',
+    start: 'M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z',
+    complete: 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+    reset: 'M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99',
+    back: 'M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18',
+    next: 'M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3',
+    more: 'M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z',
+    user: 'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z',
 };
 
+// Remove old BreadcrumbIcon type and map
+// export type BreadcrumbIcon = 'home' | 'topic' | 'session' | 'learner' | 'edit' | 'create';
+// export const BreadcrumbIconMap: Record<BreadcrumbIcon, string> = { ... };
+
+// Update BreadcrumbItem to use IconType
 export interface BreadcrumbItem {
     label: string;
     href?: string;
-    icon?: BreadcrumbIcon;
+    icon?: IconType;
 }
 
 /**
@@ -372,6 +397,37 @@ export interface LatestAchievement {
     icon: AchievementIcon;
     /** Description of what was achieved */
     description: string;
+}
+
+/**
+ * Interface representing overall progress metrics for a learner
+ */
+export interface LearnerOverallProgress {
+    /** Total number of practice sessions */
+    totalSessions: number;
+    /** Number of successfully completed sessions */
+    completedSessions: number;
+    /** Average score across all sessions */
+    averageScore: number;
+    /** Topics where the learner needs additional help */
+    needsHelpWith: string[];
+    /** Topics where the learner is performing well */
+    doingWellIn: string[];
+}
+
+/**
+ * Interface representing a learner's progress across all practice sessions
+ * Used by getLearnerProgressForParent to provide a comprehensive view
+ */
+export interface LearnerProgress {
+    /** Sessions that have wrong answers and need review */
+    needsAttention: PracticeSessionStats[];
+    /** Active sessions that are not completed */
+    inProgress: PracticeSessionStats[];
+    /** Recently completed sessions with no wrong answers */
+    recentlyCompleted: PracticeSessionStats[];
+    /** Overall progress metrics */
+    overallProgress: LearnerOverallProgress;
 }
 
 export interface RegistrationForm {

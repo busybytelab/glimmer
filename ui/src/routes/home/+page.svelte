@@ -33,7 +33,12 @@
     function handleAccountSettings() {
         // Clear the current learner when going to account settings
         setCurrentLearner(null);
-        goto('/account');
+        goto('/account/settings');
+    }
+
+    function handleAddChild() {
+        // Navigate to create learner page
+        goto('/account/learners/create');
     }
 </script>
 
@@ -81,6 +86,34 @@
                     </button>
                 {/each}
 
+                <!-- Add Child Card -->
+                <button
+                    on:click={handleAddChild}
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col items-center text-left"
+                >
+                    <div class="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 mb-4 flex items-center justify-center">
+                        <svg
+                            class="w-12 h-12 text-gray-500 dark:text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 4v16m8-8H4"
+                            />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Add Child
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Set up a profile for your child
+                    </p>
+                </button>
+
                 <!-- Account Settings Card -->
                 <button
                     on:click={handleAccountSettings}
@@ -111,7 +144,7 @@
                         Account Settings
                     </h3>
                     <p class="text-gray-600 dark:text-gray-300 text-sm">
-                        Manage your account settings and preferences
+                        Manage your account and children profiles
                     </p>
                 </button>
             </div>

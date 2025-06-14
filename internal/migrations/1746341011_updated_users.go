@@ -16,7 +16,7 @@ func init() {
 
 		// update users rules, allow users to view or update their own user record
 		if err := json.Unmarshal([]byte(`{
-			"createRule": null,
+			"createRule": "",
 			"deleteRule": null,
 			"listRule": null,
 			"viewRule": "id = @request.auth.id",
