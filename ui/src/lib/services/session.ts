@@ -127,6 +127,103 @@ class SessionService {
             throw new Error(error.message);
         }
     }
+
+    /**
+     * Get learner progress in a parent-friendly format
+     * @param learnerId The ID of the learner
+     * @returns Parent-friendly progress information
+     */
+    async getLearnerProgressForParent(learnerId: string): Promise<{
+        needsAttention: PracticeSessionStats[];
+        inProgress: PracticeSessionStats[];
+        recentlyCompleted: PracticeSessionStats[];
+        overallProgress: {
+            totalSessions: number;
+            completedSessions: number;
+            averageScore: number;
+            needsHelpWith: string[];
+            doingWellIn: string[];
+        };
+    }> {
+        try {
+            const result = await pb.collection('pbc_practice_session_stats').getList(1, 100, {
+                filter: `learner_id="${learnerId}"`,
+                sort: '-last_answer_time'
+            });
+
+            const items = result.items as PracticeSessionStats[];
+            
+            // Group sessions by topic to analyze performance
+            const topicPerformance = new Map<string, {
+                totalSessions: number;
+                wrongAnswers: number;
+                totalItems: number;
+            }>();
+
+            items.forEach(item => {
+                const existing = topicPerformance.get(item.topic_name) || {
+                    totalSessions: 0,
+                    wrongAnswers: 0,
+                    totalItems: 0
+                };
+                
+                topicPerformance.set(item.topic_name, {
+                    totalSessions: existing.totalSessions + 1,
+                    wrongAnswers: existing.wrongAnswers + item.wrong_answers_count,
+                    totalItems: existing.totalItems + item.total_items
+                });
+            });
+
+            // Identify topics needing help and doing well
+            const needsHelpWith: string[] = [];
+            const doingWellIn: string[] = [];
+            
+            topicPerformance.forEach((perf, topic) => {
+                const errorRate = perf.wrongAnswers / perf.totalItems;
+                if (errorRate > 0.3 && perf.totalSessions >= 2) {
+                    needsHelpWith.push(topic);
+                } else if (errorRate < 0.1 && perf.totalSessions >= 2) {
+                    doingWellIn.push(topic);
+                }
+            });
+
+            // Calculate overall statistics
+            const totalSessions = items.length;
+            const completedSessions = items.filter(item => 
+                item.answered_items === item.total_items && item.wrong_answers_count === 0
+            ).length;
+            
+            const totalScore = items.reduce((sum, item) => sum + item.total_score, 0);
+            const averageScore = totalSessions > 0 ? totalScore / totalSessions : 0;
+
+            return {
+                // Sessions that have wrong answers and need review
+                needsAttention: items.filter(item => 
+                    item.wrong_answers_count > 0
+                ).slice(0, 3), // Limit to 3 most recent
+
+                // Active sessions that are not completed
+                inProgress: items.filter(item =>
+                    item.answered_items < item.total_items && item.wrong_answers_count === 0
+                ).slice(0, 3), // Limit to 3 most recent
+
+                // Recently completed sessions with no wrong answers
+                recentlyCompleted: items.filter(item =>
+                    item.answered_items === item.total_items && item.wrong_answers_count === 0
+                ).slice(0, 3), // Limit to 3 most recent
+
+                overallProgress: {
+                    totalSessions,
+                    completedSessions,
+                    averageScore,
+                    needsHelpWith,
+                    doingWellIn
+                }
+            };
+        } catch (error: any) {
+            throw new Error(error.message);
+        }
+    }
 }
 
 export const sessionService = new SessionService(); 
