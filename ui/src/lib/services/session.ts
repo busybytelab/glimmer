@@ -1,5 +1,5 @@
 import pb from '$lib/pocketbase';
-import type { PracticeSession, PracticeItem, Learner, PracticeSessionStats, PracticeTopic } from '$lib/types';
+import type { PracticeSession, PracticeItem, Learner, PracticeSessionStats, PracticeTopic, LearnerProgress } from '$lib/types';
 
 export interface SessionWithExpandedData extends PracticeSession {
     expand?: {
@@ -133,18 +133,7 @@ class SessionService {
      * @param learnerId The ID of the learner
      * @returns Parent-friendly progress information
      */
-    async getLearnerProgressForParent(learnerId: string): Promise<{
-        needsAttention: PracticeSessionStats[];
-        inProgress: PracticeSessionStats[];
-        recentlyCompleted: PracticeSessionStats[];
-        overallProgress: {
-            totalSessions: number;
-            completedSessions: number;
-            averageScore: number;
-            needsHelpWith: string[];
-            doingWellIn: string[];
-        };
-    }> {
+    async getLearnerProgressForParent(learnerId: string): Promise<LearnerProgress> {
         try {
             const result = await pb.collection('pbc_practice_session_stats').getList(1, 100, {
                 filter: `learner_id="${learnerId}"`,

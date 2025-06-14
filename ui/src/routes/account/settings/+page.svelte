@@ -1,25 +1,20 @@
 <script lang="ts">
     import ProfileCard from '$components/account/ProfileCard.svelte';
-    import LLMSettingsCard from '$components/account/LLMSettingsCard.svelte';
     import pb from '$lib/pocketbase';
     
-    let isLoading = {
-        profile: false,
-        llmSettings: false
-    };
     
-    /**
-     * Handle LLM settings save event from the LLMSettingsCard component
-     * @param event Custom event containing the saved settings
-     */
-    function handleLLMSettingsSave(event: CustomEvent<{
-        openaiApiKey: string;
-        ollamaEndpoint: string;
-        defaultModel: string;
-    }>) {
-        // You could handle global app state updates here if needed
-        console.log('LLM settings saved:', event.detail);
-    }
+    // /**
+    //  * Handle LLM settings save event from the LLMSettingsCard component
+    //  * @param event Custom event containing the saved settings
+    //  */
+    // function handleLLMSettingsSave(event: CustomEvent<{
+    //     openaiApiKey: string;
+    //     ollamaEndpoint: string;
+    //     defaultModel: string;
+    // }>) {
+    //     // You could handle global app state updates here if needed
+    //     console.log('LLM settings saved:', event.detail);
+    // }
     
     /**
      * Log out the current user and redirect to the login page
@@ -60,11 +55,11 @@
             <!-- Profile Card -->
             <ProfileCard />
             
-            <!-- LLM Settings Card -->
-            <LLMSettingsCard 
+            <!-- LLM Settings disabled since backend is not ready yet -->
+            <!-- <LLMSettingsCard 
                 isLoading={isLoading.llmSettings}
                 on:save={handleLLMSettingsSave}
-            />
+            /> -->
         </div>
     </div>
 </div> 

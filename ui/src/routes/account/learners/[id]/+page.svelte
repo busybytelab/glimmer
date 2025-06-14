@@ -47,7 +47,7 @@
 			{learner?.nickname}'s Learning Journey
 		</h1>
 		<FormButton type="button" variant="secondary" on:click={editLearner}>
-			Edit Profile
+			Edit
 		</FormButton>
 	</div>
 

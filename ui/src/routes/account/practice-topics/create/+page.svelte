@@ -8,7 +8,7 @@
     let breadcrumbItems: BreadcrumbItem[] = [
         {
             label: 'Topics',
-            href: '/practice-topics',
+            href: '/account/practice-topics',
             icon: 'topic' as BreadcrumbIcon
         },
         {
@@ -19,11 +19,11 @@
 
     function handleTopicUpdate(_updatedTopic: PracticeTopic) {
         // After creating a topic, navigate back to the topics list
-        goto('/practice-topics');
+        goto('/account/practice-topics');
     }
 
     function handleCancel() {
-        goto('/practice-topics');
+        goto('/account/practice-topics');
     }
 
     // Actions for the toolbar

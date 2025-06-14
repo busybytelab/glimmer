@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { PracticeSessionStats } from '$lib/types';
+    import type { LearnerProgress } from '$lib/types';
     import { sessionService } from '$lib/services/session';
     import LoadingSpinner from '../common/LoadingSpinner.svelte';
     import ErrorAlert from '../common/ErrorAlert.svelte';
@@ -8,18 +8,7 @@
 
     let loading = true;
     let error: string | null = null;
-    let progress: {
-        needsAttention: PracticeSessionStats[];
-        inProgress: PracticeSessionStats[];
-        recentlyCompleted: PracticeSessionStats[];
-        overallProgress: {
-            totalSessions: number;
-            completedSessions: number;
-            averageScore: number;
-            needsHelpWith: string[];
-            doingWellIn: string[];
-        };
-    } | null = null;
+    let progress: LearnerProgress | null = null;
 
     async function loadProgress() {
         try {

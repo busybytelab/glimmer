@@ -60,6 +60,10 @@
 	function viewLearner(learner: Learner) {
 		goto(`/account/learners/${learner.id}`);
 	}
+
+	function editLearner(learner: Learner) {
+		goto(`/account/learners/${learner.id}/edit`);
+	}
 </script>
 
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -85,6 +89,7 @@
 	{loading}
 	emptyMessage="No learners found. Create your first learner!"
 	onClick={viewLearner}
+	onEdit={editLearner}
 	cardActions={[]}
 />
 	{/if}

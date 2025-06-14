@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { Learner } from '$lib/types';
+    import { IconTypeMap } from '$lib/types';
     
     export let learner: Learner;
     export let actions: Array<{
@@ -11,6 +12,7 @@
     export let onClick: (learner: Learner) => void = () => {};
     export let shadow: boolean = true;
     export let showPreferences: boolean = true;
+    export let onEdit: ((learner: Learner) => void) | undefined = undefined;
     
     // Helper function to get button color classes
     function getColorClasses(color: string = 'primary') {
@@ -29,21 +31,41 @@
         }
     }
 
+    function handleEditClick(e: Event) {
+        e.stopPropagation();
+        if (onEdit) onEdit(learner);
+    }
+
     // Get the user's name safely
     $: userName = learner?.nickname || 'Unknown learner';
 </script>
 
 {#if clickable}
-<button 
+<div 
     class={`
-        bg-white dark:bg-gray-800 rounded-lg w-full text-left
+        relative bg-white dark:bg-gray-800 rounded-lg w-full text-left
         ${shadow ? 'shadow-md' : 'border border-gray-100 dark:border-gray-700'} 
         p-6 
         hover:shadow-lg transition-shadow cursor-pointer
     `}
     on:click={() => onClick(learner)}
+    on:keydown={(e) => e.key === 'Enter' && onClick(learner)}
+    tabindex="0"
+    role="button"
     aria-label={`Select ${userName}`}
 >
+    {#if onEdit}
+        <button 
+            class="absolute top-2 right-2 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-200 ease-in-out" 
+            on:click={handleEditClick}
+            aria-label="Edit learner"
+        >
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d={IconTypeMap.edit} />
+            </svg>
+        </button>
+    {/if}
+
     <div class="flex items-center mb-4">
         <div class="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-full mr-4">
             {#if learner.avatar}
@@ -53,8 +75,8 @@
                     class="h-8 w-8 rounded-full object-cover"
                 />
             {:else}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d={IconTypeMap.user} />
                 </svg>
             {/if}
         </div>
@@ -111,15 +133,27 @@
             {/each}
         </div>
     {/if}
-</button>
+</div>
 {:else}
 <div 
     class={`
-        bg-white dark:bg-gray-800 rounded-lg
+        relative bg-white dark:bg-gray-800 rounded-lg
         ${shadow ? 'shadow-md' : 'border border-gray-100 dark:border-gray-700'} 
         p-6 
     `}
 >
+    {#if onEdit}
+        <button 
+            class="absolute top-2 right-2 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-200 ease-in-out" 
+            on:click={handleEditClick}
+            aria-label="Edit learner"
+        >
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d={IconTypeMap.edit} />
+            </svg>
+        </button>
+    {/if}
+
     <div class="flex items-center mb-4">
         <div class="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-full mr-4">
             {#if learner.avatar}
@@ -129,8 +163,8 @@
                     class="h-8 w-8 rounded-full object-cover"
                 />
             {:else}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d={IconTypeMap.user} />
                 </svg>
             {/if}
         </div>

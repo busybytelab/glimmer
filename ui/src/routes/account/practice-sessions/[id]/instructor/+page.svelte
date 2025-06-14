@@ -8,12 +8,13 @@
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
     import { resultsService } from '$lib/services/results';
+    import { toast } from '$lib/stores/toast';
     import ActionToolbar from '$components/common/ActionToolbar.svelte';
     import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
     import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
     import ErrorAlert from '$components/common/ErrorAlert.svelte';
     import SessionHeader from '$components/practice-sessions/SessionHeader.svelte';
-    import ExportSessionButton from '$components/practice-session/ExportSessionButton.svelte';
+    import { sessionImportExportService } from '$lib/services/sessionImportExport';
     import { updateBreadcrumbs, handlePrint } from '$lib/utils/practice-session';
 
     let session: SessionWithExpandedData | null = null;
@@ -135,6 +136,23 @@
     // Actions for the toolbar
     $: sessionActions = [
         {
+            id: 'export',
+            label: 'Export',
+            icon: 'download',
+            variant: 'secondary' as const,
+            disabled: loading,
+            onClick: async () => {
+                try {
+                    const exportData = await sessionImportExportService.exportPracticeSession($page.params.id);
+                    sessionImportExportService.downloadExportedSession(exportData);
+                    toast.success('Session exported successfully');
+                } catch (error) {
+                    console.error('Failed to export session:', error);
+                    toast.error('Failed to export session');
+                }
+            }
+        },
+        {
             id: 'print',
             label: 'Print',
             icon: 'print',
@@ -185,8 +203,7 @@
         <div>
             <Breadcrumbs items={breadcrumbItems} />
         </div>
-        <div class="flex items-center gap-2">
-            <ExportSessionButton sessionId={$page.params.id} disabled={loading} />
+        <div>
             <ActionToolbar actions={sessionActions} />
         </div>
     </div>
