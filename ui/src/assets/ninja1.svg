@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="250" height="250" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Define gradients for ninja outfit -->
+  <defs>
+    <radialGradient id="outfitGradient" cx="50%" cy="40%" r="60%" fx="50%" fy="40%">
+      <stop offset="0%" style="stop-color:#4A4A4A; stop-opacity:1" /> <!-- Light Gray -->
+      <stop offset="100%" style="stop-color:#2C2C2C; stop-opacity:1" /> <!-- Dark Gray -->
+    </radialGradient>
+    <radialGradient id="skinGradient" cx="50%" cy="40%" r="60%" fx="50%" fy="40%">
+      <stop offset="0%" style="stop-color:#FFE5D9; stop-opacity:1" /> <!-- Light Skin -->
+      <stop offset="100%" style="stop-color:#FFD1C1; stop-opacity:1" /> <!-- Darker Skin -->
+    </radialGradient>
+    <linearGradient id="bandanaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF69B4; stop-opacity:1" /> <!-- Hot Pink -->
+      <stop offset="100%" style="stop-color:#FF1493; stop-opacity:1" /> <!-- Deep Pink -->
+    </linearGradient>
+    <radialGradient id="hairGradient" cx="50%" cy="40%" r="60%" fx="50%" fy="40%">
+      <stop offset="0%" style="stop-color:#4A3000; stop-opacity:1" /> <!-- Light Brown -->
+      <stop offset="100%" style="stop-color:#2A1B00; stop-opacity:1" /> <!-- Dark Brown -->
+    </radialGradient>
+  </defs>
+
+  <!-- Ninja's Body -->
+  <ellipse cx="50" cy="65" rx="20" ry="25" fill="url(#outfitGradient)" stroke="#2C2C2C" stroke-width="1.5"/>
+
+  <!-- Head -->
+  <circle cx="50" cy="35" r="20" fill="url(#skinGradient)" stroke="#2C2C2C" stroke-width="1.5"/>
+
+  <!-- Hair Behind -->
+  <path d="M 30 35
+           C 30 45, 70 45, 70 35
+           C 70 15, 30 15, 30 35 Z"
+        fill="url(#hairGradient)" stroke="#2A1B00" stroke-width="0.5"/>
+
+  <!-- Side Hair Left -->
+  <path d="M 32 35
+           C 30 35, 28 45, 32 50
+           C 34 48, 34 38, 32 35 Z"
+        fill="url(#hairGradient)" stroke="#2A1B00" stroke-width="0.5"/>
+
+  <!-- Side Hair Right -->
+  <path d="M 68 35
+           C 70 35, 72 45, 68 50
+           C 66 48, 66 38, 68 35 Z"
+        fill="url(#hairGradient)" stroke="#2A1B00" stroke-width="0.5"/>
+
+  <!-- Bandana -->
+  <path d="M 30 35 
+           Q 50 38 70 35
+           Q 70 25 50 22
+           Q 30 25 30 35 Z" 
+        fill="url(#bandanaGradient)" stroke="#FF1493" stroke-width="1.5"/>
+  
+  <!-- Bangs -->
+  <path d="M 40 25
+           Q 50 28 60 25
+           C 55 20, 45 20, 40 25 Z"
+        fill="url(#hairGradient)" stroke="#2A1B00" stroke-width="0.5"/>
+  
+  <!-- Side Bangs Left -->
+  <path d="M 35 28
+           C 32 30, 33 35, 35 36
+           C 37 34, 37 30, 35 28 Z"
+        fill="url(#hairGradient)" stroke="#2A1B00" stroke-width="0.5"/>
+
+  <!-- Side Bangs Right -->
+  <path d="M 65 28
+           C 68 30, 67 35, 65 36
+           C 63 34, 63 30, 65 28 Z"
+        fill="url(#hairGradient)" stroke="#2A1B00" stroke-width="0.5"/>
+
+  <!-- Bandana Tails -->
+  <path d="M 65 32
+           C 75 30, 80 35, 75 40
+           Q 70 42, 65 38 Z" 
+        fill="url(#bandanaGradient)" stroke="#FF1493" stroke-width="1"/>
+  <path d="M 70 31
+           C 80 29, 85 34, 80 39
+           Q 75 41, 70 37 Z" 
+        fill="url(#bandanaGradient)" stroke="#FF1493" stroke-width="1"/>
+
+  <!-- Eyes -->
+  <circle cx="42" cy="35" r="4" fill="white" stroke="#333" stroke-width="0.5"/>
+  <circle cx="42" cy="35" r="2" fill="#4B0082"/> <!-- Purple Pupil -->
+  <circle cx="41.5" cy="34.5" r="0.8" fill="white"/> <!-- Highlight -->
+
+  <circle cx="58" cy="35" r="4" fill="white" stroke="#333" stroke-width="0.5"/>
+  <circle cx="58" cy="35" r="2" fill="#4B0082"/> <!-- Purple Pupil -->
+  <circle cx="57.5" cy="34.5" r="0.8" fill="white"/> <!-- Highlight -->
+
+  <!-- Cute Blush -->
+  <ellipse cx="35" cy="40" rx="4" ry="2" fill="#FF69B4" opacity="0.3"/>
+  <ellipse cx="65" cy="40" rx="4" ry="2" fill="#FF69B4" opacity="0.3"/>
+
+  <!-- Arms -->
+  <path d="M 30 60
+           C 20 65, 15 75, 25 80
+           C 30 82, 35 75, 32 70 Z" 
+        fill="url(#outfitGradient)" stroke="#2C2C2C" stroke-width="1.5"/>
+  <path d="M 70 60
+           C 80 65, 85 75, 75 80
+           C 70 82, 65 75, 68 70 Z" 
+        fill="url(#outfitGradient)" stroke="#2C2C2C" stroke-width="1.5"/>
+
+  <!-- Ninja Belt -->
+  <rect x="40" y="55" width="20" height="4" 
+        fill="url(#bandanaGradient)" stroke="#FF1493" stroke-width="1"/>
+  
+  <!-- Legs -->
+  <path d="M 40 85
+           C 35 95, 45 95, 45 85 Z" 
+        fill="url(#outfitGradient)" stroke="#2C2C2C" stroke-width="1.5"/>
+  <path d="M 60 85
+           C 65 95, 55 95, 55 85 Z" 
+        fill="url(#outfitGradient)" stroke="#2C2C2C" stroke-width="1.5"/>
+</svg> 

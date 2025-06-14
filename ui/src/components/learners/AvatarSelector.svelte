@@ -3,6 +3,9 @@
     import robot1 from '../../assets/robot1.svg';
     import bunny1 from '../../assets/bunny1.svg';
     import octopus1 from '../../assets/octopus1.svg';
+    import sealion1 from '../../assets/sealion1.svg';
+    import ninja1 from '../../assets/ninja1.svg';
+    import captain1 from '../../assets/captain1.svg';
 
     export let selectedAvatar: string = '';
 
@@ -13,7 +16,10 @@
     const avatars = [
         { src: '/robot1.svg', preview: robot1, alt: 'Robot Avatar' },
         { src: '/bunny1.svg', preview: bunny1, alt: 'Bunny Avatar' },
-        { src: '/octopus1.svg', preview: octopus1, alt: 'Octopus Avatar' }
+        { src: '/octopus1.svg', preview: octopus1, alt: 'Octopus Avatar' },
+        { src: '/sealion1.svg', preview: sealion1, alt: 'Sea Lion Avatar' },
+        { src: '/ninja1.svg', preview: ninja1, alt: 'Ninja Girl Avatar' },
+        { src: '/captain1.svg', preview: captain1, alt: 'Captain Boy Avatar' }
     ];
 
     function handleSelect(src: string) {
