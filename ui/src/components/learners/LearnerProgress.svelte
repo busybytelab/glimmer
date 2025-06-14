@@ -145,7 +145,7 @@
                                 </div>
                                 <div class="pt-2 border-t border-orange-200 dark:border-orange-700/30">
                                     <a
-                                        href={`/account/practice-sessions/${session.id}/instructor`}
+                                        href={`/account/practice-sessions/${session.id}/overview`}
                                         class="inline-flex items-center text-sm text-orange-700 dark:text-orange-300 hover:text-orange-800 dark:hover:text-orange-200"
                                     >
                                         View Details
@@ -182,7 +182,7 @@
                                 </div>
                                 <div class="pt-2 border-t border-green-200 dark:border-green-700/30">
                                     <a
-                                        href={`/account/practice-sessions/${session.id}/instructor`}
+                                        href={`/account/practice-sessions/${session.id}/overview`}
                                         class="inline-flex items-center text-sm text-green-700 dark:text-green-300 hover:text-green-800 dark:hover:text-green-200"
                                     >
                                         View Details

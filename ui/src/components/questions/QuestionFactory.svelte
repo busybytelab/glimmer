@@ -17,7 +17,6 @@
     export let onAnswerChange: ((answer: string) => void) | undefined = undefined;
     export let printMode = false;
     export let isInstructor: boolean = false;
-    export let showHints: boolean = false;
     export let onHintRequested: ((level: number) => void) | undefined = undefined;
     export let onReviewStatusChange: ((itemId: string, status: ReviewStatus) => void) | undefined = undefined;
 
@@ -35,17 +34,24 @@
                    viewType !== QuestionViewType.LEARNER || 
                    (isInstructor && viewType === QuestionViewType.LEARNER);
 
-    // Handle hint requests from HintSystem
     function handleHintRequested(event: CustomEvent<{level: number}>) {
-        const { level } = event.detail;
         if (onHintRequested) {
-            onHintRequested(level);
+            onHintRequested(event.detail.level);
         }
     }
 
     // State for showing/hiding hints and explanations
     let showHint = false;
     let showExplanation = false;
+
+    function toggleHint() {
+        if (!showHint && (!item.hint_level_reached || item.hint_level_reached === 0)) {
+            if (onHintRequested) {
+                onHintRequested(1);
+            }
+        }
+        showHint = !showHint;
+    }
 
     $: if (viewType === QuestionViewType.LEARNER && item.is_correct) {
         showExplanation = true;
@@ -54,11 +60,11 @@
 
 <div class="relative">
     <div class="absolute top-4 right-4 flex items-center space-x-2">
-        {#if viewType === QuestionViewType.LEARNER && item.hints && item.hints.length > 0 && !isInstructor && !item.is_correct && showHints}
+        {#if viewType === QuestionViewType.LEARNER && item.hints && item.hints.length > 0 && !isInstructor && item.is_correct === false}
             <button
                 class="group p-1 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors duration-200 focus:outline-none"
                 style="box-shadow: none; border: none;"
-                on:click={() => showHint = !showHint}
+                on:click={toggleHint}
                 title="Show hint"
                 aria-label="Show hint">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500 group-hover:text-indigo-700 dark:text-indigo-400 dark:group-hover:text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">

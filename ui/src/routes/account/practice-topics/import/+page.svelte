@@ -108,7 +108,7 @@
             toast.success('Session imported successfully');
             
             // Navigate to the imported session
-            goto('/practice-sessions/' + session.id + '/instructor');
+            goto(`/account/practice-sessions/${session.id}/overview`);
         } catch (error) {
             console.error('Failed to import session:', error);
             toast.error('Failed to import session');

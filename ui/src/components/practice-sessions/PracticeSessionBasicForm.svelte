@@ -96,7 +96,7 @@
 			dispatch('update', result as unknown as PracticeSession);
 			
 			// Navigate to the instructor view
-			goto(`/practice-sessions/${session.id}/instructor`);
+			goto(`/account/practice-sessions/${session.id}/overview`);
 		} catch (err) {
 			console.error('Failed to save session:', err);
 			error = 'Failed to save practice session';
@@ -131,7 +131,7 @@
 	function handleCancel() {
 		if (!session) return;
 		dispatch('cancel');
-		goto(`/practice-sessions/${session.id}/instructor`);
+		goto(`/account/practice-sessions/${session.id}/overview`);
 	}
 
 	function handleLearnerSelect(learner: any) {

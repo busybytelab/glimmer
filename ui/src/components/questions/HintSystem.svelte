@@ -20,6 +20,10 @@
         if (disabled || !hasMoreHints) return;
         dispatch('hintRequested', { level: currentHintLevel + 1 });
     }
+    function requestPreviousHint() {
+        if (disabled || currentHintLevel <= 1) return;
+        dispatch('hintRequested', { level: currentHintLevel - 1 });
+    }
 </script>
 
 {#if hints.length > 0}
@@ -31,18 +35,39 @@
                 </svg>
                 <div class="flex-1">
                     <div class="flex justify-between items-center mb-1.5">
-                        <h5 class="text-sm font-medium text-indigo-900 dark:text-indigo-200">Hint {currentHintLevel}/{hints.length}</h5>
-                        {#if hasMoreHints}
-                            <button
-                                class="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
-                                on:click={requestHint}
-                                disabled={disabled}
-                            >
-                                Next Hint
-                            </button>
-                        {/if}
+                        <div class="flex items-center space-x-2">
+                            {#if currentHintLevel > 1}
+                                <button
+                                    class="p-1 rounded-full text-indigo-600 hover:bg-indigo-100"
+                                    on:click={requestPreviousHint}
+                                    disabled={disabled}
+                                    aria-label="Previous hint"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                            {:else}
+                                <div class="w-6 h-6"></div>
+                            {/if}
+                            <h5 class="text-sm font-medium text-indigo-900 dark:text-indigo-200">Hint {currentHintLevel}/{hints.length}</h5>
+                            {#if hasMoreHints}
+                                <button
+                                    class="p-1 rounded-full text-indigo-600 hover:bg-indigo-100"
+                                    on:click={requestHint}
+                                    disabled={disabled}
+                                    aria-label="Next hint"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                            {:else}
+                                <div class="w-6 h-6"></div>
+                            {/if}
+                        </div>
                     </div>
-                    <p class="text-sm text-indigo-700 dark:text-indigo-300">{hints[currentHintLevel - 1]}</p>
+                    <p class="text-sm text-indigo-700 dark:text-indigo-300 ml-7">{hints[currentHintLevel - 1]}</p>
                 </div>
             </div>
         </div>
@@ -54,16 +79,35 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div class="flex-1">
-                        <div class="flex justify-between items-center mb-1.5">
+                        <div class="flex items-center space-x-2 mb-1.5">
+                            {#if currentHintLevel > 1}
+                                <button
+                                    class="p-1 rounded-full text-indigo-600 hover:bg-indigo-100"
+                                    on:click={requestPreviousHint}
+                                    disabled={disabled}
+                                    aria-label="Previous hint"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                            {:else}
+                                <div class="w-7 h-7"></div>
+                            {/if}
                             <h5 class="text-sm font-medium text-indigo-900 dark:text-indigo-200">Hint {currentHintLevel}/{hints.length}</h5>
                             {#if hasMoreHints}
                                 <button
-                                    class="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+                                    class="p-1 rounded-full text-indigo-600 hover:bg-indigo-100"
                                     on:click={requestHint}
                                     disabled={disabled}
+                                    aria-label="Next hint"
                                 >
-                                    Next Hint
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
                                 </button>
+                            {:else}
+                                <div class="w-7 h-7"></div>
                             {/if}
                         </div>
                         <p class="text-sm text-indigo-700 dark:text-indigo-300">{hints[currentHintLevel - 1]}</p>

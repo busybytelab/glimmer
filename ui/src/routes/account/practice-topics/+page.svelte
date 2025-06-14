@@ -2,11 +2,11 @@
 	import { onMount } from 'svelte';
 	import { topicsService } from '$lib/services/topics';
 	import { goto } from '$app/navigation';
-	import type { PracticeTopic } from '$lib/types';
+	import type { PracticeTopic, IconType } from '$lib/types';
 	import PracticeTopicCard from '$components/practice-topics/PracticeTopicCard.svelte';
-	import FormButton from '$components/common/FormButton.svelte';
 	import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
 	import ErrorAlert from '$components/common/ErrorAlert.svelte';
+	import ActionToolbar from '$components/common/ActionToolbar.svelte';
 
 	let topics: PracticeTopic[] = [];
 	let loading = true;
@@ -49,7 +49,6 @@
 	}
 
 	onMount(async () => {
-		console.log('PracticeTopics mounted, loading topics');
 		await loadTopics();
 	});
 
@@ -60,29 +59,30 @@
 	function handleImport() {
 		goto('/account/practice-topics/import');
 	}
+
+	// Actions for the toolbar
+	const topicActions = [
+		{
+			id: 'import',
+			label: 'Import Session',
+			icon: 'download' as IconType,
+			variant: 'secondary' as const,
+			onClick: handleImport
+		},
+		{
+			id: 'create',
+			label: 'Create Topic',
+			icon: 'add' as IconType,
+			variant: 'primary' as const,
+			onClick: handleCreateNew
+		}
+	];
 </script>
 
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
 	<div class="flex justify-between items-center mb-6">
 		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Practice Topics</h1>
-		<div class="flex items-center gap-2">
-			<FormButton
-				type="button"
-				variant="secondary"
-				on:click={handleImport}
-			>
-				<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-				</svg>
-				Import Session
-			</FormButton>
-			<FormButton
-				type="button"
-				on:click={handleCreateNew}
-			>
-				Create Topic
-			</FormButton>
-		</div>
+		<ActionToolbar actions={topicActions} />
 	</div>
 
 	{#if loading}

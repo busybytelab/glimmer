@@ -23,7 +23,7 @@
     let error: string | null = null;
     let printMode = false;
     let breadcrumbItems: BreadcrumbItem[] = [];
-    let selectedViewType: QuestionViewType = QuestionViewType.PARENT;
+    let selectedViewType: QuestionViewType = QuestionViewType.ANSWERED;
 
     onMount(async () => {
         try {
@@ -57,31 +57,30 @@
                 throw new Error('Session not found');
             }
 
-            practiceItems = sessionService.parsePracticeItems(session);
-            
-            // Attach learner data to each practice item
-            if (session && session.expand?.learner) {
-                const learnerData = session.expand.learner;
-                practiceItems = practiceItems.map(item => ({
-                    ...item,
-                    expand: {
-                        ...item.expand,
-                        learner: learnerData
+            let items = sessionService.parsePracticeItems(session);
+
+            // Fetch existing practice results for the session learner
+            if (session.learner) {
+                const results = await resultsService.getResults(session.id, session.learner);
+
+                // Map results to practice items
+                items = items.map(item => {
+                    const result = results.find(r => r.practice_item === item.id);
+                    if (result) {
+                        return {
+                            ...item,
+                            user_answer: result.answer,
+                            is_correct: result.is_correct,
+                            score: result.score,
+                            feedback: result.feedback,
+                            hint_level_reached: result.hint_level_reached,
+                            attempt_number: result.attempt_number
+                        };
                     }
-                }));
+                    return item;
+                });
             }
-
-            // Fetch existing practice results
-            const results = await resultsService.getResults(session.id, session.learner);
-
-            // Map results to practice items
-            practiceItems = practiceItems.map(item => {
-                const result = results.find(r => r.practice_item === item.id);
-                return {
-                    ...item,
-                    result: result || null
-                };
-            });
+            practiceItems = items;
         } catch (err) {
             console.error('Failed to load session:', err);
             error = err instanceof Error ? err.message : 'Failed to load practice session';

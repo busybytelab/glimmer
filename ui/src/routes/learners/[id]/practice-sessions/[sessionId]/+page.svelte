@@ -14,6 +14,7 @@
     import { updateBreadcrumbs, handlePrint } from '$lib/utils/practice-session';
     import { answersService } from '$lib/services/answers';
     import { resultsService } from '$lib/services/results';
+    import { goto } from '$app/navigation';
 
     let session: SessionWithExpandedData | null = null;
     let practiceItems: PracticeItem[] = [];
@@ -24,10 +25,6 @@
     let savingItems: Set<number> = new Set();
     let selectedViewType: QuestionViewType = QuestionViewType.LEARNER;
     
-    // Smart hint system
-    let consecutiveIncorrectAttempts = new Map<string, number>();
-    const HINT_THRESHOLD = 2;
-
     // View mode state
     // TODO: define type for viewMode
     let viewMode: 'all' | 'wizard' = 'all'; // NOTE: wizard mode has lots of bugs, UI need a redesign
@@ -35,15 +32,8 @@
     // TODO: define type for stepResults
     let stepResults: ('correct' | 'incorrect' | 'pending')[] = [];
 
-    // Reactive declarations for practice items
-    $: practiceItemsWithHints = practiceItems.map(item => {
-        const attempts = item.id ? (consecutiveIncorrectAttempts.get(item.id) || 0) : 0;
-        return {
-            item,
-            attemptsCount: attempts,
-            showHints: attempts >= HINT_THRESHOLD
-        };
-    });
+    // Track if all questions are answered
+    $: allQuestionsAnswered = practiceItems.length > 0 && practiceItems.every(item => item.is_correct !== undefined);
 
     onMount(async () => {
         try {
@@ -169,13 +159,6 @@
                 hintLevel
             );
             
-            if (isCorrect) {
-                consecutiveIncorrectAttempts.set(practiceItem.id, 0);
-            } else {
-                const currentAttempts = consecutiveIncorrectAttempts.get(practiceItem.id) || 0;
-                consecutiveIncorrectAttempts.set(practiceItem.id, currentAttempts + 1);
-            }
-
             // Update the practice item with all the new data
             practiceItems[index] = {
                 ...practiceItems[index],
@@ -240,6 +223,11 @@
 
     function toggleViewMode() {
         viewMode = viewMode === 'all' ? 'wizard' : 'all';
+    }
+
+    function handleCompletionClick() {
+        const learnerId = $page.params.id;
+        goto(`/learners/${learnerId}/home`);
     }
 </script>
 
@@ -317,15 +305,13 @@
                                 {selectedViewType}
                                 sessionStatus={session?.status || ''}
                                 {savingItems}
-                                {consecutiveIncorrectAttempts}
-                                {HINT_THRESHOLD}
                                 onStepClick={handleStepClick}
                                 onAnswerChange={handleAnswerChange}
                                 onHintRequest={handleHintRequest}
                             />
                         {:else}
                             <div class="space-y-6">
-                                {#each practiceItemsWithHints as { item, showHints }, index}
+                                {#each practiceItems as item, index}
                                     <div class="question-container">
                                         <QuestionFactory
                                             {item}
@@ -334,11 +320,21 @@
                                             disabled={selectedViewType !== QuestionViewType.LEARNER || session.status === 'Completed' || savingItems.has(index)}
                                             onAnswerChange={(answer: string) => handleAnswerChange(index, answer)}
                                             isInstructor={false}
-                                            {showHints}
                                             onHintRequested={(level: number) => handleHintRequest(index, level)}
                                         />
                                     </div>
                                 {/each}
+
+                                {#if allQuestionsAnswered && session.status !== 'Completed'}
+                                    <div class="flex justify-center mt-8">
+                                        <button 
+                                            on:click={handleCompletionClick}
+                                            class="bg-green-400 hover:bg-green-500 text-gray-900 dark:text-white font-bold py-3 px-6 rounded-lg text-lg shadow-lg transform transition-transform duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50"
+                                        >
+                                            🎉 Great job! You completed all questions! 🎉
+                                        </button>
+                                    </div>
+                                {/if}
                             </div>
                         {/if}
                     </div>
@@ -368,8 +364,8 @@
             {/if}
         </div>
 
-        {#if practiceItemsWithHints.length > 0}
-            {#each practiceItemsWithHints as { item, showHints }, index}
+        {#if practiceItems.length > 0}
+            {#each practiceItems as item, index}
                 <div class="print-item question-container">
                     <QuestionFactory
                         {item}
@@ -379,7 +375,6 @@
                         disabled={true}
                         onAnswerChange={(answer: string) => handleAnswerChange(index, answer)}
                         isInstructor={false}
-                        {showHints}
                         onHintRequested={(level: number) => handleHintRequest(index, level)}
                     />
                 </div>
