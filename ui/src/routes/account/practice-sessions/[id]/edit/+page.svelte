@@ -52,27 +52,35 @@
     }
     
     function handleSessionUpdate() {
-        if (!session) return;
+        if (!session) {
+            return;
+        }
         goto(`/account/practice-sessions/${session.id}/edit`);
     }
     
     function handleSessionDelete() {
-        if (!session) return;
+        if (!session) {
+            return;
+        }
         // If we know the practice topic, go back to it, otherwise go to home
         if (session.expand?.practice_topic) {
             goto(`/account/practice-topics/${session.practice_topic}`);
         } else {
-            goto('/home');
+            goto('/account/practice-topics');
         }
     }
     
     function handleCancel() {
-        if (!session) return;
+        if (!session) {
+            return;
+        }
         goto(`/account/practice-topics/${session.practice_topic}`);
     }
     
     function updateBreadcrumbs() {
-        if (!session) return;
+        if (!session) {
+            return;
+        }
         
         const items: BreadcrumbItem[] = [
             {
