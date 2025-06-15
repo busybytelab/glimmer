@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import type { PracticeItem, BreadcrumbItem, ReviewStatus, IconType } from '$lib/types';
+    import type { PracticeItem, BreadcrumbItem, ReviewStatus, IconType, PracticeSessionStats } from '$lib/types';
     import { QuestionViewType } from '$lib/types';
     import QuestionFactory from '$components/questions/QuestionFactory.svelte';
     import ViewSelector from '$components/questions/ViewSelector.svelte';
@@ -24,6 +24,7 @@
     let printMode = false;
     let breadcrumbItems: BreadcrumbItem[] = [];
     let selectedViewType: QuestionViewType = QuestionViewType.ANSWERED;
+    let sessionStats: PracticeSessionStats | null = null;
 
     onMount(async () => {
         try {
@@ -57,6 +58,9 @@
                 throw new Error('Session not found');
             }
 
+            // Load session stats
+            sessionStats = await sessionService.getSessionStats(id);
+
             let items = sessionService.parsePracticeItems(session);
 
             // Fetch existing practice results for the session learner
@@ -86,6 +90,7 @@
             error = err instanceof Error ? err.message : 'Failed to load practice session';
             session = null;
             practiceItems = [];
+            sessionStats = null;
         } finally {
             loading = false;
         }
@@ -216,7 +221,7 @@
     {:else if session}
         <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
             <div class="px-4 py-5 sm:p-6">
-                <SessionHeader {session} />
+                <SessionHeader {session} stats={sessionStats} />
                 
                 <ViewSelector 
                     viewType={selectedViewType}

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import type { PracticeItem, PracticeResult, BreadcrumbItem, IconType } from '$lib/types';
+    import type { PracticeItem, PracticeResult, BreadcrumbItem, IconType, PracticeSessionStats } from '$lib/types';
     import { QuestionViewType } from '$lib/types';
     import QuestionFactory from '$components/questions/QuestionFactory.svelte';
     import { sessionService, type SessionWithExpandedData } from '$lib/services/session';
@@ -15,6 +15,7 @@
     import { answersService } from '$lib/services/answers';
     import { resultsService } from '$lib/services/results';
     import { goto } from '$app/navigation';
+    import SessionStatsDonut from '$components/practice-sessions/SessionStatsDonut.svelte';
 
     let session: SessionWithExpandedData | null = null;
     let practiceItems: PracticeItem[] = [];
@@ -24,6 +25,7 @@
     let breadcrumbItems: BreadcrumbItem[] = [];
     let savingItems: Set<number> = new Set();
     let selectedViewType: QuestionViewType = QuestionViewType.LEARNER;
+    let sessionStats: PracticeSessionStats | null = null;
     
     // View mode state
     // TODO: define type for viewMode
@@ -73,6 +75,9 @@
                 throw new Error('Session not found');
             }
 
+            // Load session stats
+            sessionStats = await sessionService.getSessionStats(id);
+
             practiceItems = sessionService.parsePracticeItems(session);
             
             // Attach learner data to each practice item
@@ -120,6 +125,7 @@
             error = err instanceof Error ? err.message : 'Failed to load practice session';
             session = null;
             practiceItems = [];
+            sessionStats = null;
         } finally {
             loading = false;
         }
@@ -291,7 +297,7 @@
     {:else if session}
         <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
             <div class="px-4 py-5 sm:p-6">
-                <SessionHeader {session} />
+                <SessionHeader {session} stats={sessionStats} />
 
                 {#if practiceItems.length > 0}
                     <div class="mt-6">
@@ -344,6 +350,10 @@
                     </div>
                 {/if}
             </div>
+
+            {#if sessionStats}
+                <SessionStatsDonut {sessionStats} showLegend={false} />
+            {/if}
         </div>
     {/if}
 </div>
@@ -360,7 +370,7 @@
             {/if}
             
             {#if session.expand?.learner}
-                <p class="text-lg">Learner: {session.expand.learner?.nickname || 'Unknown Learner'}</p>
+                <p class="text-lg">{session.expand.learner?.nickname || 'Unknown Learner'}</p>
             {/if}
         </div>
 
