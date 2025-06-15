@@ -53,7 +53,7 @@
     
     function handleSessionUpdate() {
         if (!session) return;
-        goto(`/account/practice-sessions/${session.id}`);
+        goto(`/account/practice-sessions/${session.id}/edit`);
     }
     
     function handleSessionDelete() {
@@ -68,7 +68,7 @@
     
     function handleCancel() {
         if (!session) return;
-        goto(`/account/practice-sessions/${session.id}`);
+        goto(`/account/practice-topics/${session.practice_topic}`);
     }
     
     function updateBreadcrumbs() {
@@ -95,7 +95,7 @@
         
         items.push({
             label: sessionName,
-            href: `/account/practice-sessions/${session.id}`,
+            href: `/account/practice-sessions/${session.id}/overview`,
             icon: 'session' as IconType
         });
         

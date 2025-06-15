@@ -221,7 +221,7 @@
     {:else if session}
         <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
             <div class="px-4 py-5 sm:p-6">
-                <SessionHeader {session} stats={sessionStats} />
+                <SessionHeader {session} stats={sessionStats} showStatsLegend={true} />
                 
                 <ViewSelector 
                     viewType={selectedViewType}
@@ -231,7 +231,7 @@
 
                 {#if practiceItems.length > 0}
                     <div class="mt-6">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Practice Items</h3>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Questions</h3>
                         <div class="space-y-6">
                             {#each practiceItems as item, index}
                                 <div class="question-container">

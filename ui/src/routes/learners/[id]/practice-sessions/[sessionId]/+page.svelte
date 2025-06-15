@@ -15,7 +15,6 @@
     import { answersService } from '$lib/services/answers';
     import { resultsService } from '$lib/services/results';
     import { goto } from '$app/navigation';
-    import SessionStatsDonut from '$components/practice-sessions/SessionStatsDonut.svelte';
 
     let session: SessionWithExpandedData | null = null;
     let practiceItems: PracticeItem[] = [];
@@ -350,10 +349,6 @@
                     </div>
                 {/if}
             </div>
-
-            {#if sessionStats}
-                <SessionStatsDonut {sessionStats} showLegend={false} />
-            {/if}
         </div>
     {/if}
 </div>

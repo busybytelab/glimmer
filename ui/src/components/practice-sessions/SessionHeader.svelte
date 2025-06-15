@@ -14,11 +14,21 @@
      */
     export let stats: PracticeSessionStats | null = null;
 
+    /**
+     * Whether to show the legend below the stats donut
+     */
+    export let showStatsLegend: boolean = false;
+
     function getProgressDescription(stats: PracticeSessionStats): string {
         if (stats.answered_items === 0) {
             return 'Not started yet';
         } else if (stats.answered_items === stats.total_items) {
-            return `Completed with score ${stats.total_score}%`;
+            const percentage = Math.round((stats.total_score / stats.total_items) * 100);
+            if (percentage === 100) {
+                return 'Perfect score! All questions answered correctly 🎉';
+            } else {
+                return `Completed with ${stats.total_score} of ${stats.total_items} correct (${percentage}%)`;
+            }
         } else {
             return `${stats.answered_items} of ${stats.total_items} questions answered`;
         }
@@ -28,7 +38,10 @@
 <div class="mb-6">
     <div class="flex items-start gap-6">
         {#if session.expand?.learner}
-            <div class="flex flex-col items-center bg-gray-50 dark:bg-gray-700/40 rounded-lg p-3">
+            <a 
+                href="/account/learners/{session.expand.learner.id}"
+                class="flex flex-col items-center bg-gray-50 dark:bg-gray-700/40 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors cursor-pointer"
+            >
                 <div class="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-full mb-2">
                     {#if session.expand.learner.avatar}
                         <img 
@@ -45,7 +58,7 @@
                 <span class="text-gray-900 dark:text-white font-medium text-center text-sm">
                     {session.expand.learner.nickname || 'Unknown'}
                 </span>
-            </div>
+            </a>
         {/if}
 
         <div class="flex-1 flex items-start justify-between">
@@ -66,7 +79,7 @@
                 </div>
                 
                 {#if session.expand?.practice_topic?.description}
-                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                    <p class="text-gray-600 dark:text-gray-400 text-xs">
                         {session.expand.practice_topic.description}
                     </p>
                 {/if}
@@ -79,7 +92,7 @@
             </div>
 
             {#if stats}
-                <SessionStatsDonut {stats} showLegend={false} />
+                <SessionStatsDonut {stats} showLegend={showStatsLegend} />
             {/if}
         </div>
     </div>

@@ -16,6 +16,9 @@
     $: correctPercent = stats ? ((stats.answered_items - stats.wrong_answers_count) / stats.total_items) * 100 : 0;
     $: wrongPercent = stats ? (stats.wrong_answers_count / stats.total_items) * 100 : 0;
 
+    // Calculate the actual percentage score for display
+    $: scorePercentage = stats ? Math.round((stats.total_score / stats.total_items) * 100) : 0;
+
     // SVG circle properties
     const radius = 40;
     const circumference = 2 * Math.PI * radius;
@@ -81,8 +84,8 @@
                     dominant-baseline="middle"
                     class="fill-gray-900 dark:fill-white"
                 >
-                    <tspan class="font-bold" style="font-size: 28px">{stats.total_score}</tspan><!--
-                    --><tspan style="font-size: 16px">%</tspan>
+                    <tspan class="font-bold" style="font-size: 24px">{scorePercentage}</tspan><!--
+                    --><tspan style="font-size: 12px">%</tspan>
                 </text>
             </g>
         </svg>

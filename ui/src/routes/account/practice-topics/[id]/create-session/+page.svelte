@@ -144,7 +144,7 @@
             });
             
             // Redirect to practice session page
-            goto(`/account/practice-sessions/${newSession.id}`);
+            goto(`/account/practice-sessions/${newSession.id}/overview`);
         } catch (err) {
             console.error('Failed to create practice session:', err);
             error = err instanceof Error ? err.message : 'An unexpected error occurred';
