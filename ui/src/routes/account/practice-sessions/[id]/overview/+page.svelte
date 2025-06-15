@@ -242,6 +242,7 @@
                                         disabled={true}
                                         isInstructor={true}
                                         onReviewStatusChange={handleReviewStatusChange}
+                                        sessionId={session?.id}
                                     />
                                 </div>
                             {/each}

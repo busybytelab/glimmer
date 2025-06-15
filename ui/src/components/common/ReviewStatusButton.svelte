@@ -1,5 +1,6 @@
 <script lang="ts">
-    import type { ReviewStatus } from '$lib/types';
+    import type { ReviewStatus, IconType } from '$lib/types';
+    import Icon from './Icon.svelte';
     
     /**
      * The current review status to display
@@ -32,6 +33,11 @@
     export let reviewDate: string | undefined = undefined;
     
     /**
+     * Optional icon to display
+     */
+    export let icon: IconType | undefined = undefined;
+    
+    /**
      * Click handler
      */
     export let onClick: () => void;
@@ -41,7 +47,7 @@
     
     // Get button styles based on target status and active state
     function getButtonStyles(targetStatus: ReviewStatus, isActive: boolean): string {
-        const baseStyles = 'px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+        const baseStyles = 'inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
         
         if (isActive) {
             switch (targetStatus) {
@@ -95,5 +101,8 @@
     title={getTooltipText()}
     aria-pressed={isActive}
 >
+    {#if icon}
+        <Icon type={icon} class_name="h-4 w-4" />
+    {/if}
     {displayLabel}
 </button> 
