@@ -40,7 +40,7 @@
             }
             const changeUser = {
                 href: '/change-user',
-                label: 'Change User',
+                label: 'Switch User',
                 icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7zM19 4l4-4v3h1v2h-1v3l-4-4z'
             }
     // Create dynamic nav items based on context

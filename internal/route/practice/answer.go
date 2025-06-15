@@ -87,12 +87,7 @@ func (r *answerRoute) HandleEvaluateAnswer(e *core.RequestEvent) error {
 	// 4. Evaluate answer
 	isCorrect := false
 	if req.UserAnswer != "" {
-		// Unmarshal the correct answer from JSON string
-		var correctAnswerStr string
-		if err := json.Unmarshal([]byte(correctAnswer), &correctAnswerStr); err != nil {
-			log.Error().Err(err).Str("correctAnswer", correctAnswer).Msg("Failed to unmarshal correct answer")
-			return e.InternalServerError("Invalid correct answer format", err)
-		}
+		correctAnswerStr := getCleanCorrectAnswer(correctAnswer)
 		isCorrect = checkAnswer(practiceItem, req.UserAnswer, correctAnswerStr)
 	}
 
@@ -141,12 +136,7 @@ func (r *answerRoute) HandleProcessAnswer(e *core.RequestEvent) error {
 	// 4. Evaluate answer correctness
 	isCorrect := false
 	if req.UserAnswer != "" {
-		// Unmarshal the correct answer from JSON string
-		var correctAnswerStr string
-		if err := json.Unmarshal([]byte(correctAnswer), &correctAnswerStr); err != nil {
-			log.Error().Err(err).Str("correctAnswer", correctAnswer).Msg("Failed to unmarshal correct answer")
-			return e.InternalServerError("Invalid correct answer format", err)
-		}
+		correctAnswerStr := getCleanCorrectAnswer(correctAnswer)
 		isCorrect = checkAnswer(practiceItem, req.UserAnswer, correctAnswerStr)
 	}
 
@@ -230,19 +220,47 @@ func (r *answerRoute) HandleProcessAnswer(e *core.RequestEvent) error {
 	})
 }
 
+// normalizeAnswerString trims leading/trailing whitespace and backticks (single or triple).
+func normalizeAnswerString(s string) string {
+	s = strings.TrimSpace(s)
+	// Handle triple backticks first as they are more specific
+	if len(s) >= 6 && strings.HasPrefix(s, "```") && strings.HasSuffix(s, "```") {
+		s = s[3 : len(s)-3]
+	} else if len(s) >= 2 && strings.HasPrefix(s, "`") && strings.HasSuffix(s, "`") {
+		s = s[1 : len(s)-1]
+	}
+	return strings.TrimSpace(s)
+}
+
 func checkAnswer(item *core.Record, userAnswer string, correctAnswer string) bool {
-	normalizedUserAnswer := strings.TrimSpace(strings.ToLower(userAnswer))
-	normalizedCorrectAnswer := strings.TrimSpace(strings.ToLower(correctAnswer))
+	normalizedUserAnswer := strings.ToLower(normalizeAnswerString(userAnswer))
+	normalizedCorrectAnswer := strings.ToLower(normalizeAnswerString(correctAnswer))
 	correct := normalizedUserAnswer == normalizedCorrectAnswer
 
 	log.Info().
 		Str("practiceItemId", item.Id).
 		Str("userAnswer", userAnswer).
 		Str("correctAnswer", correctAnswer).
+		Str("normalizedUserAnswer", normalizedUserAnswer).
+		Str("normalizedCorrectAnswer", normalizedCorrectAnswer).
 		Bool("isCorrect", correct).
 		Msg("Answer evaluation")
 
 	return correct
+}
+
+// getCleanCorrectAnswer unmarshals the correct answer, falling back to a raw string if needed.
+// This handles cases where the answer is a JSON-encoded string (e.g., "\"some text\"") or a
+// raw value (e.g., "1", "some text").
+func getCleanCorrectAnswer(rawCorrectAnswer string) string {
+	var correctAnswerStr string
+	if err := json.Unmarshal([]byte(rawCorrectAnswer), &correctAnswerStr); err != nil {
+		// If unmarshalling fails, it's likely not a JSON-encoded string.
+		// Log a warning and use the raw value.
+		log.Warn().Err(err).Str("correctAnswer", rawCorrectAnswer).Msg("Could not unmarshal correct answer as JSON, using raw value")
+		return rawCorrectAnswer
+	}
+	return correctAnswerStr
 }
 
 // calculateScore computes the score based on correctness and hint usage

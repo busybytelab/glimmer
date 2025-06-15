@@ -15,6 +15,8 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/router"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -117,6 +119,24 @@ func TestHandleEvaluateAnswer(t *testing.T) {
 	// Create a practice item with no correct answer
 	practiceItemNoAnswer := core.NewRecord(collection)
 	err = app.SaveNoValidate(practiceItemNoAnswer)
+	require.NoError(t, err)
+
+	// Create a practice item with a raw number as correct answer
+	practiceItemRawNumber := core.NewRecord(collection)
+	practiceItemRawNumber.Set("correct_answer", "12345")
+	err = app.SaveNoValidate(practiceItemRawNumber)
+	require.NoError(t, err)
+
+	// Create a practice item with backticks in correct answer
+	practiceItemBackticks := core.NewRecord(collection)
+	practiceItemBackticks.Set("correct_answer", "`code`")
+	err = app.SaveNoValidate(practiceItemBackticks)
+	require.NoError(t, err)
+
+	// Create a practice item with triple backticks in correct answer
+	practiceItemTripleBackticks := core.NewRecord(collection)
+	practiceItemTripleBackticks.Set("correct_answer", "```code block```")
+	err = app.SaveNoValidate(practiceItemTripleBackticks)
 	require.NoError(t, err)
 
 	// Create a test user once for all tests
@@ -226,6 +246,90 @@ func TestHandleEvaluateAnswer(t *testing.T) {
 			errorMessage:   "Practice item has no correct answer",
 		},
 		{
+			name: "correct answer is raw number",
+			request: AnswerEvaluationRequest{
+				PracticeItemId: practiceItemRawNumber.Id,
+				UserAnswer:     "12345",
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: AnswerEvaluationResponse{
+				IsCorrect: true,
+			},
+			setupAuth: true,
+		},
+		{
+			name: "incorrect answer for raw number",
+			request: AnswerEvaluationRequest{
+				PracticeItemId: practiceItemRawNumber.Id,
+				UserAnswer:     "54321",
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: AnswerEvaluationResponse{
+				IsCorrect: false,
+			},
+			setupAuth: true,
+		},
+		{
+			name: "correct answer with backticks",
+			request: AnswerEvaluationRequest{
+				PracticeItemId: practiceItemBackticks.Id,
+				UserAnswer:     "`code`",
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: AnswerEvaluationResponse{
+				IsCorrect: true,
+			},
+			setupAuth: true,
+		},
+		{
+			name: "correct answer with triple backticks",
+			request: AnswerEvaluationRequest{
+				PracticeItemId: practiceItemTripleBackticks.Id,
+				UserAnswer:     "```code block```",
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: AnswerEvaluationResponse{
+				IsCorrect: true,
+			},
+			setupAuth: true,
+		},
+		{
+			name: "correct answer with backticks, user answer without",
+			request: AnswerEvaluationRequest{
+				PracticeItemId: practiceItemBackticks.Id,
+				UserAnswer:     "code",
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: AnswerEvaluationResponse{
+				IsCorrect: true,
+			},
+			setupAuth: true,
+		},
+		{
+			name: "correct answer without backticks, user answer with",
+			request: AnswerEvaluationRequest{
+				PracticeItemId: practiceItem.Id,
+				UserAnswer:     "`test answer`",
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: AnswerEvaluationResponse{
+				IsCorrect: true,
+			},
+			setupAuth: true,
+		},
+		{
+			name: "correct answer with triple backticks, user answer without",
+			request: AnswerEvaluationRequest{
+				PracticeItemId: practiceItemTripleBackticks.Id,
+				UserAnswer:     "code block",
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: AnswerEvaluationResponse{
+				IsCorrect: true,
+			},
+			setupAuth: true,
+		},
+		{
 			name: "unauthorized request",
 			request: AnswerEvaluationRequest{
 				PracticeItemId: practiceItem.Id,
@@ -243,6 +347,42 @@ func TestHandleEvaluateAnswer(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 			setupAuth:      true,
 			errorMessage:   "Invalid request body",
+		},
+		{
+			name: "correct answer without backticks, user answer with triple backticks",
+			request: AnswerEvaluationRequest{
+				PracticeItemId: practiceItem.Id,
+				UserAnswer:     "```test answer```",
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: AnswerEvaluationResponse{
+				IsCorrect: true,
+			},
+			setupAuth: true,
+		},
+		{
+			name: "correct answer with single backtick, user answer with triple backticks",
+			request: AnswerEvaluationRequest{
+				PracticeItemId: practiceItemBackticks.Id,
+				UserAnswer:     "```code```",
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: AnswerEvaluationResponse{
+				IsCorrect: true,
+			},
+			setupAuth: true,
+		},
+		{
+			name: "correct answer with triple backticks, user answer with single backticks",
+			request: AnswerEvaluationRequest{
+				PracticeItemId: practiceItemTripleBackticks.Id,
+				UserAnswer:     "`code block`",
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody: AnswerEvaluationResponse{
+				IsCorrect: true,
+			},
+			setupAuth: true,
 		},
 	}
 
@@ -712,6 +852,228 @@ func TestHandleProcessAnswer(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Practice item has no correct answer")
 	})
+
+	t.Run("correct answer is a raw number", func(t *testing.T) {
+		// Create practice item with a raw number as correct answer
+		collection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeItems)
+		require.NoError(t, err)
+		practiceItem := core.NewRecord(collection)
+		practiceItem.Set("correct_answer", "12345")
+		err = app.SaveNoValidate(practiceItem)
+		require.NoError(t, err)
+
+		// Create practice session
+		sessionCollection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeSessions)
+		require.NoError(t, err)
+		session := core.NewRecord(sessionCollection)
+		session.Set("learner", learner.Id)
+		session.Set("status", "active")
+		err = app.SaveNoValidate(session)
+		require.NoError(t, err)
+
+		request := ProcessAnswerRequest{
+			PracticeItemId:   practiceItem.Id,
+			UserAnswer:       "12345",
+			PracticeSession:  session.Id,
+			LearnerId:        learner.Id,
+			HintLevelReached: 0,
+		}
+
+		body, err := json.Marshal(request)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		e := &core.RequestEvent{
+			App:  app,
+			Auth: user,
+			Event: router.Event{
+				Response: rec,
+				Request:  req,
+			},
+		}
+
+		route := NewAnswerRoute()
+		err = route.HandleProcessAnswer(e)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var response ProcessAnswerResponse
+		err = json.Unmarshal(rec.Body.Bytes(), &response)
+		require.NoError(t, err)
+
+		assert.True(t, response.IsCorrect)
+		assert.Equal(t, 1.0, response.Score)
+	})
+
+	t.Run("correct answer contains backticks", func(t *testing.T) {
+		// Create practice item with backticks
+		collection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeItems)
+		require.NoError(t, err)
+		practiceItem := core.NewRecord(collection)
+		practiceItem.Set("correct_answer", "`code`")
+		err = app.SaveNoValidate(practiceItem)
+		require.NoError(t, err)
+
+		// Create practice session
+		sessionCollection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeSessions)
+		require.NoError(t, err)
+		session := core.NewRecord(sessionCollection)
+		session.Set("learner", learner.Id)
+		session.Set("status", "active")
+		err = app.SaveNoValidate(session)
+		require.NoError(t, err)
+
+		request := ProcessAnswerRequest{
+			PracticeItemId:   practiceItem.Id,
+			UserAnswer:       "`code`",
+			PracticeSession:  session.Id,
+			LearnerId:        learner.Id,
+			HintLevelReached: 0,
+		}
+
+		body, err := json.Marshal(request)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		e := &core.RequestEvent{
+			App:  app,
+			Auth: user,
+			Event: router.Event{
+				Response: rec,
+				Request:  req,
+			},
+		}
+
+		route := NewAnswerRoute()
+		err = route.HandleProcessAnswer(e)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var response ProcessAnswerResponse
+		err = json.Unmarshal(rec.Body.Bytes(), &response)
+		require.NoError(t, err)
+
+		assert.True(t, response.IsCorrect)
+		assert.Equal(t, 1.0, response.Score)
+	})
+
+	t.Run("correct answer with backticks and user answer without", func(t *testing.T) {
+		// Create practice item with backticks
+		collection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeItems)
+		require.NoError(t, err)
+		practiceItem := core.NewRecord(collection)
+		practiceItem.Set("correct_answer", "```go\nfunc main() {}\n```")
+		err = app.SaveNoValidate(practiceItem)
+		require.NoError(t, err)
+
+		// Create practice session
+		sessionCollection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeSessions)
+		require.NoError(t, err)
+		session := core.NewRecord(sessionCollection)
+		session.Set("learner", learner.Id)
+		session.Set("status", "active")
+		err = app.SaveNoValidate(session)
+		require.NoError(t, err)
+
+		request := ProcessAnswerRequest{
+			PracticeItemId:   practiceItem.Id,
+			UserAnswer:       "go\nfunc main() {}\n",
+			PracticeSession:  session.Id,
+			LearnerId:        learner.Id,
+			HintLevelReached: 0,
+		}
+
+		body, err := json.Marshal(request)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		e := &core.RequestEvent{
+			App:  app,
+			Auth: user,
+			Event: router.Event{
+				Response: rec,
+				Request:  req,
+			},
+		}
+
+		route := NewAnswerRoute()
+		err = route.HandleProcessAnswer(e)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var response ProcessAnswerResponse
+		err = json.Unmarshal(rec.Body.Bytes(), &response)
+		require.NoError(t, err)
+
+		assert.True(t, response.IsCorrect)
+		assert.Equal(t, 1.0, response.Score)
+	})
+
+	t.Run("correct answer without backticks and user with triple", func(t *testing.T) {
+		// Create practice item
+		collection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeItems)
+		require.NoError(t, err)
+		practiceItem := core.NewRecord(collection)
+		correctAnswerJSON, err := json.Marshal("plain text answer")
+		require.NoError(t, err)
+		practiceItem.Set("correct_answer", string(correctAnswerJSON))
+		err = app.SaveNoValidate(practiceItem)
+		require.NoError(t, err)
+
+		// Create practice session
+		sessionCollection, err := app.FindCollectionByNameOrId(domain.CollectionPracticeSessions)
+		require.NoError(t, err)
+		session := core.NewRecord(sessionCollection)
+		session.Set("learner", learner.Id)
+		session.Set("status", "active")
+		err = app.SaveNoValidate(session)
+		require.NoError(t, err)
+
+		request := ProcessAnswerRequest{
+			PracticeItemId:   practiceItem.Id,
+			UserAnswer:       "```plain text answer```",
+			PracticeSession:  session.Id,
+			LearnerId:        learner.Id,
+			HintLevelReached: 0,
+		}
+
+		body, err := json.Marshal(request)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/glimmer/v1/practice/process-answer", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		e := &core.RequestEvent{
+			App:  app,
+			Auth: user,
+			Event: router.Event{
+				Response: rec,
+				Request:  req,
+			},
+		}
+
+		route := NewAnswerRoute()
+		err = route.HandleProcessAnswer(e)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var response ProcessAnswerResponse
+		err = json.Unmarshal(rec.Body.Bytes(), &response)
+		require.NoError(t, err)
+
+		assert.True(t, response.IsCorrect)
+		assert.Equal(t, 1.0, response.Score)
+	})
 }
 
 // TestHandleProcessAnswerSecondAttempt tests that second attempts increment attempt number
@@ -848,4 +1210,126 @@ func TestHandleProcessAnswerSecondAttempt(t *testing.T) {
 	assert.Equal(t, 1, result.GetInt("hint_level_reached"))
 	assert.Equal(t, 2, result.GetInt("attempt_number"))
 	assert.Greater(t, result.GetFloat("score"), 0.0)
+}
+
+func TestGetCleanCorrectAnswer(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		expected   string
+		expectWarn bool
+	}{
+		{
+			name:       "JSON-encoded string",
+			input:      `"hello world"`,
+			expected:   "hello world",
+			expectWarn: false,
+		},
+		{
+			name:       "raw number string",
+			input:      "123",
+			expected:   "123",
+			expectWarn: true,
+		},
+		{
+			name:       "raw string with spaces",
+			input:      "hello world",
+			expected:   "hello world",
+			expectWarn: true,
+		},
+		{
+			name:       "JSON-encoded number as string",
+			input:      `"123"`,
+			expected:   "123",
+			expectWarn: false,
+		},
+		{
+			name:       "string with single backticks",
+			input:      "`code`",
+			expected:   "`code`",
+			expectWarn: true,
+		},
+		{
+			name:       "string with triple backticks",
+			input:      "```code block```",
+			expected:   "```code block```",
+			expectWarn: true,
+		},
+		{
+			name:       "JSON-encoded string with backticks",
+			input:      "\"`code`\"",
+			expected:   "`code`",
+			expectWarn: false,
+		},
+		{
+			name:       "empty string",
+			input:      "",
+			expected:   "",
+			expectWarn: true,
+		},
+		{
+			name:       "JSON-encoded empty string",
+			input:      `""`,
+			expected:   "",
+			expectWarn: false,
+		},
+		{
+			name:       "null value",
+			input:      "null",
+			expected:   "null",
+			expectWarn: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Capture log output
+			var logBuf bytes.Buffer
+			originalLogger := log.Logger
+			log.Logger = zerolog.New(&logBuf)
+			defer func() { log.Logger = originalLogger }()
+
+			actual := getCleanCorrectAnswer(tt.input)
+			assert.Equal(t, tt.expected, actual)
+
+			logOutput := logBuf.String()
+			if tt.expectWarn {
+				assert.Contains(t, logOutput, "Could not unmarshal correct answer as JSON")
+				assert.Contains(t, logOutput, tt.input)
+			} else {
+				assert.Empty(t, logOutput)
+			}
+		})
+	}
+}
+
+func TestNormalizeAnswerString(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{name: "no change", input: "hello", expected: "hello"},
+		{name: "simple trim space", input: "  hello  ", expected: "hello"},
+		{name: "single backticks", input: "`hello`", expected: "hello"},
+		{name: "single backticks with space", input: "  `hello`  ", expected: "hello"},
+		{name: "single backticks with inner space", input: "`  hello  `", expected: "hello"},
+		{name: "triple backticks", input: "```hello```", expected: "hello"},
+		{name: "triple backticks with space", input: "  ```hello```  ", expected: "hello"},
+		{name: "triple backticks with inner space", input: "```  hello  ```", expected: "hello"},
+		{name: "mismatched backticks start", input: "`hello``", expected: "`hello``"},
+		{name: "mismatched backticks end", input: "``hello`", expected: "``hello`"},
+		{name: "backticks in middle", input: "he`llo", expected: "he`llo"},
+		{name: "empty string", input: "", expected: ""},
+		{name: "only backticks", input: "``", expected: ""},
+		{name: "only triple backticks", input: "``````", expected: ""},
+		{name: "only spaces", input: "   ", expected: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := normalizeAnswerString(tt.input)
+			assert.Equal(t, tt.expected, actual)
+		})
+	}
 }

@@ -213,6 +213,24 @@ class SessionService {
             throw new Error(error.message);
         }
     }
+
+    /**
+     * Get detailed stats for a specific session
+     * @param sessionId The ID of the session
+     * @returns Session statistics including completion status and scores
+     */
+    async getSessionStats(sessionId: string): Promise<PracticeSessionStats | null> {
+        try {
+            const result = await pb.collection('pbc_practice_session_stats').getFirstListItem(
+                `id="${sessionId}"`,
+                { sort: '-last_answer_time' }
+            ) as PracticeSessionStats;
+            return result || null;
+        } catch (error: any) {
+            console.error('Failed to get session stats:', error);
+            throw new Error('Failed to get session statistics');
+        }
+    }
 }
 
 export const sessionService = new SessionService(); 

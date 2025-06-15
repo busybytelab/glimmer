@@ -17,9 +17,9 @@
     export let onAnswerChange: ((answer: string) => void) | undefined = undefined;
     export let printMode = false;
     export let isInstructor: boolean = false;
-    export let showHints: boolean = false;
     export let onHintRequested: ((level: number) => void) | undefined = undefined;
     export let onReviewStatusChange: ((itemId: string, status: ReviewStatus) => void) | undefined = undefined;
+    export let sessionId: string | undefined = undefined;
 
     // Derived values based on view type
     $: showAnswer = viewType === QuestionViewType.ANSWERED || viewType === QuestionViewType.PARENT || viewType === QuestionViewType.GENERATED;
@@ -35,51 +35,33 @@
                    viewType !== QuestionViewType.LEARNER || 
                    (isInstructor && viewType === QuestionViewType.LEARNER);
 
-    // Handle hint requests from HintSystem
-    function handleHintRequested(event: CustomEvent<{level: number}>) {
-        const { level } = event.detail;
+    // Show hint system if:
+    // 1. Question has hints
+    // 2. Not in print mode
+    // 3. Not showing answer yet
+    // 4. Not showing instructor info
+    $: showHint = Boolean(item.hints?.length) && 
+                  !printMode && 
+                  !showAnswer && 
+                  !showInstructorInfo;
+
+    // Show explanation if:
+    // 1. Not in print mode
+    // 2. Question has been answered
+    // 3. Question has an explanation
+    $: showExplanation = !printMode && 
+                        item.is_correct !== undefined && 
+                        (item.explanation || Object.keys(item.explanation_for_incorrect || {}).length > 0);
+
+    function handleHintRequested(event: CustomEvent<{ level: number }>) {
         if (onHintRequested) {
-            onHintRequested(level);
+            onHintRequested(event.detail.level);
         }
-    }
-
-    // State for showing/hiding hints and explanations
-    let showHint = false;
-    let showExplanation = false;
-
-    $: if (viewType === QuestionViewType.LEARNER && item.is_correct) {
-        showExplanation = true;
     }
 </script>
 
-<div class="relative">
-    <div class="absolute top-4 right-4 flex items-center space-x-2">
-        {#if viewType === QuestionViewType.LEARNER && item.hints && item.hints.length > 0 && !isInstructor && !item.is_correct && showHints}
-            <button
-                class="group p-1 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors duration-200 focus:outline-none"
-                style="box-shadow: none; border: none;"
-                on:click={() => showHint = !showHint}
-                title="Show hint"
-                aria-label="Show hint">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500 group-hover:text-indigo-700 dark:text-indigo-400 dark:group-hover:text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            </button>
-        {/if}
-        {#if (viewType === QuestionViewType.PARENT && item.user_answer) || (viewType === QuestionViewType.LEARNER && item.is_correct)}
-            <button
-                class="group p-1 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors duration-200 focus:outline-none"
-                style="box-shadow: none; border: none;"
-                on:click={() => showExplanation = !showExplanation}
-                title="Explanation"
-                aria-label="Show explanation">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500 group-hover:text-indigo-700 dark:text-indigo-400 dark:group-hover:text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            </button>
-        {/if}
-    </div>
-
+<div class="bg-white dark:bg-gray-800 rounded-lg">
+    
     {#if item.question_type === QuestionType.MULTIPLE_CHOICE}
         <MultipleChoiceQuestion
             {item}
@@ -141,12 +123,19 @@
         <div class="mt-4" transition:fade={{ duration: 300 }}>
             <QuestionExplanation {item} />
         </div>
+        {#if !showReviewControls}
+            <hr class="my-4" />
+        {/if}
     {/if}
 
     {#if showReviewControls && onReviewStatusChange}
+        <div class="mt-4" transition:fade={{ duration: 300 }}>
         <QuestionReviewControls
             {item}
+            {sessionId}
             onReviewStatusChange={onReviewStatusChange}
         />
+        </div>
+        <hr class="my-4" />
     {/if}
 </div>

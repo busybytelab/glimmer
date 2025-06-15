@@ -35,7 +35,8 @@
       return `Completed on ${new Date(session.last_answer_time).toLocaleDateString()}`;
     }
     if (session.wrong_answers_count > 0) {
-      return `Let's try again! ${session.wrong_answers_count} question${session.wrong_answers_count === 1 ? '' : 's'} to practice`;
+      const questionsToReview = session.wrong_answers_count + (session.total_items - session.answered_items);
+      return `Let's try again! ${questionsToReview} question${questionsToReview === 1 ? '' : 's'} to practice`;
     }
     if (session.answered_items === 0) {
       return 'Ready to start!';

@@ -10,16 +10,12 @@
     export let selectedViewType: QuestionViewType;
     export let sessionStatus: string;
     export let savingItems: Set<number>;
-    export let consecutiveIncorrectAttempts: Map<string, number>;
-    export let HINT_THRESHOLD: number;
 
     export let onStepClick: (index: number) => void;
     export let onAnswerChange: (index: number, answer: string) => void;
     export let onHintRequest: (index: number, level: number) => void;
 
     $: currentItem = practiceItems[currentStep];
-    $: currentAttemptsCount = currentItem?.id ? (consecutiveIncorrectAttempts.get(currentItem.id) || 0) : 0;
-    $: currentShowHints = Boolean(currentAttemptsCount >= HINT_THRESHOLD);
 </script>
 
 <div class="flex space-x-6">
@@ -41,7 +37,6 @@
                     disabled={selectedViewType !== QuestionViewType.LEARNER || sessionStatus === 'Completed' || savingItems.has(currentStep)}
                     onAnswerChange={(answer) => onAnswerChange(currentStep, answer)}
                     isInstructor={false}
-                    showHints={currentShowHints}
                     onHintRequested={(level) => onHintRequest(currentStep, level)}
                 />
             </div>

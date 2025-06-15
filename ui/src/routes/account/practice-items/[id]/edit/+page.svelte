@@ -2,27 +2,30 @@
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
     import { onMount } from 'svelte';
-    import type { PracticeSession, BreadcrumbItem, IconType } from '$lib/types';
-    import PracticeSessionBasicForm from '$components/practice-sessions/PracticeSessionBasicForm.svelte';
+    import type { PracticeItem, BreadcrumbItem, IconType } from '$lib/types';
+    import { practiceItemService } from '$lib/services/practiceItem';
+    import PracticeItemEditForm from '$components/questions/PracticeItemEditForm.svelte';
     import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
     import ActionToolbar from '$components/common/ActionToolbar.svelte';
     import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
     import ErrorAlert from '$components/common/ErrorAlert.svelte';
-    import { sessionService } from '$lib/services/session';
     
-    let session: PracticeSession | null = null;
+    let item: PracticeItem | null = null;
     let loading = true;
     let error: string | null = null;
     let breadcrumbItems: BreadcrumbItem[] = [];
     
+    // Get session ID from URL if available
+    $: sessionId = $page.url.searchParams.get('sessionId');
+    
     onMount(async () => {
         try {
-            const sessionId = $page.params.id;
-            if (sessionId) {
-                await loadSession(sessionId);
+            const itemId = $page.params.id;
+            if (itemId) {
+                await loadItem(itemId);
                 updateBreadcrumbs();
             } else {
-                error = 'Session ID is required';
+                error = 'Item ID is required';
                 loading = false;
             }
         } catch (err) {
@@ -32,55 +35,46 @@
         }
     });
     
-    async function loadSession(id: string) {
+    async function loadItem(id: string) {
         try {
             loading = true;
             error = null;
             
             if (!id) {
-                throw new Error('Session ID is required');
+                throw new Error('Item ID is required');
             }
             
-            session = await sessionService.loadSession(id);
+            item = await practiceItemService.getItem(id);
             
         } catch (err) {
-            console.error('Failed to load session:', err);
-            error = 'Failed to load practice session';
+            console.error('Failed to load item:', err);
+            error = 'Failed to load practice item';
         } finally {
             loading = false;
         }
     }
     
-    function handleSessionUpdate() {
-        if (!session) {
-            return;
-        }
-        goto(`/account/practice-sessions/${session.id}/edit`);
-    }
-    
-    function handleSessionDelete() {
-        if (!session) {
-            return;
-        }
-        // If we know the practice topic, go back to it, otherwise go to home
-        if (session.expand?.practice_topic) {
-            goto(`/account/practice-topics/${session.practice_topic}`);
+    function handleItemUpdate() {
+        // After successful update, navigate back to the session overview if we have a session ID
+        if (sessionId) {
+            goto(`/account/practice-sessions/${sessionId}/overview`);
         } else {
+            // If no session context, go back to topics
             goto('/account/practice-topics');
         }
     }
     
     function handleCancel() {
-        if (!session) {
-            return;
+        // Navigate back based on context
+        if (sessionId) {
+            goto(`/account/practice-sessions/${sessionId}/overview`);
+        } else {
+            goto('/account/practice-topics');
         }
-        goto(`/account/practice-topics/${session.practice_topic}`);
     }
     
     function updateBreadcrumbs() {
-        if (!session) {
-            return;
-        }
+        if (!item) return;
         
         const items: BreadcrumbItem[] = [
             {
@@ -90,33 +84,32 @@
             }
         ];
         
-        if (session.expand?.practice_topic) {
+        if (item.expand?.practice_topic) {
             items.push({
-                label: session.expand.practice_topic.name,
-                href: `/account/practice-topics/${session.practice_topic}`,
+                label: item.expand.practice_topic.name,
+                href: `/account/practice-topics/${item.practice_topic}`,
                 icon: 'topic' as IconType
             });
         }
         
-        // Use the session name or a fallback
-        const sessionName = session.name || 'Practice Session';
+        if (sessionId) {
+            items.push({
+                label: 'Practice Session',
+                href: `/account/practice-sessions/${sessionId}/overview`,
+                icon: 'session' as IconType
+            });
+        }
         
         items.push({
-            label: sessionName,
-            href: `/account/practice-sessions/${session.id}/overview`,
-            icon: 'session' as IconType
-        });
-        
-        items.push({
-            label: 'Edit',
+            label: 'Edit Practice Item',
             icon: 'edit' as IconType
         });
         
         breadcrumbItems = items;
     }
     
-    // Back action for the toolbar
-    $: sessionActions = [
+    // Actions for the toolbar
+    $: itemActions = [
         {
             id: 'back',
             label: 'Back',
@@ -132,7 +125,7 @@
         <div>
             <Breadcrumbs items={breadcrumbItems} />
         </div>
-        <ActionToolbar actions={sessionActions} />
+        <ActionToolbar actions={itemActions} />
     </div>
 
     {#if loading}
@@ -141,13 +134,12 @@
         </div>
     {:else if error}
         <ErrorAlert message={error} />
-    {:else if session}
+    {:else if item}
         <div class="w-full">
-            <PracticeSessionBasicForm
-                {session}
-                on:update={() => handleSessionUpdate()}
-                on:delete={() => handleSessionDelete()}
-                on:cancel={handleCancel}
+            <PracticeItemEditForm
+                {item}
+                onSave={handleItemUpdate}
+                onCancel={handleCancel}
             />
         </div>
     {/if}

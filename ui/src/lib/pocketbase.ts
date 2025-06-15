@@ -50,20 +50,8 @@ pb.authStore.onChange(() => {
   document.cookie = `pb_auth_token=${pb.authStore.token || ''}; path=/; SameSite=Lax`;
 });
 
-// Enhanced error class for better error handling
-export class AutoCancellationError extends Error {
-  constructor(message: string = 'Request was automatically cancelled') {
-    super(message);
-    this.name = 'AutoCancellationError';
-  }
-}
-
 // Store the original send method
 const originalSend = pb.send;
-
-// A map to store debounce timers and associated promise resolvers
-const debounceTimers: { [key: string]: { timer: NodeJS.Timeout; reject: (reason?: any) => void } } = {};
-const DEBOUNCE_DELAY_MS = 300;
 
 /**
  * Checks if an error is due to PocketBase auto-cancellation
@@ -90,40 +78,25 @@ function isAutoCancelledErrorInternal(err: any): boolean {
   return false;
 }
 
-// Override the send method to globally handle auto-cancellation and add debouncing for read requests.
+// Override the send method to globally handle auto-cancellation.
 pb.send = async function <T = any>(path: string, options: any = {}): Promise<T> {
-  const method = options.method || 'GET';
-  const isListRequest = method === 'GET' && path.startsWith('/api/collections/') && path.endsWith('/records');
-
-  // For non-list requests, just pass through to original send
-  if (!isListRequest) {
+  try {
+    // Pass all requests through to the original send method
     return await originalSend.call(this, path, options) as T;
+  } catch (err) {
+    // Check if the error is due to auto-cancellation
+    if (isAutoCancelledErrorInternal(err)) {
+      // This is an expected auto-cancellation. We can "swallow" this error
+      // by returning a promise that never resolves. This prevents the error
+      // from propagating to the console as an unhandled promise rejection.
+      // The new request that superseded this one will proceed as normal.
+      console.log(`Request cancelled: ${path}`);
+      return new Promise<T>(() => {}); // A promise that never resolves
+    }
+
+    // For any other type of error, re-throw it to be handled by the caller.
+    throw err;
   }
-
-  const requestKey = `${path}?${JSON.stringify(options.query || {})}`;
-
-  // If there's a pending request, cancel it and set up debouncing
-  if (debounceTimers[requestKey]) {
-    clearTimeout(debounceTimers[requestKey].timer);
-    debounceTimers[requestKey].reject(new AutoCancellationError('Request superseded by a new debounced request.'));
-
-    return new Promise<T>((resolve, reject) => {
-      const timer = setTimeout(async () => {
-        delete debounceTimers[requestKey];
-        try {
-          const result = await originalSend.call(this, path, options) as T;
-          resolve(result);
-        } catch (err) {
-          reject(err);
-        }
-      }, DEBOUNCE_DELAY_MS);
-
-      debounceTimers[requestKey] = { timer, reject };
-    });
-  }
-
-  // First request goes through immediately
-  return await originalSend.call(this, path, options) as T;
 };
 
 

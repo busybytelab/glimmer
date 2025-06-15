@@ -353,7 +353,7 @@ Feel free to maintain similar structure but adapt content and difficulty as need
                                     </td>
                                     <td class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
                                         <a 
-                                            href={`/account/practice-sessions/${session.id}`} 
+                                            href={`/account/practice-sessions/${session.id}/overview`} 
                                             class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
                                         >
                                             View

@@ -1,7 +1,8 @@
 <script lang="ts">
-    import type { PracticeItem, ReviewStatus } from '$lib/types';
+    import type { PracticeItem, ReviewStatus, IconType } from '$lib/types';
     import { practiceItemService } from '$lib/services/practiceItem';
-    import PracticeItemEditForm from './PracticeItemEditForm.svelte';
+    import { goto } from '$app/navigation';
+    import ReviewStatusButton from '../common/ReviewStatusButton.svelte';
     import { toast } from '$lib/stores/toast';
     /**
      * The practice item to be reviewed
@@ -9,85 +10,112 @@
     export let item: PracticeItem;
     
     /**
+     * The session ID if this item is being reviewed in a session context
+     */
+    export let sessionId: string | undefined = undefined;
+    
+    /**
      * Event handler for when review status changes
      */
     export let onReviewStatusChange: (itemId: string, status: ReviewStatus) => void;
     
-    let isEditing = false;
+    let isUpdating = false;
     
-    async function handleReviewStatusChange(status: PracticeItem['review_status']) {
+    async function handleReviewStatusChange(status: ReviewStatus) {
+        if (isUpdating) return;
+        
+        isUpdating = true;
         try {
             const updatedItem = await practiceItemService.updateItem(item.id, {
                 review_status: status
             });
+            
             if (updatedItem.review_status) {
                 onReviewStatusChange(item.id, updatedItem.review_status);
+                // Update local item data
+                item = { ...item, ...updatedItem };
             }
+            
             if (status === 'NEED_EDIT') {
-                isEditing = true;
+                const editUrl = new URL(`/account/practice-items/${item.id}/edit`, window.location.origin);
+                if (sessionId) {
+                    editUrl.searchParams.set('sessionId', sessionId);
+                }
+                goto(editUrl.pathname + editUrl.search);
             }
-            toast.success(`Practice item marked as ${status?.toLowerCase() || 'updated'}`);
+            
+            toast.success(`Practice item marked as ${status?.toLowerCase().replace('_', ' ') || 'updated'}`);
         } catch (error) {
             console.error('Failed to update review status:', error);
             toast.error('Failed to update review status');
+        } finally {
+            isUpdating = false;
         }
-    }
-
-    function handleEditSave(updatedItem: PracticeItem) {
-        if (updatedItem.review_status) {
-            onReviewStatusChange(item.id, updatedItem.review_status);
-        }
-        isEditing = false;
-        toast.success('Practice item updated successfully');
-    }
-
-    function handleEditCancel() {
-        isEditing = false;
     }
 </script>
 
-<div class="flex flex-col gap-4">
-    {#if isEditing}
-        <PracticeItemEditForm
-            {item}
-            onSave={handleEditSave}
-            onCancel={handleEditCancel}
-        />
-    {:else}
-        <div class="flex flex-wrap gap-2">
-            <button
-                class="px-3 py-1.5 text-sm rounded-md transition-colors {item.review_status === 'APPROVED'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}"
-                on:click={() => handleReviewStatusChange('APPROVED')}
-                title={item.review_status === 'APPROVED' && item.review_date 
-                    ? `Approved on ${new Date(item.review_date).toLocaleString()}`
-                    : 'Approve this item'}
-            >
-                {item.review_status === 'APPROVED' ? 'Approved' : 'Approve'}
-            </button>
-            <button
-                class="px-3 py-1.5 text-sm rounded-md transition-colors {item.review_status === 'NEED_EDIT'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}"
-                on:click={() => handleReviewStatusChange('NEED_EDIT')}
-                title={item.review_status === 'NEED_EDIT' && item.review_date 
-                    ? `Marked for editing on ${new Date(item.review_date).toLocaleString()}`
-                    : 'Mark this item for editing'}
-            >
-                Needs Edit
-            </button>
-            <button
-                class="px-3 py-1.5 text-sm rounded-md transition-colors {item.review_status === 'IGNORE'
-                    ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}"
-                on:click={() => handleReviewStatusChange('IGNORE')}
-                title={item.review_status === 'IGNORE' && item.review_date 
-                    ? `Ignored on ${new Date(item.review_date).toLocaleString()}`
-                    : 'Ignore this item'}
-            >
-                {item.review_status === 'IGNORE' ? 'Ignored' : 'Ignore'}
-            </button>
+<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+    <!-- Review Status Section -->
+    <div class="space-y-3">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+            Review Status
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+            Choose the appropriate status for this practice item
+        </p>
+        
+        <!-- Review Controls Row -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <!-- Status Buttons (Left) -->
+            <div class="flex flex-wrap gap-3">
+                <ReviewStatusButton
+                    status={item.review_status}
+                    targetStatus="APPROVED"
+                    label="Approve"
+                    activeLabel="Approved"
+                    reviewDate={item.review_date}
+                    disabled={isUpdating}
+                    onClick={() => handleReviewStatusChange('APPROVED')}
+                    icon={'complete' as IconType}
+                />
+                
+                <ReviewStatusButton
+                    status={item.review_status}
+                    targetStatus="NEED_EDIT"
+                    label="Edit"
+                    activeLabel="Edit"
+                    reviewDate={item.review_date}
+                    disabled={isUpdating}
+                    onClick={() => handleReviewStatusChange('NEED_EDIT')}
+                    icon={'edit' as IconType}
+                />
+                
+                <ReviewStatusButton
+                    status={item.review_status}
+                    targetStatus="IGNORE"
+                    label="Ignore"
+                    activeLabel="Ignored"
+                    reviewDate={item.review_date}
+                    disabled={isUpdating}
+                    onClick={() => handleReviewStatusChange('IGNORE')}
+                    icon={'ignore' as IconType}
+                />
+            </div>
+
+            <!-- Right Side Info & Actions -->
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                <!-- Status Information -->
+                {#if item.review_status && item.review_date}
+                    <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                        <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>
+                            {new Date(item.review_date).toLocaleString()}
+                        </span>
+                    </div>
+                {/if}
+            </div>
         </div>
-    {/if}
+    </div>
 </div> 
