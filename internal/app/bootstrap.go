@@ -1,7 +1,9 @@
 package app
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/spf13/cast"
@@ -19,6 +21,9 @@ func (app *Application) configureAppSettings() {
 		e.App.Settings().Meta.AppURL = os.Getenv("APP_URL")
 		e.App.Settings().Meta.SenderName = os.Getenv("SENDER_NAME")
 		e.App.Settings().Meta.SenderAddress = os.Getenv("SENDER_ADDRESS")
+		if err := e.App.Settings().Meta.Validate(); err != nil {
+			return fmt.Errorf("meta settings are invalid: %w", err)
+		}
 
 		// Configure SMTP settings from environment variables
 		e.App.Settings().SMTP.Enabled = cast.ToBool(os.Getenv("SMTP_ENABLED"))
@@ -29,6 +34,31 @@ func (app *Application) configureAppSettings() {
 		e.App.Settings().SMTP.AuthMethod = os.Getenv("SMTP_AUTH_METHOD")
 		e.App.Settings().SMTP.TLS = cast.ToBool(os.Getenv("SMTP_TLS"))
 		e.App.Settings().SMTP.LocalName = os.Getenv("SMTP_LOCAL_NAME")
+		if err := e.App.Settings().SMTP.Validate(); err != nil {
+			return fmt.Errorf("SMTP settings are invalid: %w", err)
+		}
+
+		// Configure logs settings from environment variables
+		e.App.Settings().Logs.LogAuthId = cast.ToBool(os.Getenv("LOG_AUTH_ID"))
+		e.App.Settings().Logs.LogIP = cast.ToBool(os.Getenv("LOG_IP"))
+		e.App.Settings().Logs.MaxDays = cast.ToInt(os.Getenv("LOG_MAX_DAYS"))
+		if err := e.App.Settings().Logs.Validate(); err != nil {
+			return fmt.Errorf("logs settings are invalid: %w", err)
+		}
+
+		e.App.Settings().TrustedProxy.UseLeftmostIP = cast.ToBool(os.Getenv("TRUSTED_PROXY_USE_LEFTMOST_IP"))
+		// CF-Connecting-IP, X-Forwarded-For
+		e.App.Settings().TrustedProxy.Headers = strings.Split(os.Getenv("TRUSTED_PROXY_HEATERS"), ",")
+		e.App.Settings().RateLimits.Enabled = cast.ToBool(os.Getenv("RATE_LIMITS_ENABLED"))
+		if err := e.App.Settings().RateLimits.Validate(); err != nil {
+			return fmt.Errorf("rate limits settings are invalid: %w", err)
+		}
+
+		e.App.Settings().Backups.Cron = os.Getenv("BACKUPS_CRON")
+		e.App.Settings().Backups.CronMaxKeep = cast.ToInt(os.Getenv("BACKUPS_CRON_MAX_KEEP"))
+		if err := e.App.Settings().Backups.Validate(); err != nil {
+			return fmt.Errorf("backups settings are invalid: %w", err)
+		}
 
 		// Validate and persist the changes
 		return e.App.Save(e.App.Settings())

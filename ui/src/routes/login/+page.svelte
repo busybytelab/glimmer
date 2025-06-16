@@ -84,7 +84,7 @@
 				<img src={glimmerLogoUrl} alt="Glimmer Logo" class="h-12 w-12 sm:h-14 sm:w-14 mr-3" />
 				<h1 class="text-2xl sm:text-3xl font-bold text-primary dark:text-white">Glimmer</h1>
 			</div>
-			<p class="mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">Learning Helper for Kids</p>
+			<p class="mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">Practice Companion for Young Minds</p>
 		</div>
 		<form on:submit|preventDefault={handleSubmit} class="space-y-6">
 			{#if $error}
