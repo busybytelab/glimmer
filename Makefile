@@ -70,7 +70,7 @@ run: ## Run the application with env vars from .env file if it exists
 	@if [ -f .env ]; then \
 		LISTEN_ADDRESS=$$(grep LISTEN_ADDRESS .env | cut -d= -f2); \
 		ENCRYPTION_KEY=$$(grep ENCRYPTION_KEY .env | cut -d= -f2 || echo ""); \
-		export $$(grep -v '^#' .env | xargs) && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
+		set -a && source .env && set +a && go run -tags embed cmd/glimmer/main.go --encryptionEnv=$$ENCRYPTION_KEY serve --http="$$LISTEN_ADDRESS"; \
 	else \
 		go run -tags embed cmd/glimmer/main.go serve; \
 	fi
