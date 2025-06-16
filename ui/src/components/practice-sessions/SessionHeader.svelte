@@ -27,7 +27,7 @@
             if (percentage === 100) {
                 return 'Perfect score! All questions answered correctly 🎉';
             } else {
-                return `Completed with ${stats.total_score} of ${stats.total_items} correct (${percentage}%)`;
+                return `Completed with ${Math.round(stats.total_score)} of ${stats.total_items} correct (${percentage}%)`;
             }
         } else {
             return `${stats.answered_items} of ${stats.total_items} questions answered`;
