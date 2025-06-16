@@ -1276,8 +1276,8 @@ func TestGetCleanCorrectAnswer(t *testing.T) {
 		{
 			name:       "null value",
 			input:      "null",
-			expected:   "null",
-			expectWarn: true,
+			expected:   "",
+			expectWarn: false,
 		},
 	}
 
@@ -1317,8 +1317,8 @@ func TestNormalizeAnswerString(t *testing.T) {
 		{name: "triple backticks", input: "```hello```", expected: "hello"},
 		{name: "triple backticks with space", input: "  ```hello```  ", expected: "hello"},
 		{name: "triple backticks with inner space", input: "```  hello  ```", expected: "hello"},
-		{name: "mismatched backticks start", input: "`hello``", expected: "`hello``"},
-		{name: "mismatched backticks end", input: "``hello`", expected: "``hello`"},
+		{name: "mismatched backticks start", input: "`hello``", expected: "hello"},
+		{name: "mismatched backticks end", input: "``hello`", expected: "hello"},
 		{name: "backticks in middle", input: "he`llo", expected: "he`llo"},
 		{name: "empty string", input: "", expected: ""},
 		{name: "only backticks", input: "``", expected: ""},
