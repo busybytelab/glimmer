@@ -92,7 +92,7 @@
               <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-2">
                 <div 
                   class="h-2.5 rounded-full {session.wrong_answers_count > 0 ? 'bg-orange-400' : 'bg-green-500'}" 
-                  style="width: {(session.answered_items / session.total_items) * 100}%"
+                  style="width: {Math.round((session.answered_items / session.total_items) * 100)}%"
                 ></div>
               </div>
             {/if}

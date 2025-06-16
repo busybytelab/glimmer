@@ -12,9 +12,9 @@
     export let showLegend: boolean = true;
 
     // Calculate circle segments (each segment is a percentage of the total)
-    $: remainingPercent = stats ? ((stats.total_items - stats.answered_items) / stats.total_items) * 100 : 100;
-    $: correctPercent = stats ? ((stats.answered_items - stats.wrong_answers_count) / stats.total_items) * 100 : 0;
-    $: wrongPercent = stats ? (stats.wrong_answers_count / stats.total_items) * 100 : 0;
+    $: remainingPercent = stats ? Math.round(((stats.total_items - stats.answered_items) / stats.total_items) * 100) : 100;
+    $: correctPercent = stats ? Math.round(((stats.answered_items - stats.wrong_answers_count) / stats.total_items) * 100) : 0;
+    $: wrongPercent = stats ? Math.round((stats.wrong_answers_count / stats.total_items) * 100) : 0;
 
     // Calculate the actual percentage score for display
     $: scorePercentage = stats ? Math.round((stats.total_score / stats.total_items) * 100) : 0;

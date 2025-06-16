@@ -2,6 +2,7 @@ package practice
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -297,7 +298,8 @@ func calculateScore(isCorrect bool, hintLevelReached int, practiceItem *core.Rec
 		score = 0.1
 	}
 
-	return score
+	// Round to 0 decimal places
+	return math.Round(score)
 }
 
 // generateFeedback creates appropriate feedback based on performance
