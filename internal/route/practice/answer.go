@@ -2,7 +2,6 @@ package practice
 
 import (
 	"encoding/json"
-	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -224,12 +223,16 @@ func (r *answerRoute) HandleProcessAnswer(e *core.RequestEvent) error {
 // normalizeAnswerString trims leading/trailing whitespace and backticks (single or triple).
 func normalizeAnswerString(s string) string {
 	s = strings.TrimSpace(s)
-	// Handle triple backticks first as they are more specific
-	if len(s) >= 6 && strings.HasPrefix(s, "```") && strings.HasSuffix(s, "```") {
-		s = s[3 : len(s)-3]
-	} else if len(s) >= 2 && strings.HasPrefix(s, "`") && strings.HasSuffix(s, "`") {
-		s = s[1 : len(s)-1]
+
+	// Remove all leading and trailing backticks, regardless of matching
+	// This handles both properly matched cases and mismatched cases
+	for len(s) > 0 && s[0] == '`' {
+		s = s[1:]
 	}
+	for len(s) > 0 && s[len(s)-1] == '`' {
+		s = s[:len(s)-1]
+	}
+
 	return strings.TrimSpace(s)
 }
 
@@ -298,8 +301,7 @@ func calculateScore(isCorrect bool, hintLevelReached int, practiceItem *core.Rec
 		score = 0.1
 	}
 
-	// Round to 0 decimal places
-	return math.Round(score)
+	return score
 }
 
 // generateFeedback creates appropriate feedback based on performance
