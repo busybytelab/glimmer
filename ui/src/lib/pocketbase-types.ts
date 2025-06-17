@@ -51,12 +51,18 @@ export interface AuthOperations {
     authRefresh(options?: any): Promise<any>;
     requestPasswordReset(email: string, options?: any): Promise<any>;
     confirmPasswordReset(resetToken: string, newPassword: string, options?: any): Promise<any>;
+    requestVerification(email: string, options?: any): Promise<any>;
 }
 
 /**
  * Complete service interface combining record and auth operations
  */
-export interface RecordService<T = any> extends RecordOperations<T>, AuthOperations {}
+export interface RecordService<T = any> extends RecordOperations<T> {}
+
+/**
+ * Special collection type for users that includes both record and auth operations
+ */
+export interface UsersCollection extends RecordService<User>, AuthOperations {}
 
 /**
  * Type for the PocketBase client with strongly typed collections
@@ -68,7 +74,7 @@ export type PocketBaseCollections = Omit<PocketBase, 'collection'> & {
     collection(idOrName: 'practice_sessions'): RecordService<PracticeSession>;
     collection(idOrName: 'practice_results'): RecordService<PracticeResult>;
     collection(idOrName: 'accounts'): RecordService<Account>;
-    collection(idOrName: 'users'): RecordService<User>;
+    collection(idOrName: 'users'): UsersCollection;
     collection(idOrName: 'learners'): RecordService<Learner>;
     collection(idOrName: 'pbc_practice_session_stats'): RecordService<PracticeSessionStats>;
 } 

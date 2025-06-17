@@ -116,6 +116,7 @@ export class AuthService {
       this.saveAuthToken(rememberMe);
     } catch (error) {
       this.clearAuthToken();
+      // handle error: The request doesn't satisfy the collection requirements to authenticate
       throw error;
     }
   }
