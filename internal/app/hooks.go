@@ -64,6 +64,12 @@ func (app *Application) setupUserHooks() {
 
 	// Register hook for account creation after email verification
 	app.pb.OnRecordConfirmVerificationRequest("users").BindFunc(func(e *core.RecordConfirmVerificationRequestEvent) error {
+		// Log the verification status before processing
+		log.Info().
+			Str("email", e.Record.Email()).
+			Bool("verified_before", e.Record.GetBool("verified")).
+			Msg("Processing email verification")
+
 		// Get the user's email
 		email := e.Record.Email()
 
@@ -79,11 +85,31 @@ func (app *Application) setupUserHooks() {
 			return err
 		}
 
-		// Save the updated user record
-		if err := e.App.Save(e.Record); err != nil {
-			log.Error().Err(err).Msg("Failed to update user name")
+		// Try to fetch fresh record to ensure we have latest state
+		collection, err := e.App.FindCollectionByNameOrId("users")
+		if err != nil {
 			return err
 		}
+
+		record, err := e.App.FindRecordById(collection.Id, e.Record.Id)
+		if err != nil {
+			return err
+		}
+
+		// Set verified flag
+		record.Set("verified", true)
+
+		// Save the updated user record with verified flag
+		if err := e.App.Save(record); err != nil {
+			log.Error().Err(err).Msg("Failed to update user record")
+			return err
+		}
+
+		// Log the verification status after processing
+		log.Info().
+			Str("email", record.Email()).
+			Bool("verified_after", record.GetBool("verified")).
+			Msg("Completed email verification")
 
 		return nil
 	})

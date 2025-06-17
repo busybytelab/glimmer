@@ -21,6 +21,7 @@ func init() {
 			"listRule": null,
 			"viewRule": "id = @request.auth.id",
 			"updateRule": "id = @request.auth.id",
+			"authRule": "verified = true",
 			"authAlert": {
 				"enabled": true
 			}

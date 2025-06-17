@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { userService } from '$lib/services/user';
 
 	// Use the public URL instead of importing the asset
 	const glimmerLogoUrl = '/glimmer.svg';
@@ -12,6 +13,11 @@
 			goto('/login');
 		}
 	});
+
+	async function resendVerificationEmail() {
+		const email = $page.url.searchParams.get('email');
+		await userService.resendVerificationEmail(email ?? undefined);
+	}
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 sm:px-6">
@@ -37,8 +43,8 @@
 					<p class="text-sm text-gray-500 dark:text-gray-400">
 						Didn't receive the email? Check your spam folder or
 						<button
-							class="text-secondary hover:text-emerald-500 focus:outline-none focus:underline font-medium"
-							on:click={() => window.location.reload()}
+							class="text-secondary dark:text-blue-400 hover:text-emerald-500 dark:hover:text-emerald-400 focus:outline-none focus:underline font-medium"
+							on:click={resendVerificationEmail}
 						>
 							click here to resend
 						</button>

@@ -28,6 +28,15 @@ class UserService {
 		}
 	}
 
+	async resendVerificationEmail(email?: string): Promise<void> {
+		if (email) {
+			await pb.collection('users').requestVerification(email);
+			console.log('Verification email sent');
+		} else {
+			console.error('No email provided');
+		}
+	}
+
 	async getCurrentUser(): Promise<User> {
 		if (!pb.authStore.record?.id) {
 			throw new Error('No user found');
