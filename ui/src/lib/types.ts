@@ -270,12 +270,71 @@ export interface PracticeSessionStats extends PocketBaseRecord {
     not_reviewed_items: number;
 }
 
+/**
+ * Utility class for checking practice session status.
+ * Contains static methods to determine various states of a practice session.
+ */
+export class PracticeSessionStatusChecker {
+    /**
+     * Determines if a session needs attention based on the percentage of wrong answers.
+     * A session needs attention if the wrong answers percentage is above 30%.
+     * @param stats - The session statistics to evaluate
+     * @returns boolean indicating if the session needs attention
+     */
+    static needsAttention(stats: PracticeSessionStats): boolean {
+        if (stats.total_items === 0) return false;
+        const wrongAnswersPercentage = (stats.wrong_answers_count / stats.total_items) * 100;
+        return wrongAnswersPercentage > 30;
+    }
+
+    /**
+     * Determines if a session is in progress.
+     * A session is considered in progress if it has not been fully answered
+     * (answered items are less than total items).
+     * @param stats - The session statistics to evaluate
+     * @returns boolean indicating if the session is in progress
+     */
+    static isInProgress(stats: PracticeSessionStats): boolean {
+        return stats.answered_items < stats.total_items;
+    }
+
+    /**
+     * Determines if a session has been recently completed successfully.
+     * A session is considered successfully completed when all items have been
+     * answered (answered_items equals total_items).
+     * @param stats - The session statistics to evaluate
+     * @returns boolean indicating if the session is completed successfully
+     */
+    static isRecentlyCompleted(stats: PracticeSessionStats): boolean {
+        return stats.answered_items === stats.total_items;
+    }
+}
+
 export interface Account extends PocketBaseRecord {
     owner: User;
     llm_api_key?: string;
     ollama_server_url?: string;
     default_llm_model?: string;
     default_language?: string;
+}
+
+/**
+ * Statistics for an account, generated from the account_stats view
+ * Matches all fields from the migration 1746341014_created_account_stats.go
+ */
+export interface AccountStats extends PocketBaseRecord {
+    /** Name of the account */
+    account_name: string;
+    /** Total number of learners in the account */
+    total_learners: number;
+    /** Total number of practice topics */
+    total_practice_topics: number;
+    /** Total number of practice items across all topics */
+    total_practice_items: number;
+    /** Total number of practice results */
+    total_practice_results: number;
+    /** Average number of practice results per learner */
+    avg_practice_results_per_learner: number;
 }
 
 export interface User extends PocketBaseRecord {

@@ -46,30 +46,7 @@
           await pb.collection('users').authRefresh();
           // Token is valid, get user data
           if (pb.authStore.isValid) {
-            //const userData = await pb.collection('users').getOne(pb.authStore.record?.id ?? '');
-            
-
-            // Then check if user is a learner
-            // FIXME: need to fix this logic
-            // try {
-            //   const learner = await pb.collection('learners').getFirstListItem(`user.id="${pb.authStore.record?.id}"`, { requestKey: null });
-            //   if (learner) {
-            //     learner.user = userData;
-            //     user.set(learner as unknown as Learner);
-            //     isAuthenticated.set(true);
-            //     return;
-            //   }
-            // } catch (err) {
-            //   // No learner found
-            // }
-            
-            
             isAuthenticated.set(true);
-
-
-            // Clear auth state and show login
-            //authService.clearAuthToken();
-            //isAuthenticated.set(false);
           }
         } catch (err) {
           // Token refresh failed, clear auth state
