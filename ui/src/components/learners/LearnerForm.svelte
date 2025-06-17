@@ -144,7 +144,7 @@
 	async function handleDelete() {
 		if (!learner) return;
 
-		if (!confirm('Are you sure you want to delete this learner?')) {
+		if (!confirm('Are you sure you want to delete this profile?')) {
 			return;
 		}
 

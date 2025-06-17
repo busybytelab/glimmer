@@ -8,13 +8,17 @@
     import { setCurrentLearner } from '$lib/stores/learnerStore';
 
     let learners: Learner[] = [];
-    let loading = true;
+    let loading = false;
     let error: string | null = null;
 
     onMount(async () => {
         try {
+            loading = true;
             // Fetch learners associated with the current user
             learners = await learnersService.getLearners();
+            if (learners.length === 0) {
+                goto('/account/dashboard');
+            }
         } catch (err) {
             console.error('Error fetching learners:', err);
             error = 'Failed to load learners. Please try again.';
@@ -30,10 +34,10 @@
         goto(`/learners/${learner.id}/home`);
     }
 
-    function handleAccountSettings() {
+    function handleAccountDashboard() {
         // Clear the current learner when going to account settings
         setCurrentLearner(null);
-        goto('/account/settings');
+        goto('/account/dashboard');
     }
 
     function handleAddChild() {
@@ -114,9 +118,9 @@
                     </p>
                 </button>
 
-                <!-- Account Settings Card -->
+                <!-- Account Dashboard Card -->
                 <button
-                    on:click={handleAccountSettings}
+                    on:click={handleAccountDashboard}
                     class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col items-center text-left"
                 >
                     <div class="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 mb-4 flex items-center justify-center">
@@ -141,7 +145,7 @@
                         </svg>
                     </div>
                     <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                        Account Settings
+                        Account
                     </h3>
                     <p class="text-gray-600 dark:text-gray-300 text-sm">
                         Manage your account and children profiles

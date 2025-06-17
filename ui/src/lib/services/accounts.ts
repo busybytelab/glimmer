@@ -1,5 +1,5 @@
 import pb from '$lib/pocketbase';
-import type { Account } from '$lib/types';
+import type { Account, AccountStats } from '$lib/types';
 
 class AccountService {
     /**
@@ -26,6 +26,27 @@ class AccountService {
         } catch (err) {
             console.error('Failed to get account:', err);
             throw new Error('Failed to get account information');
+        }
+    }
+
+    /**
+     * Gets the statistics for the currently logged in user's account
+     * @returns The account statistics
+     * @throws Error if user is not logged in or stats cannot be found
+     */
+    async getAccountStats(): Promise<AccountStats> {
+        const currentUser = pb.authStore.model;
+        if (!currentUser) {
+            throw new Error('You must be logged in to access account statistics');
+        }
+
+        try {
+            const account = await this.getAccount();
+            const stats = await pb.collection('account_stats').getFirstListItem(`id = "${account.id}"`);
+            return stats as unknown as AccountStats;
+        } catch (err) {
+            console.error('Failed to get account stats:', err);
+            throw new Error('Failed to get account statistics');
         }
     }
 }
