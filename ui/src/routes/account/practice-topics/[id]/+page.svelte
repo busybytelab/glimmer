@@ -174,11 +174,12 @@
         },
         {
             id: 'useTemplate',
-            label: 'Use as Template',
+            label: 'AI Copy',
             icon: 'duplicate' as IconType,
             variant: 'primary' as const,
             onClick: useAsTemplate,
-            disabled: isCreatingTemplate
+            disabled: isCreatingTemplate,
+            tooltip: 'Create a copy of this topic and let AI help improve it'
         }
     ];
 

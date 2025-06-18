@@ -2,7 +2,6 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import type { Learner, PracticeTopic, LearnerProgress, AccountStats } from '$lib/types';
-    import { IconTypeMap } from '$lib/types';
     import { learnersService } from '$lib/services/learners';
     import { topicsService } from '$lib/services/topics';
     import { sessionService } from '$lib/services/session';
@@ -11,6 +10,7 @@
     import ErrorAlert from '$components/common/ErrorAlert.svelte';
     import LearnerSummary from '$components/learners/LearnerSummary.svelte';
     import StatCard from '$components/dashboard/StatCard.svelte';
+    import Icon from '$components/common/Icon.svelte';
 
     let learners: Learner[] = [];
     let topics: PracticeTopic[] = [];
@@ -78,36 +78,34 @@
         <ErrorAlert message={error} />
     {:else}
         <!-- Quick Stats -->
-                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
-                <StatCard 
-                    title="Learning Topics" 
-                    value={accountStats?.total_practice_topics ?? 0} 
-                    isLoading={loading} 
-                    icon={IconTypeMap.topic} 
-                />
-                
-                <StatCard 
-                    title="Study Materials" 
-                    value={accountStats?.total_practice_items ?? 0} 
-                    isLoading={loading} 
-                    icon={IconTypeMap.practice} 
-                />
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+            <StatCard 
+                title="Learning Topics" 
+                value={accountStats?.total_practice_topics ?? 0} 
+                isLoading={loading} 
+                icon="topic"
+            />
+            
+            <StatCard 
+                title="Study Materials" 
+                value={accountStats?.total_practice_items ?? 0} 
+                isLoading={loading} 
+                icon="practice"
+            />
 
-                <StatCard 
-                    title="Total Exercises Done" 
-                    value={accountStats?.total_practice_results ?? 0} 
-                    isLoading={loading} 
-                    icon={IconTypeMap.answers} 
-                />
+            <StatCard 
+                title="Total Exercises Done" 
+                value={accountStats?.total_practice_results ?? 0} 
+                isLoading={loading} 
+                icon="answers"
+            />
         </div>
 
         <!-- No Topics Guide -->
         {#if topics.length === 0}
             <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-8 mb-8 text-center">
                 <div class="w-16 h-16 mx-auto mb-4 text-blue-500 dark:text-blue-400">
-                    <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        {@html IconTypeMap.practice}
-                    </svg>
+                    <Icon type="practice" class_name="w-full h-full" />
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                     Create Your First Learning Topic
@@ -119,9 +117,7 @@
                     on:click={handleAddTopic}
                     class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
                 >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        {@html IconTypeMap.add}
-                    </svg>
+                    <Icon type="add" class_name="w-5 h-5 mr-2" />
                     Add First Topic
                 </button>
             </div>
@@ -131,9 +127,7 @@
         {#if learners.length === 0}
             <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-8 mb-8 text-center">
                 <div class="w-16 h-16 mx-auto mb-4 text-green-500 dark:text-green-400">
-                    <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        {@html IconTypeMap.learner}
-                    </svg>
+                    <Icon type="learner" class_name="w-full h-full" />
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                     Add Your Child
@@ -145,9 +139,7 @@
                     on:click={handleAddChild}
                     class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
                 >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        {@html IconTypeMap.add}
-                    </svg>
+                    <Icon type="add" class_name="w-5 h-5 mr-2" />
                     Add Child
                 </button>
             </div>
@@ -164,9 +156,7 @@
                         on:click={handleAddChild}
                         class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
                     >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            {@html IconTypeMap.add}
-                        </svg>
+                        <Icon type="add" class_name="w-4 h-4 mr-2" />
                         Add Child
                     </button>
                 </div>
@@ -206,9 +196,7 @@
                                     class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
                                 >
                                     View Full Progress
-                                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
+                                    <Icon type="next" class_name="w-4 h-4 ml-2" />
                                 </button>
                             </div>
                         </div>
@@ -238,9 +226,7 @@
                         class="flex items-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200"
                     >
                         <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                {@html IconTypeMap.practice}
-                            </svg>
+                            <Icon type="practice" class_name="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div class="text-left">
                             <p class="font-medium text-gray-900 dark:text-white">New Topic</p>
@@ -253,9 +239,7 @@
                         class="flex items-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200"
                     >
                         <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                {@html IconTypeMap.learner}
-                            </svg>
+                            <Icon type="learner" class_name="w-5 h-5 text-green-600 dark:text-green-400" />
                         </div>
                         <div class="text-left">
                             <p class="font-medium text-gray-900 dark:text-white">New Child</p>
@@ -268,9 +252,7 @@
                         class="flex items-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200"
                     >
                         <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                {@html IconTypeMap.topic}
-                            </svg>
+                            <Icon type="topic" class_name="w-5 h-5 text-purple-600 dark:text-purple-400" />
                         </div>
                         <div class="text-left">
                             <p class="font-medium text-gray-900 dark:text-white">All Topics</p>

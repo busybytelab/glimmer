@@ -10,6 +10,7 @@
         onClick: () => void;
         variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning';
         disabled?: boolean;
+        tooltip?: string;
     }> = [];
 
     export let showDropdownBreakpoint = 640; // sm breakpoint (in px)
@@ -93,6 +94,7 @@
                                     action.onClick();
                                 }}
                                 disabled={action.disabled}
+                                title={action.tooltip || action.label}
                             >
                                 <svg class="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d={IconTypeMap[action.icon]} />
@@ -112,7 +114,7 @@
                     class={getButtonClasses(action.variant)}
                     on:click={action.onClick}
                     disabled={action.disabled}
-                    title={action.label}
+                    title={action.tooltip || action.label}
                 >
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d={IconTypeMap[action.icon]} />

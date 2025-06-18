@@ -92,6 +92,7 @@
                                 class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 ml-1 focus:outline-none"
                                 on:click={() => removeTag(index)}
                                 title="Remove tag: {tag}"
+                                aria-label="Remove tag: {tag}"
                             >
                                 <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
