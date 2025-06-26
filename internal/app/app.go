@@ -70,7 +70,7 @@ func (a *Application) setupMigrations() {
 // configures custom commands
 func (app *Application) setupCommands() {
 	log.Trace().Msg("Setting up custom commands...")
-	setupSeedCommand(app.pb)
+	setupCommands(app.pb)
 	log.Trace().Msg("Custom commands setup completed")
 }
 

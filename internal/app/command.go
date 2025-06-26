@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/busybytelab.com/glimmer/data"
 	"github.com/busybytelab.com/glimmer/internal/seed"
@@ -49,15 +52,53 @@ func (s *seedCommand) handleSeed(cmd *cobra.Command, args []string) {
 		configPath = tmpFile.Name()
 	}
 
-	// Log the start of the seeding process
-	log.Info().Msg("Starting YAML-based database seeding...")
-
-	// Run the seed from YAML
-	if err := seed.RunSeedFromYAML(s.pb, configPath); err != nil {
-		log.Fatal().Err(err).Msg("Failed to seed database")
+	// Check if configPath is a directory
+	fileInfo, err := os.Stat(configPath)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to stat config path")
 	}
 
-	log.Info().Msg("Seeding completed successfully!")
+	if fileInfo.IsDir() {
+		// Process all YAML files in the directory
+		log.Info().Msgf("Starting YAML-based database seeding from directory: %s", configPath)
+
+		// Get all YAML files in the directory
+		files, err := os.ReadDir(configPath)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed to read directory")
+		}
+
+		// Filter and sort YAML files
+		var yamlFiles []string
+		for _, file := range files {
+			if !file.IsDir() && (strings.HasSuffix(file.Name(), ".yaml") || strings.HasSuffix(file.Name(), ".yml")) {
+				yamlFiles = append(yamlFiles, filepath.Join(configPath, file.Name()))
+			}
+		}
+
+		// Sort files to ensure consistent order
+		sort.Strings(yamlFiles)
+
+		// Process each YAML file
+		for _, yamlFile := range yamlFiles {
+			log.Info().Msgf("Processing seed file: %s", yamlFile)
+			if err := seed.RunSeedFromYAML(s.pb, yamlFile); err != nil {
+				log.Fatal().Err(err).Msgf("Failed to seed database from file: %s", yamlFile)
+			}
+		}
+
+		log.Info().Msg("Directory seeding completed successfully!")
+	} else {
+		// Process single file
+		log.Info().Msg("Starting YAML-based database seeding...")
+
+		// Run the seed from YAML
+		if err := seed.RunSeedFromYAML(s.pb, configPath); err != nil {
+			log.Fatal().Err(err).Msg("Failed to seed database")
+		}
+
+		log.Info().Msg("Seeding completed successfully!")
+	}
 }
 
 // handlePasswordHash handles the password-hash subcommand execution
@@ -83,7 +124,7 @@ func (s *seedCommand) handlePasswordHash(cmd *cobra.Command, args []string) {
 }
 
 // setupSeedCommand configures the seed command for the application
-func setupSeedCommand(pb *pocketbase.PocketBase) {
+func setupCommands(pb *pocketbase.PocketBase) {
 	log.Trace().Msg("Setting up seed command...")
 
 	// Create command handler
