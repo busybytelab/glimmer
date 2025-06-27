@@ -174,7 +174,7 @@
         },
         {
             id: 'useTemplate',
-            label: 'AI Copy',
+            label: 'Copy as',
             icon: 'duplicate' as IconType,
             variant: 'primary' as const,
             onClick: useAsTemplate,
@@ -328,7 +328,7 @@ Feel free to maintain similar structure but adapt content and difficulty as need
                         <thead>
                             <tr class="border-b border-gray-200 dark:border-gray-700">
                                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Session Name</th>
-                                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Learner</th>
+                                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Child Name</th>
                                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Date</th>
                                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Status</th>
                                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>

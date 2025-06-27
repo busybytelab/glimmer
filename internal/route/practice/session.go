@@ -102,6 +102,7 @@ func (r *sessionRoute) HandleCreatePracticeSession(e *core.RequestEvent) error {
 	// 4. Ask LLM to create practice items
 	// Get user name from the expanded relation
 	userId := learner.GetString("user")
+	learnerNickname := learner.GetString("nickname")
 	var userName string
 	if user, err := e.App.FindRecordById("_pb_users_auth_", userId); err == nil {
 		userName = user.GetString("name")
@@ -110,7 +111,8 @@ func (r *sessionRoute) HandleCreatePracticeSession(e *core.RequestEvent) error {
 	}
 
 	log.Info().
-		Str("learner", userName).
+		Str("user", userName).
+		Str("nickname", learnerNickname).
 		Str("topic", topic.GetString("name")).
 		Msg("Generating practice items using LLM")
 
@@ -236,6 +238,7 @@ func buildGenerationPrompt(basePrompt string, learnerProfile string, topic *core
 	}
 
 	// Get the prompt extension from the account, or use an empty string if not available
+	// TODO: fix this, must use default extension if empty
 	promptExtension := ""
 	if account != nil {
 		promptExtension = account.GetString("practice_session_default_prompt_extension")

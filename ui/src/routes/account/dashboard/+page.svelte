@@ -152,13 +152,7 @@
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
                         Children's Progress
                     </h2>
-                    <button
-                        on:click={handleAddChild}
-                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                    >
-                        <Icon type="add" class_name="w-4 h-4 mr-2" />
-                        Add Child
-                    </button>
+                
                 </div>
 
                 {#each learners as learner}
@@ -242,7 +236,7 @@
                             <Icon type="learner" class_name="w-5 h-5 text-green-600 dark:text-green-400" />
                         </div>
                         <div class="text-left">
-                            <p class="font-medium text-gray-900 dark:text-white">New Child</p>
+                            <p class="font-medium text-gray-900 dark:text-white">Add Child</p>
                             <p class="text-sm text-gray-600 dark:text-gray-400">Add child profile</p>
                         </div>
                     </button>
