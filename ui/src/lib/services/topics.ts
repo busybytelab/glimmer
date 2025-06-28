@@ -1,5 +1,5 @@
 import pb from '$lib/pocketbase';
-import type { PracticeTopic, PracticeSession, TopicFormData } from '$lib/types';
+import type { PracticeTopic, PracticeSession, TopicFormData, PracticeTopicLibrary } from '$lib/types';
 import { accountService } from './accounts';
 
 export class TopicsService {
@@ -83,6 +83,53 @@ export class TopicsService {
             await pb.collection('practice_topics').delete(id);
         } catch (error: any) {
             throw new Error(error.message);
+        }
+    }
+
+    /**
+     * Imports a practice topic from the library to the user's account
+     * Creates a new topic based on library template data
+     * @param libraryTopic - The library topic to import
+     * @param customizations - Optional customizations to apply during import
+     * @returns Promise<PracticeTopic> - The newly created topic
+     */
+    async importFromLibrary(
+        libraryTopic: PracticeTopicLibrary, 
+        customizations: Partial<TopicFormData> = {}
+    ): Promise<PracticeTopic> {
+        try {
+            const account = await accountService.getAccount();
+            
+            // Check if similar topic already exists
+            const existingSimilarTopic = await this.findSimilarTopic(libraryTopic.name);
+            if (existingSimilarTopic) {
+                throw new Error(`A similar topic "${existingSimilarTopic.name}" already exists in your account. Please choose a different name or modify the existing topic.`);
+            }
+
+            // Map library topic data to account topic format
+            const topicData: TopicFormData = {
+                name: customizations.name || libraryTopic.name,
+                subject: customizations.subject || libraryTopic.category || 'General',
+                description: customizations.description || libraryTopic.description || '',
+                target_age_range: customizations.target_age_range || libraryTopic.target_age_range || '',
+                target_grade_level: customizations.target_grade_level || libraryTopic.target_grade_level || '',
+                learning_goals: customizations.learning_goals || [],
+                base_prompt: customizations.base_prompt || libraryTopic.base_prompt,
+                system_prompt: customizations.system_prompt || libraryTopic.system_prompt || '',
+                tags: customizations.tags || [], // Library topics don't have tags field
+                llm_model: customizations.llm_model || '',
+                account: account.id
+            };
+
+            // Create the new topic
+            const result = await pb.collection('practice_topics').create(topicData);
+            result.tags = this.formatTags(result.tags);
+            
+            console.log('Successfully imported topic from library:', result.name);
+            return result as unknown as PracticeTopic;
+        } catch (error: any) {
+            console.error('Failed to import topic from library:', error);
+            throw new Error(error.message || 'Failed to import topic from library');
         }
     }
 

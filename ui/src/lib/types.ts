@@ -318,6 +318,65 @@ export interface Account extends PocketBaseRecord {
     default_language?: string;
 }
 
+// -------------------------------------------------------------------------
+// Library Collection Models
+// -------------------------------------------------------------------------
+
+/**
+ * Practice Topic Library - Community-shared topic templates
+ * These are reusable topic templates that can be used to create practice topics
+ */
+export interface PracticeTopicLibrary extends PocketBaseRecord {
+    /** Name of the practice topic template */
+    name: string;
+    /** Description of what this topic covers */
+    description?: string;
+    /** Category/subject area (e.g., 'Math', 'Science', 'Language') */
+    category: string;
+    /** Country/region this topic is designed for */
+    country: string;
+    /** Target age range (e.g., '8-10', '10-12') */
+    target_age_range?: string;
+    /** Target grade level (e.g., 'Grade 3', 'Middle School') */
+    target_grade_level?: string;
+    /** Base prompt for generating practice content */
+    base_prompt: string;
+    /** System prompt for the LLM */
+    system_prompt?: string;
+    /** Total number of times this template has been used */
+    total_usage?: number;
+    /** Last time this template was used */
+    last_used?: string;
+}
+
+/**
+ * Practice Session Library - Community-shared session templates
+ * These are reusable session templates that include practice items
+ */
+export interface PracticeSessionLibrary extends PocketBaseRecord {
+    /** Name of the practice session template */
+    name: string;
+    /** Description of what this session covers */
+    description?: string;
+    /** Target year/grade for this session */
+    target_year?: number;
+    /** Generation prompt used to create this session */
+    generation_prompt?: string;
+    /** Reference to the topic library this session belongs to */
+    practice_topic_library: string;
+    /** Array of practice item IDs from the library */
+    practice_items?: string[];
+    /** Total number of times this template has been used */
+    total_usage?: number;
+    /** Last time this template was used */
+    last_used?: string;
+    /** Expanded relations */
+    expand?: {
+        practice_topic_library?: PracticeTopicLibrary;
+        practice_items?: any[]; // practice_items_library items
+    };
+}
+
 /**
  * Statistics for an account, generated from the account_stats view
  * Matches all fields from the migration 1746341014_created_account_stats.go
@@ -365,7 +424,7 @@ export interface Learner extends PocketBaseRecord {
 export type IconType = 'home' | 'topic' | 'session' | 'learner' | 'edit' | 'create' | 
     'print' | 'delete' | 'view' | 'download' | 'share' | 'duplicate' | 'add' | 
     'start' | 'complete' | 'reset' | 'back' | 'next' | 'more' | 'user' |
-    'practice' | 'progress' | 'answers' | 'review' | 'hint' | 'ignore';
+    'practice' | 'progress' | 'answers' | 'review' | 'hint' | 'ignore' | 'library';
 
 /**
  * Map of icon types to their SVG path data
@@ -400,7 +459,9 @@ export const IconTypeMap: Record<IconType, string> = {
     review: 'M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125',
     hint: 'M9 9a3 3 0 0 1 3-3m-2 15h4m0-3c0-4.1 4-4.9 4-9A6 6 0 1 0 6 9c0 4 4 5 4 9h4Z',
     // Eye with slash icon for ignore
-    ignore: 'M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88'
+    ignore: 'M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88',
+    // Library icon (book collection)
+    library: 'M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z'
 };
 
 // Remove old BreadcrumbIcon type and map
