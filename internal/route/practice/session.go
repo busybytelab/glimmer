@@ -127,17 +127,10 @@ func (r *sessionRoute) HandleCreatePracticeSession(e *core.RequestEvent) error {
 		chatOptions = append(chatOptions, llm.WithModel(llmModel))
 	}
 
-	llmResponse, _, err := r.llmService.Chat(generationPrompt, systemPrompt, chatOptions...)
+	// 5. Generate practice items with retry logic for JSON parsing issues
+	practiceItems, err := r.generatePracticeItemsWithRetry(generationPrompt, systemPrompt, chatOptions)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to generate practice items using LLM")
 		return e.InternalServerError("Failed to generate practice items", err)
-	}
-
-	// 6. Parse LLM JSON, cleaning up the response if needed
-	practiceItems, err := parseAndCleanLLMResponse(llmResponse)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to parse LLM response")
-		return e.InternalServerError("Failed to parse generated practice items", err)
 	}
 
 	// Get account ID from learner
@@ -402,4 +395,51 @@ func createPracticeSession(e *core.RequestEvent, topicId, learnerId string, item
 	}
 
 	return session, nil
+}
+
+// generatePracticeItemsWithRetry attempts to generate and parse practice items with retry logic
+func (r *sessionRoute) generatePracticeItemsWithRetry(generationPrompt, systemPrompt string, chatOptions []llm.ChatOption) ([]PracticeItemResponse, error) {
+	var practiceItems []PracticeItemResponse
+	var parseErr error
+
+	maxRetries := 3
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		// Use current chatOptions for first attempt, add IgnoreCache for retries
+		currentChatOptions := chatOptions
+		if attempt > 1 {
+			log.Warn().Int("attempt", attempt).Msg("Retrying LLM generation due to JSON parse failure, ignoring cache")
+			// Create new options slice with cache ignore for retry attempts
+			// This ensures we don't duplicate cache options and override any existing ones
+			currentChatOptions = make([]llm.ChatOption, len(chatOptions)+1)
+			copy(currentChatOptions, chatOptions)
+			currentChatOptions[len(chatOptions)] = llm.WithCache(true, false)
+		}
+
+		llmResponse, _, err := r.llmService.Chat(generationPrompt, systemPrompt, currentChatOptions...)
+		if err != nil {
+			log.Error().Err(err).Int("attempt", attempt).Msg("Failed to generate practice items using LLM")
+			if attempt == maxRetries {
+				return nil, err
+			}
+			continue // Try next attempt
+		}
+
+		// Try to parse the LLM response
+		practiceItems, parseErr = parseAndCleanLLMResponse(llmResponse)
+		if parseErr == nil {
+			// Success! Break out of retry loop
+			log.Info().Int("attempt", attempt).Msg("Successfully generated and parsed practice items")
+			break
+		}
+
+		log.Warn().Err(parseErr).Int("attempt", attempt).Str("response", llmResponse).Msg("Failed to parse LLM response, will retry if attempts remain")
+
+		// If this was the last attempt, return the error
+		if attempt == maxRetries {
+			log.Error().Err(parseErr).Msg("Failed to parse LLM response after all retry attempts")
+			return nil, parseErr
+		}
+	}
+
+	return practiceItems, nil
 }
