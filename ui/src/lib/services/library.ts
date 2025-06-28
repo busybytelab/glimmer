@@ -15,7 +15,6 @@ class LibraryService {
         try {
             const result = await pb.collection('practice_topics_library').getList<PracticeTopicLibrary>(1, limit, {
                 sort: '-total_usage,name,-last_used,-created',
-                fields: 'id,name,description,category,country,target_age_range,target_grade_level,total_usage,last_used,created,updated'
             });
             return result.items;
         } catch (error: any) {

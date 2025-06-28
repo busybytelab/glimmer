@@ -106,6 +106,11 @@ export class TopicsService {
                 throw new Error(`A similar topic "${existingSimilarTopic.name}" already exists in your account. Please choose a different name or modify the existing topic.`);
             }
 
+            // Validate that required fields are present
+            if (!libraryTopic.base_prompt || libraryTopic.base_prompt.trim() === '') {
+                throw new Error(`The library topic "${libraryTopic.name}" is missing a required field and cannot be imported. Please contact the library maintainer.`);
+            }
+
             // Map library topic data to account topic format
             const topicData: TopicFormData = {
                 name: customizations.name || libraryTopic.name,
@@ -120,6 +125,11 @@ export class TopicsService {
                 llm_model: customizations.llm_model || '',
                 account: account.id
             };
+
+            // Additional validation before creating
+            if (!topicData.base_prompt || topicData.base_prompt.trim() === '') {
+                throw new Error('Base prompt is required but was not provided in the library topic or customizations.');
+            }
 
             // Create the new topic
             const result = await pb.collection('practice_topics').create(topicData);

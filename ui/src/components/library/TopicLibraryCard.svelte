@@ -20,6 +20,12 @@
      */
     export let onClick: (topicId: string, topic: PracticeTopicLibrary) => void;
 
+    /**
+     * Optional callback function when the Add button is clicked
+     * @param topic - The topic object to add
+     */
+    export let onAdd: ((topic: PracticeTopicLibrary) => void) | undefined = undefined;
+
     function handleClick() {
         onClick(topic.id, topic);
     }
@@ -28,6 +34,13 @@
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             handleClick();
+        }
+    }
+
+    function handleAddClick(event: MouseEvent) {
+        event.stopPropagation(); // Prevent card click from firing
+        if (onAdd) {
+            onAdd(topic);
         }
     }
 </script>
@@ -50,7 +63,7 @@
         <p class="text-xs text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{topic.description}</p>
     {/if}
     
-    <div class="flex flex-wrap gap-1 mb-2">
+    <div class="flex flex-wrap gap-1 mb-3">
         {#if topic.category}
             <span title="Subject" class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded">
                 {topic.category}
@@ -62,6 +75,18 @@
             </span>
         {/if}
     </div>
+
+    {#if onAdd}
+        <div class="flex justify-end">
+            <button
+                on:click={handleAddClick}
+                title="Add to my topics"
+                class="text-xs bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 px-3 py-1 rounded font-medium transition-colors"
+            >
+                Add
+            </button>
+        </div>
+    {/if}
 </div>
 
 <style>

@@ -2,12 +2,14 @@
     import { onMount } from 'svelte';
     import type { PracticeTopicLibrary, PracticeSessionLibrary, BreadcrumbItem, IconType } from '$lib/types';
     import { libraryService } from '$lib/services/library';
+    import { topicsService } from '$lib/services/topics';
     import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
     import ErrorAlert from '$components/common/ErrorAlert.svelte';
     import Breadcrumbs from '$components/common/Breadcrumbs.svelte';
     import ActionToolbar from '$components/common/ActionToolbar.svelte';
     import TopicLibraryCard from '$components/library/TopicLibraryCard.svelte';
     import PopularityBadge from '$components/common/PopularityBadge.svelte';
+    import { toast } from '$lib/stores/toast';
 
     // State management
     let topTopics: PracticeTopicLibrary[] = [];
@@ -22,6 +24,7 @@
     let loadingSessions = false;
     let showAllTopics = false;
     let allTopics: PracticeTopicLibrary[] = [];
+
     
 
     // Breadcrumbs
@@ -108,6 +111,21 @@
         handleTopicSelection(null, null);
     }
 
+    async function handleAdd(libraryTopic: PracticeTopicLibrary) {
+        try {
+            const newTopic = await topicsService.importFromLibrary(libraryTopic);
+            
+            toast.success(`Successfully added "${newTopic.name}" to your topics!`);
+            
+            // Optionally redirect to the new topic or show success message
+            console.log('Successfully imported topic:', newTopic);
+        } catch (err) {
+            console.error('Failed to add topic:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Failed to add topic';
+            toast.error(errorMessage);
+        }
+    }
+
     // Actions for the toolbar
     const libraryActions = [
         {
@@ -164,6 +182,7 @@
                             {topic}
                             isSelected={selectedTopicId === topic.id}
                             onClick={handleTopicSelection}
+                            onAdd={handleAdd}
                         />
                     {/each}
 
@@ -193,6 +212,7 @@
                             {topic}
                             isSelected={selectedTopicId === topic.id}
                             onClick={handleTopicSelection}
+                            onAdd={handleAdd}
                         />
                     {/each}
 
