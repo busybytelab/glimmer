@@ -8,6 +8,7 @@
     export let emptyMessage: string = 'No learners found.';
     export let gridCols: string = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
     export let showPreferences: boolean = true;
+    export let selectedLearnerId: string = '';
     
     export let onClick: (learner: Learner) => void = () => {};
     export let onEdit: ((learner: Learner) => void) | undefined = undefined;
@@ -53,6 +54,7 @@
                 {onEdit}
                 {showPreferences}
                 actions={getActionsForLearner(learner)}
+                isSelected={selectedLearnerId === learner.id}
             />
         {/each}
     </div>

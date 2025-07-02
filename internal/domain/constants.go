@@ -13,4 +13,8 @@ const (
 	CollectionEarnedAchievements     = "earned_achievements"
 	CollectionChats                  = "chats"
 	CollectionChatItems              = "chat_items"
+	// Library collections
+	CollectionPracticeTopicsLibrary   = "practice_topics_library"
+	CollectionPracticeItemsLibrary    = "practice_items_library"
+	CollectionPracticeSessionsLibrary = "practice_sessions_library"
 )

@@ -1,31 +1,15 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import { learnersService } from '$lib/services/learners';
-    import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
     import ErrorAlert from '$components/common/ErrorAlert.svelte';
     import type { Learner } from '$lib/types';
     import { setCurrentLearner } from '$lib/stores/learnerStore';
 
-    let learners: Learner[] = [];
-    let loading = false;
-    let error: string | null = null;
+    export let data: {
+        learners?: Learner[];
+        error?: string | null;
+    };
 
-    onMount(async () => {
-        try {
-            loading = true;
-            // Fetch learners associated with the current user
-            learners = await learnersService.getLearners();
-            if (learners.length === 0) {
-                goto('/account/dashboard');
-            }
-        } catch (err) {
-            console.error('Error fetching learners:', err);
-            error = 'Failed to load learners. Please try again.';
-        } finally {
-            loading = false;
-        }
-    });
+    $: ({ learners = [], error = null } = data || {});
 
     function handleLearnerSelect(learner: Learner) {
         // Set the current learner in the store
@@ -52,11 +36,7 @@
             <p class="text-lg text-gray-600 dark:text-gray-300">Choose your profile to start learning</p>
         </div>
 
-        {#if loading}
-            <div class="flex justify-center items-center min-h-[400px]">
-                <LoadingSpinner size="lg" color="gray" />
-            </div>
-        {:else if error}
+        {#if error}
             <div class="max-w-md mx-auto">
                 <ErrorAlert message={error} />
             </div>

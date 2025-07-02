@@ -74,6 +74,7 @@
                             class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-red-500"
                             on:click={() => removeIncorrectAnswer(index)}
                             title="Remove this incorrect answer"
+                            aria-label="Remove incorrect answer"
                             {disabled}
                         >
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

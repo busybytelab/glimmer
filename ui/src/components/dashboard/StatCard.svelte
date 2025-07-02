@@ -1,17 +1,18 @@
 <script lang="ts">
+	import type { IconType } from '$lib/types';
+	import Icon from '$components/common/Icon.svelte';
+
 	export let title: string;
 	export let value: number | string;
 	export let isLoading: boolean = false;
-	export let icon: string;
+	export let icon: IconType;
 </script>
 
 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
 	<div class="p-5">
 		<div class="flex items-center">
 			<div class="flex-shrink-0">
-				<svg class="h-6 w-6 text-gray-400 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					{@html icon}
-				</svg>
+				<Icon type={icon} class_name="h-6 w-6 text-gray-400 dark:text-gray-300" />
 			</div>
 			<div class="ml-5 w-0 flex-1">
 				<dl>

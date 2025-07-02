@@ -13,6 +13,7 @@
     export let shadow: boolean = true;
     export let showPreferences: boolean = true;
     export let onEdit: ((learner: Learner) => void) | undefined = undefined;
+    export let isSelected: boolean = false;
     
     // Helper function to get button color classes
     function getColorClasses(color: string = 'primary') {
@@ -47,6 +48,7 @@
         ${shadow ? 'shadow-md' : 'border border-gray-100 dark:border-gray-700'} 
         p-6 
         hover:shadow-lg transition-shadow cursor-pointer
+        ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : ''}
     `}
     on:click={() => onClick(learner)}
     on:keydown={(e) => e.key === 'Enter' && onClick(learner)}
@@ -140,6 +142,7 @@
         relative bg-white dark:bg-gray-800 rounded-lg
         ${shadow ? 'shadow-md' : 'border border-gray-100 dark:border-gray-700'} 
         p-6 
+        ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : ''}
     `}
 >
     {#if onEdit}

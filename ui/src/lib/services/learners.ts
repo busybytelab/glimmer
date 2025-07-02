@@ -6,10 +6,15 @@ class LearnersService {
      * Gets a list of learners
      * @param page Page number (1-based)
      * @param perPage Number of items per page
+     * @param customFetch Optional custom fetch function
      * @returns List of learners
      */
-    async getLearners(page: number = 1, perPage: number = 50): Promise<Learner[]> {
-        const result = await pb.collection('learners').getList(page, perPage);
+    async getLearners(page: number = 1, perPage: number = 50, customFetch?: typeof fetch): Promise<Learner[]> {
+        const options: { [key: string]: any } = {};
+        if (customFetch) {
+            options.fetch = customFetch;
+        }
+        const result = await pb.collection('learners').getList(page, perPage, options);
         return result.items as Learner[];
     }
 

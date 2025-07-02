@@ -99,12 +99,10 @@ func (r *sessionRoute) HandleCreatePracticeSession(e *core.RequestEvent) error {
 		systemPrompt = "You are an expert educational content creator specialized in creating practice exercises for students."
 	}
 
-	// 4. Append the json generation instruction to the base prompt
-	generationPrompt := buildGenerationPrompt(basePrompt, topic.GetString("name"), topic.GetString("subject"), topic.GetString("account"), e)
-
-	// 5. Ask LLM to create practice items
+	// 4. Ask LLM to create practice items
 	// Get user name from the expanded relation
 	userId := learner.GetString("user")
+	learnerNickname := learner.GetString("nickname")
 	var userName string
 	if user, err := e.App.FindRecordById("_pb_users_auth_", userId); err == nil {
 		userName = user.GetString("name")
@@ -113,9 +111,14 @@ func (r *sessionRoute) HandleCreatePracticeSession(e *core.RequestEvent) error {
 	}
 
 	log.Info().
-		Str("learner", userName).
+		Str("user", userName).
+		Str("nickname", learnerNickname).
 		Str("topic", topic.GetString("name")).
 		Msg("Generating practice items using LLM")
+
+	// Build learner profile and generation prompt
+	learnerProfile := buildLearnerProfile(learner, topic)
+	generationPrompt := buildGenerationPrompt(basePrompt, learnerProfile, topic, e)
 
 	// Get the LLM model from the practice topic, if not set, the service will use default
 	llmModel := topic.GetString("llm_model")
@@ -124,17 +127,10 @@ func (r *sessionRoute) HandleCreatePracticeSession(e *core.RequestEvent) error {
 		chatOptions = append(chatOptions, llm.WithModel(llmModel))
 	}
 
-	llmResponse, _, err := r.llmService.Chat(generationPrompt, systemPrompt, chatOptions...)
+	// 5. Generate practice items with retry logic for JSON parsing issues
+	practiceItems, err := r.generatePracticeItemsWithRetry(generationPrompt, systemPrompt, chatOptions)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to generate practice items using LLM")
 		return e.InternalServerError("Failed to generate practice items", err)
-	}
-
-	// 6. Parse LLM JSON, cleaning up the response if needed
-	practiceItems, err := parseAndCleanLLMResponse(llmResponse)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to parse LLM response")
-		return e.InternalServerError("Failed to parse generated practice items", err)
 	}
 
 	// Get account ID from learner
@@ -158,9 +154,76 @@ func (r *sessionRoute) HandleCreatePracticeSession(e *core.RequestEvent) error {
 	return e.JSON(http.StatusOK, practiceSession)
 }
 
+// buildLearnerProfile constructs a profile string based on learner's attributes
+func buildLearnerProfile(learner *core.Record, topic *core.Record) string {
+	if learner == nil {
+		return ""
+	}
+
+	// Get learning preferences as a slice
+	var learningPrefs []string
+	if prefsStr := learner.GetString("learning_preferences"); prefsStr != "" {
+		if err := json.Unmarshal([]byte(prefsStr), &learningPrefs); err != nil {
+			log.Error().Err(err).Msg("Failed to unmarshal learning preferences")
+			learningPrefs = []string{} // Reset to empty if unmarshal fails
+		}
+	}
+
+	age := learner.GetInt("age")
+	gradeLevel := learner.GetString("grade_level")
+
+	// Convert age to year level if grade level is not specified
+	yearLevel := gradeLevel
+	if yearLevel == "" {
+		// Simple mapping: age 5 = year 1, age 6 = year 2, etc.
+		if age >= 5 && age <= 18 {
+			yearLevel = fmt.Sprintf("year %d", age-4)
+		} else {
+			yearLevel = fmt.Sprintf("%d years old", age)
+		}
+	}
+
+	// Get topic name for the profile
+	topicName := "the topic"
+	if topic != nil {
+		topicName = topic.GetString("name")
+	}
+
+	// Build natural language profile
+	profile := fmt.Sprintf("There is a student in %s who needs to improve their skills in %s.", yearLevel, topicName)
+
+	// Add learning preferences in natural language
+	if len(learningPrefs) > 0 {
+		var learningStyle string
+		for i, pref := range learningPrefs {
+			switch strings.ToLower(pref) {
+			case "visual":
+				learningStyle += "learns best through concrete examples and visual thinking"
+			case "auditory":
+				learningStyle += "learns best through verbal explanations and talking through problems"
+			case "kinesthetic":
+				learningStyle += "learns best through interactive practice and step-by-step activities"
+			default:
+				learningStyle += fmt.Sprintf("has %s learning preferences", strings.ToLower(pref))
+			}
+
+			if i < len(learningPrefs)-1 {
+				learningStyle += " and "
+			}
+		}
+
+		if learningStyle != "" {
+			profile += fmt.Sprintf(" The student %s.", learningStyle)
+		}
+	}
+
+	return profile
+}
+
 // buildGenerationPrompt constructs a detailed prompt for the LLM to generate practice items
-func buildGenerationPrompt(basePrompt, topicName, subject string, accountId string, e *core.RequestEvent) string {
+func buildGenerationPrompt(basePrompt string, learnerProfile string, topic *core.Record, e *core.RequestEvent) string {
 	// Get account to retrieve the prompt extension template
+	accountId := topic.GetString("account")
 	account, err := e.App.FindRecordById(domain.CollectionAccounts, accountId)
 	if err != nil {
 		log.Error().Err(err).Str("accountId", accountId).Msg("Failed to find account, using default prompt extension")
@@ -168,17 +231,29 @@ func buildGenerationPrompt(basePrompt, topicName, subject string, accountId stri
 	}
 
 	// Get the prompt extension from the account, or use an empty string if not available
+	// TODO: fix this, must use default extension if empty
 	promptExtension := ""
 	if account != nil {
 		promptExtension = account.GetString("practice_session_default_prompt_extension")
 	}
 
-	// Combine with base prompt
-	combinedPrompt := fmt.Sprintf("%s\n\nTopic: %s\nSubject: %s\n\n%s",
-		basePrompt,
-		topicName,
-		subject,
-		promptExtension)
+	// Combine all parts of the prompt - learner profile comes first
+	var combinedPrompt string
+	if learnerProfile != "" {
+		combinedPrompt = fmt.Sprintf("%s\n\n%s\n\nTopic: %s\nSubject: %s\n\n%s",
+			learnerProfile,
+			basePrompt,
+			topic.GetString("name"),
+			topic.GetString("subject"),
+			promptExtension)
+	} else {
+		combinedPrompt = fmt.Sprintf("%s\n\nTopic: %s\nSubject: %s\n\n%s",
+			basePrompt,
+			topic.GetString("name"),
+			topic.GetString("subject"),
+			promptExtension)
+	}
+
 	// Escape any JSON special characters in the prompt to ensure it's JSON-safe
 	escapedPrompt := strings.ReplaceAll(combinedPrompt, `"`, `\"`)
 	escapedPrompt = strings.ReplaceAll(escapedPrompt, `\`, `\\`)
@@ -320,4 +395,51 @@ func createPracticeSession(e *core.RequestEvent, topicId, learnerId string, item
 	}
 
 	return session, nil
+}
+
+// generatePracticeItemsWithRetry attempts to generate and parse practice items with retry logic
+func (r *sessionRoute) generatePracticeItemsWithRetry(generationPrompt, systemPrompt string, chatOptions []llm.ChatOption) ([]PracticeItemResponse, error) {
+	var practiceItems []PracticeItemResponse
+	var parseErr error
+
+	maxRetries := 3
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		// Use current chatOptions for first attempt, add IgnoreCache for retries
+		currentChatOptions := chatOptions
+		if attempt > 1 {
+			log.Warn().Int("attempt", attempt).Msg("Retrying LLM generation due to JSON parse failure, ignoring cache")
+			// Create new options slice with cache ignore for retry attempts
+			// This ensures we don't duplicate cache options and override any existing ones
+			currentChatOptions = make([]llm.ChatOption, len(chatOptions)+1)
+			copy(currentChatOptions, chatOptions)
+			currentChatOptions[len(chatOptions)] = llm.WithCache(true, false)
+		}
+
+		llmResponse, _, err := r.llmService.Chat(generationPrompt, systemPrompt, currentChatOptions...)
+		if err != nil {
+			log.Error().Err(err).Int("attempt", attempt).Msg("Failed to generate practice items using LLM")
+			if attempt == maxRetries {
+				return nil, err
+			}
+			continue // Try next attempt
+		}
+
+		// Try to parse the LLM response
+		practiceItems, parseErr = parseAndCleanLLMResponse(llmResponse)
+		if parseErr == nil {
+			// Success! Break out of retry loop
+			log.Info().Int("attempt", attempt).Msg("Successfully generated and parsed practice items")
+			break
+		}
+
+		log.Warn().Err(parseErr).Int("attempt", attempt).Str("response", llmResponse).Msg("Failed to parse LLM response, will retry if attempts remain")
+
+		// If this was the last attempt, return the error
+		if attempt == maxRetries {
+			log.Error().Err(parseErr).Msg("Failed to parse LLM response after all retry attempts")
+			return nil, parseErr
+		}
+	}
+
+	return practiceItems, nil
 }

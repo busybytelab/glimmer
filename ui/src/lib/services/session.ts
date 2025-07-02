@@ -35,7 +35,7 @@ class SessionService {
     async loadSessionForLearner(id: string): Promise<SessionWithExpandedData> {
         try {
             const result = await pb.collection('practice_sessions').getOne(id, {
-                expand: 'learner,learner.user,practice_topic,practice_items',
+                expand: 'learner,practice_topic,practice_items',
                 fields: 'id,name,status,assigned_at,completed_at,generation_prompt,learner,practice_topic,practice_items,expand'
             });
 
