@@ -21,10 +21,18 @@
     export let disabled: boolean = false;
 
     /**
+     * The selected learner for contextual button labels
+     */
+    export let selectedLearner: { nickname: string } | undefined = undefined;
+
+    /**
      * Optional callback function when the Add button is clicked
      * @param session - The session object to add
      */
     export let onAdd: ((session: PracticeSessionLibrary) => void) | undefined = undefined;
+
+    // Contextual button label
+    $: buttonLabel = 'Add';
 </script>
 
 <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow bg-white dark:bg-gray-800">
@@ -57,12 +65,12 @@
             class="text-xs bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 px-3 py-1 rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             on:click={() => onAdd?.(session)}
             {disabled}
-            title="Add to my sessions"
+            title={selectedLearner ? `Add this activity` : 'Select a child first'}
         >
             {#if isImporting}
                 <LoadingSpinner size="sm" color="primary" />
             {:else}
-                Add
+                {buttonLabel}
             {/if}
         </button>
     </div>

@@ -49,9 +49,10 @@ class LibraryService {
      * Get top topics from the library
      * @param limit - Number of topics to return
      * @param gradeLevel - Optional grade level to filter by (e.g., "5th", "Year 5", "5")
+     * @param category - Optional category to filter by (e.g., "Math", "Science")
      * @returns Promise<PracticeTopicLibrary[]>
      */
-    async getTopTopicsLibrary(limit: number = 3, gradeLevel?: string): Promise<PracticeTopicLibrary[]> {
+    async getTopTopicsLibrary(limit: number = 3, gradeLevel?: string, category?: string): Promise<PracticeTopicLibrary[]> {
         try {
             const numericGrade = this.parseGradeLevel(gradeLevel);
             
@@ -60,10 +61,12 @@ class LibraryService {
                 sort: '-total_usage'
             });
 
-            // Filter topics by grade level if specified
-            const filteredTopics = topics.items.filter(topic => 
-                this.matchesGradeLevel(numericGrade, (topic as PracticeTopicLibrary).target_grade_level)
-            );
+            // Filter topics by grade level and category if specified
+            const filteredTopics = topics.items.filter(topic => {
+                const gradeLevelMatch = this.matchesGradeLevel(numericGrade, (topic as PracticeTopicLibrary).target_grade_level);
+                const categoryMatch = !category || (topic as PracticeTopicLibrary).category === category;
+                return gradeLevelMatch && categoryMatch;
+            });
 
             // Return only the requested number of topics
             return filteredTopics.slice(0, limit) as PracticeTopicLibrary[];
@@ -76,9 +79,10 @@ class LibraryService {
     /**
      * Get all topics from the library
      * @param gradeLevel - Optional grade level to filter by (e.g., "5th", "Year 5", "5")
+     * @param category - Optional category to filter by (e.g., "Math", "Science")
      * @returns Promise<PracticeTopicLibrary[]>
      */
-    async getTopicsLibrary(gradeLevel?: string): Promise<PracticeTopicLibrary[]> {
+    async getTopicsLibrary(gradeLevel?: string, category?: string): Promise<PracticeTopicLibrary[]> {
         try {
             const numericGrade = this.parseGradeLevel(gradeLevel);
             
@@ -87,12 +91,42 @@ class LibraryService {
                 sort: '-total_usage'
             });
 
-            // Filter topics by grade level if specified
-            return topics.filter(topic => 
-                this.matchesGradeLevel(numericGrade, (topic as PracticeTopicLibrary).target_grade_level)
-            ) as PracticeTopicLibrary[];
+            // Filter topics by grade level and category if specified
+            return topics.filter(topic => {
+                const gradeLevelMatch = this.matchesGradeLevel(numericGrade, (topic as PracticeTopicLibrary).target_grade_level);
+                const categoryMatch = !category || (topic as PracticeTopicLibrary).category === category;
+                return gradeLevelMatch && categoryMatch;
+            }) as PracticeTopicLibrary[];
         } catch (err) {
             console.error('Failed to get topics from library:', err);
+            throw err;
+        }
+    }
+
+    /**
+     * Get unique categories from the library
+     * @param gradeLevel - Optional grade level to filter by (e.g., "5th", "Year 5", "5")
+     * @returns Promise<string[]>
+     */
+    async getCategoriesLibrary(gradeLevel?: string): Promise<string[]> {
+        try {
+            const numericGrade = this.parseGradeLevel(gradeLevel);
+            
+            // Get all topics
+            const topics = await pb.collection('practice_topics_library').getFullList({
+                sort: 'category'
+            });
+
+            // Filter topics by grade level if specified and extract unique categories
+            const filteredTopics = topics.filter(topic => 
+                this.matchesGradeLevel(numericGrade, (topic as PracticeTopicLibrary).target_grade_level)
+            ) as PracticeTopicLibrary[];
+
+            // Extract unique categories
+            const categories = [...new Set(filteredTopics.map(topic => topic.category).filter(Boolean))];
+            return categories.sort();
+        } catch (err) {
+            console.error('Failed to get categories from library:', err);
             throw err;
         }
     }
